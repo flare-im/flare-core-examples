@@ -1,1 +1,1 @@
-/// <reference path="../../../packages/flare-core-vue-im-ui/node_modules/vite/client.d.ts" />
+/// <reference path="../../../../flare-im-design/vue-im-ui/node_modules/vite/client.d.ts" />

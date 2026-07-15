@@ -20,7 +20,7 @@
     "@tauri-apps/plugin-opener": "2.5.4",
     "@vicons/ionicons5": "^0.13.0",
     "flare-core-typescript-sdk": "file:../../packages/flare-core-typescript-sdk",
-    "flare-core-vue-im-ui": "file:../../packages/flare-core-vue-im-ui",
+    "flare-core-vue-im-ui": "file:../../../flare-im-design/vue-im-ui",
     "markdown-it": "^14.2.0",
     "naive-ui": "^2.44.1",
     "protobufjs": "^8.6.5",

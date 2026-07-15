@@ -65,9 +65,9 @@ test("tauri passes the flare-im-core server certificate path into native TLS con
 });
 
 test("shared login UI only renders QUIC and racing choices when the host enables native transport selection", () => {
-  const appIndex = readFromClientSdk("packages/flare-core-vue-im-ui/src/app/index.ts");
-  const loginView = readFromClientSdk("packages/flare-core-vue-im-ui/src/app/components/FlareLoginScreen.vue");
-  const authScreen = readFromClientSdk("packages/flare-core-vue-im-ui/src/components/shell/FlareAuthScreen.vue");
+  const appIndex = readFromMonorepo("flare-im-design/vue-im-ui/src/app/index.ts");
+  const loginView = readFromMonorepo("flare-im-design/vue-im-ui/src/app/components/FlareLoginScreen.vue");
+  const authScreen = readFromMonorepo("flare-im-design/vue-im-ui/src/components/shell/FlareAuthScreen.vue");
 
   assert.match(appIndex, /configureAppTransportSelector/);
   assert.match(appIndex, /isAppTransportSelectorEnabled/);

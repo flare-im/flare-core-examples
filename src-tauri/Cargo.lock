@@ -1313,7 +1313,7 @@ checksum = "1d674e81391d1e1ab681a28d99df07927c6d4aa5b027d7da16ba32d1d21ecd99"
 
 [[package]]
 name = "flare-core"
-version = "1.0.1"
+version = "1.0.3"
 dependencies = [
  "aes-gcm",
  "anyhow",
@@ -1369,7 +1369,7 @@ dependencies = [
 
 [[package]]
 name = "flare-grpc-proto"
-version = "0.1.0"
+version = "1.0.3"
 dependencies = [
  "flare-proto",
  "prost",
@@ -1382,7 +1382,7 @@ dependencies = [
 
 [[package]]
 name = "flare-im-core-sdk"
-version = "0.2.0"
+version = "1.0.3"
 dependencies = [
  "anyhow",
  "arc-swap",
@@ -1426,7 +1426,7 @@ dependencies = [
 
 [[package]]
 name = "flare-im-core-sdk-bindings-runtime"
-version = "0.1.0"
+version = "1.0.3"
 dependencies = [
  "flare-im-core-sdk",
  "tokio",
@@ -1434,7 +1434,7 @@ dependencies = [
 
 [[package]]
 name = "flare-im-core-sdk-storage-sqlite"
-version = "0.2.0"
+version = "1.0.3"
 dependencies = [
  "anyhow",
  "log",
@@ -1446,7 +1446,7 @@ dependencies = [
 
 [[package]]
 name = "flare-im-core-sdk-tauri"
-version = "0.2.0"
+version = "1.0.3"
 dependencies = [
  "anyhow",
  "base64 0.22.1",
@@ -1463,7 +1463,7 @@ dependencies = [
 
 [[package]]
 name = "flare-proto"
-version = "1.0.1"
+version = "1.0.3"
 dependencies = [
  "prost",
  "prost-build",
