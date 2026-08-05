@@ -1,5 +1,5 @@
 import { createApp } from "vue";
-import { FlareCoreSdk } from "flare-core-typescript-sdk/tauri";
+import { FlareCoreSdk } from "@flare-im/sdk/tauri";
 import App from "./App.vue";
 import { router } from "./router";
 import {
@@ -8,13 +8,13 @@ import {
   configureAppTransportSelector,
   configureAppMediaLocalPathResolver,
   configureAppMediaPathPicker,
-} from "flare-core-vue-im-ui/app";
-import { configureMediaProxy } from "flare-core-vue-im-ui/utils";
+} from "@flare-im/vue-ui/app";
+import { configureMediaProxy } from "@flare-im/vue-ui/utils";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { open } from "@tauri-apps/plugin-dialog";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
 import { configureTauriDesktopNotifications } from "./desktopNotifications";
-import "flare-core-vue-im-ui/app/style.css";
+import "@flare-im/vue-ui/app/style.css";
 
 declare const __FLARE_DEV_CA_CERT_PATH__: string;
 

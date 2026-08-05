@@ -3,8 +3,8 @@ import { computed } from "vue";
 import { ChatbubbleEllipsesOutline, FlaskOutline, SearchOutline } from "@vicons/ionicons5";
 import { NButton, NIcon } from "naive-ui";
 import { useRouter } from "vue-router";
-import { loginTransportDisplayName, useFlareWorkbenchUi } from "flare-core-vue-im-ui/composables";
-import { useFlareI18n, useFlareSdk } from "flare-core-vue-im-ui/app";
+import { loginTransportDisplayName, useFlareWorkbenchUi } from "@flare-im/vue-ui/composables";
+import { useFlareI18n, useFlareSdk } from "@flare-im/vue-ui/app";
 
 const sdk = useFlareSdk();
 const router = useRouter();

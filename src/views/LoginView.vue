@@ -7,7 +7,7 @@ import {
   isAppTransportSelectorEnabled,
   useFlareI18n,
   useFlareSdk,
-} from "flare-core-vue-im-ui/app";
+} from "@flare-im/vue-ui/app";
 
 const sdk = useFlareSdk();
 const router = useRouter();

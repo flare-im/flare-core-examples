@@ -2,7 +2,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 import vue from "@vitejs/plugin-vue";
-import { createFlareCoreWebAppViteConfig } from "flare-core-typescript-sdk/devtools/vite";
+import { createFlareCoreWebAppViteConfig } from "@flare-im/sdk/devtools/vite";
 import { defineConfig, loadEnv } from "vite";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -22,10 +22,10 @@ function tauriManualChunks(id: string): string | undefined {
   if (normalized.includes("node_modules/@vicons")) {
     return "icon-runtime";
   }
-  if (normalized.includes("flare-core-typescript-sdk") || normalized.includes("flare-im-core-sdk/bindings")) {
+  if (normalized.includes("@flare-im/sdk") || normalized.includes("flare-im-core-sdk/bindings")) {
     return "flare-sdk";
   }
-  if (normalized.includes("flare-core-vue-im-ui") || normalized.includes("node_modules")) {
+  if (normalized.includes("@flare-im/vue-ui") || normalized.includes("node_modules")) {
     return "ui-runtime";
   }
   return undefined;
@@ -73,11 +73,11 @@ export default createFlareCoreWebAppViteConfig({
   vuePlugin: vue,
   extraAliases: [
     {
-      find: "flare-core-typescript-sdk/transport",
+      find: "@flare-im/sdk/transport",
       replacement: path.join(typeScriptSdkRoot, "adapters/_shared/transportProfile.ts"),
     },
     {
-      find: "flare-core-typescript-sdk/tauri",
+      find: "@flare-im/sdk/tauri",
       replacement: path.join(typeScriptSdkRoot, "adapters/tauri/index.ts"),
     },
   ],

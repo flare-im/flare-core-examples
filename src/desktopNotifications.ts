@@ -11,7 +11,7 @@ import {
   configureDesktopNotifications,
   playDesktopNotificationSound,
   type DesktopNotificationPayload,
-} from "flare-core-vue-im-ui/app";
+} from "@flare-im/vue-ui/app";
 
 let permissionTask: Promise<boolean> | undefined;
 let trayTask: Promise<TrayIcon | null> | undefined;

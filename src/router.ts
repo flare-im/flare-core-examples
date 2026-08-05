@@ -1,5 +1,5 @@
 import { createRouter, createWebHashHistory } from "vue-router";
-import { getFlareSdkSingleton } from "flare-core-vue-im-ui/app";
+import { getFlareSdkSingleton } from "@flare-im/vue-ui/app";
 import LoginView from "./views/LoginView.vue";
 import SyncProgressView from "./views/SyncProgressView.vue";
 import WorkbenchLayout from "./views/WorkbenchLayout.vue";

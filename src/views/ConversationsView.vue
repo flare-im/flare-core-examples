@@ -3,15 +3,15 @@ import { computed } from "vue";
 import { AddOutline, ChatbubbleEllipsesOutline, CloseOutline, EllipsisHorizontalOutline, SearchOutline } from "@vicons/ionicons5";
 import { NButton, NIcon, NInput } from "naive-ui";
 import { useRouter } from "vue-router";
-import type { FlareConversationAction } from "flare-core-vue-im-ui/contracts";
-import { useFlareWorkbenchUi } from "flare-core-vue-im-ui/composables";
+import type { FlareConversationAction } from "@flare-im/vue-ui/contracts";
+import { useFlareWorkbenchUi } from "@flare-im/vue-ui/composables";
 import {
   ConversationList,
   ConversationListItem,
   useConversationListModel,
   useFlareI18n,
-} from "flare-core-vue-im-ui/app";
-import type { ConversationFilter } from "flare-core-vue-im-ui/composables";
+} from "@flare-im/vue-ui/app";
+import type { ConversationFilter } from "@flare-im/vue-ui/composables";
 
 const router = useRouter();
 const workbenchUi = useFlareWorkbenchUi();

@@ -3,7 +3,7 @@ import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { NButton, NIcon, NProgress, NTag, useMessage } from "naive-ui";
 import { ChatbubbleEllipsesOutline, CheckmarkCircleOutline, RefreshOutline } from "@vicons/ionicons5";
-import { useFlareSdk } from "flare-core-vue-im-ui/app";
+import { useFlareSdk } from "@flare-im/vue-ui/app";
 
 const sdk = useFlareSdk();
 const router = useRouter();

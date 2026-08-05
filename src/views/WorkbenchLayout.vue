@@ -32,29 +32,29 @@ import {
   useMessage,
 } from "naive-ui";
 import { useRoute, useRouter } from "vue-router";
-import { FlareStartConversationDialog, FlareWorkbenchShell } from "flare-core-vue-im-ui/components";
-import type { FlareWorkbenchShellMode } from "flare-core-vue-im-ui/contracts";
-import { provideFlareWorkbenchUi } from "flare-core-vue-im-ui/composables";
-import { useFlareTheme, type FlareThemeMode, type FlareThemeVariant } from "flare-core-vue-im-ui/theme";
+import { FlareStartConversationDialog, FlareWorkbenchShell } from "@flare-im/vue-ui/components";
+import type { FlareWorkbenchShellMode } from "@flare-im/vue-ui/contracts";
+import { provideFlareWorkbenchUi } from "@flare-im/vue-ui/composables";
+import { useFlareTheme, type FlareThemeMode, type FlareThemeVariant } from "@flare-im/vue-ui/theme";
 import {
   displayTextFromStoredPreview,
   previewTextFromMessageContent,
-} from "flare-core-vue-im-ui/utils";
+} from "@flare-im/vue-ui/utils";
 import {
   MessageSearchKind,
-} from "flare-core-typescript-sdk/web";
+} from "@flare-im/sdk/web";
 import {
   FlareConversationDetails as ConversationDetails,
   FlareDiagnosticsConsole as DeveloperConsole,
   FlareMessageActionSheet as MessageActionSheet,
   FlareMessagePreviewModal as MessagePreviewModal,
-} from "flare-core-vue-im-ui/components";
+} from "@flare-im/vue-ui/components";
 import {
   conversationTitle,
   useFlareI18n,
   useFlareSdk,
   type FlareLocale,
-} from "flare-core-vue-im-ui/app";
+} from "@flare-im/vue-ui/app";
 
 type MessageIdentity = { readonly serverId: string; readonly clientMsgId: string };
 type ChatSearchResultMessage = MessageIdentity & {

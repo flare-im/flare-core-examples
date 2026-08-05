@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { watch } from "vue";
 import { useRouter } from "vue-router";
-import { FlareUiProvider } from "flare-core-vue-im-ui/components";
+import { FlareUiProvider } from "@flare-im/vue-ui/components";
 import {
   createAppMediaResolver,
   provideFlareSdk,
-} from "flare-core-vue-im-ui/app";
+} from "@flare-im/vue-ui/app";
 
 const sdk = provideFlareSdk();
 const mediaResolver = createAppMediaResolver(sdk);

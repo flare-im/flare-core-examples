@@ -2,9 +2,9 @@
 import { computed } from "vue";
 import { ArrowBackOutline, CheckmarkCircleOutline, FlashOutline, RefreshOutline, TerminalOutline } from "@vicons/ionicons5";
 import { NButton, NIcon, NInput, NInputNumber, NList, NListItem, NSelect, NSwitch, NTabPane, NTabs, NTag } from "naive-ui";
-import { NetworkInterfaceKind } from "flare-core-typescript-sdk/web";
+import { NetworkInterfaceKind } from "@flare-im/sdk/web";
 import { useRouter } from "vue-router";
-import { useFlareI18n, useFlareSdk } from "flare-core-vue-im-ui/app";
+import { useFlareI18n, useFlareSdk } from "@flare-im/vue-ui/app";
 
 const sdk = useFlareSdk();
 const router = useRouter();

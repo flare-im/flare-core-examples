@@ -1,7 +1,7 @@
 # Flare IM Core SDK WASM Binding
 
 This package is the browser L1 binding consumed by
-`flare-core-typescript-sdk/web`.
+`@flare-im/sdk/web`.
 
 It exports:
 

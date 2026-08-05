@@ -1,11 +1,11 @@
 # flare-core-tauri-app
 
-`flare-im-core-sdk/bindings/tauri` 的 **Tauri** 桌面应用模板。Tauri 侧拥有自己的 `src/App.vue`、`src/router.ts`、平台媒体选择、桌面通知和 native transport 配置；IM 工作台页面与业务函数复用 `packages/flare-core-vue-im-ui/app`。
+`flare-im-core-sdk/bindings/tauri` 的 **Tauri** 桌面应用模板。Tauri 侧拥有自己的 `src/App.vue`、`src/router.ts`、平台媒体选择、桌面通知和 native transport 配置；IM 工作台页面与业务函数复用 `packages/@flare-im/vue-ui/app`。
 
 ## SDK
 
-- Package: `flare-core-typescript-sdk/tauri`（前端 L3/L2 SDK + Tauri L1 adapter）
-- Shared types: `flare-core-typescript-sdk`
+- Package: `@flare-im/sdk/tauri`（前端 L3/L2 SDK + Tauri L1 adapter）
+- Shared types: `@flare-im/sdk`
 - Rust L1: `flare-im-core-sdk/bindings/tauri`
 
 ## 目录结构
