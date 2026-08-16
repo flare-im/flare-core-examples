@@ -27,7 +27,7 @@ test("tauri enables native transport protocol selection while web and electron s
   const retiredTauriPackage = ["flare-core", "tauri-sdk"].join("-");
 
   assert.match(tauriMain, /configureAppTransportSelector/);
-  assert.match(tauriMain, /@flare-im/sdk\/tauri/);
+  assert.match(tauriMain, /@flare-im\/sdk\/tauri/);
   assert.doesNotMatch(tauriMain, new RegExp(retiredTauriPackage));
   assert.equal(existsSync(join(clientSdkRoot, "packages", retiredTauriPackage)), false);
   assert.match(tauriMain, /configureAppTransportSelector\(\{\s*enabled:\s*true,/s);
@@ -46,7 +46,7 @@ test("tauri renderer vite config is loaded as ESM for SDK devtools imports", () 
   const viteConfig = readFromApp("vite.config.ts");
 
   assert.equal(packageJson.type, "module");
-  assert.match(viteConfig, /@flare-im/sdk\/devtools\/vite/);
+  assert.match(viteConfig, /@flare-im\/sdk\/devtools\/vite/);
 });
 
 test("tauri passes the flare-im-core server certificate path into native TLS config", () => {
