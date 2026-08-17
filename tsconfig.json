@@ -9,22 +9,16 @@
     "jsx": "react-jsx",
     "types": ["vite/client", "node"],
     "baseUrl": ".",
+      // @flare-im/vue-ui 的 paths 映射**故意删掉了**：它写死同级仓路径，
+      // 而 kit 在另一个仓，单独 clone 的 main 里不存在。moduleResolution=bundler
+      // 会尊重包的 exports 映射，所以两种模式统一走 node_modules——
+      // dev 下 file: 依赖是指向同级仓的符号链接，解析到同一批文件。
     "paths": {
       "@vicons/ionicons5": ["../../../flare-im-design/vue-im-ui/node_modules/@vicons/ionicons5"],
       "@flare-im/sdk": ["../../packages/flare-core-typescript-sdk/src/index.ts"],
       "@flare-im/sdk/web": ["../../packages/flare-core-typescript-sdk/src/adapters/web/index.ts"],
       "@flare-im/sdk/tauri": ["../../packages/flare-core-typescript-sdk/src/adapters/tauri/index.ts"],
       "@flare-im/sdk/*": ["../../packages/flare-core-typescript-sdk/src/*"],
-      "@flare-im/vue-ui": ["../../../flare-im-design/vue-im-ui/src/index.ts"],
-      "@flare-im/vue-ui/sdk-lab": ["../../../flare-im-design/vue-im-ui/src/app/components/FlareSdkLabPanel.vue"],
-      "@flare-im/vue-ui/app": ["../../../flare-im-design/vue-im-ui/src/app/index.ts"],
-      "@flare-im/vue-ui/app/components/*": ["../../../flare-im-design/vue-im-ui/src/app/components/*"],
-      "@flare-im/vue-ui/app/style.css": ["../../../flare-im-design/vue-im-ui/src/app/styles/index.css"],
-      "@flare-im/vue-ui/style.css": ["../../../flare-im-design/vue-im-ui/src/design-system/styles/index.css"],
-      "@flare-im/vue-ui/theme": ["../../../flare-im-design/vue-im-ui/src/design-system/theme/index.ts"],
-      "@flare-im/vue-ui/i18n": ["../../../flare-im-design/vue-im-ui/src/shared/i18n/index.ts"],
-      "@flare-im/vue-ui/contracts": ["../../../flare-im-design/vue-im-ui/src/shared/contracts/index.ts"],
-      "@flare-im/vue-ui/*": ["../../../flare-im-design/vue-im-ui/src/*"],
       "markdown-it": ["../../../flare-im-design/vue-im-ui/node_modules/@types/markdown-it/index.d.ts"],
       "naive-ui": ["../../../flare-im-design/vue-im-ui/node_modules/naive-ui"],
       "vue": ["../../../flare-im-design/vue-im-ui/node_modules/vue"],
