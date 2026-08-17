@@ -47,18 +47,24 @@
   resolved "https://registry.npmjs.org/@esbuild/darwin-arm64/-/darwin-arm64-0.25.12.tgz"
   integrity sha512-N3zl+lxHCifgIlcMUP5016ESkeQjLj/959RxxNYIthIg+CQHInujFuXeWbWMgnTo4cp5XVHqFPmpyu9J65C1Yg==
 
-"@flare-im/sdk@file:../../packages/flare-core-typescript-sdk":
+"@flare-im/sdk@*", "@flare-im/sdk@file:../../packages/flare-core-typescript-sdk":
   version "1.0.6"
   resolved "file:../../packages/flare-core-typescript-sdk"
   dependencies:
     protobufjs "^8.6.5"
 
-"@flare-im/vue-ui@file:../../../flare-im-design/vue-im-ui":
-  version "1.0.6"
-  resolved "file:../../../flare-im-design/vue-im-ui"
+"@flare-im/tokens@^1.0.5":
+  version "1.0.5"
+  resolved "https://registry.npmjs.org/@flare-im/tokens/-/tokens-1.0.5.tgz"
+  integrity sha512-OHi8kvkqT/5f+V0+uZkdCal6a2G+MPs4foeWQoKX2m5uIDMgmJQWUCtmq4fZOIDu6t70fzqI8jqcPZTirqwVCQ==
+
+"@flare-im/vue-ui@^1.0.9":
+  version "1.0.9"
+  resolved "https://registry.npmjs.org/@flare-im/vue-ui/-/vue-ui-1.0.9.tgz"
+  integrity sha512-fP+6iQSmSBWjKQCjGV6gRqjKvHPiO+J5YbXFLej3gc5O7uKo8ySH1yBKVQbzZtkH6qXp0ZU8xatkM88nKPuQwg==
   dependencies:
     "@flare-im/tokens" "^1.0.5"
-    "@vicons/ionicons5" "^0.12.0"
+    "@types/markdown-it" "^14.1.2"
     lucide-vue-next "0.577.0"
     markdown-it "^14.2.0"
 
@@ -130,6 +136,11 @@
   resolved "https://registry.npmjs.org/@types/estree/-/estree-1.0.9.tgz"
   integrity sha512-GhdPgy1el4/ImP05X05Uw4cw2/M93BCUmnEvWZNStlCzEKME4Fkk+YpoA5OiHNQmoS7Cafb8Xa3Pya8m1Qrzeg==
 
+"@types/linkify-it@^5":
+  version "5.0.0"
+  resolved "https://registry.npmjs.org/@types/linkify-it/-/linkify-it-5.0.0.tgz"
+  integrity sha512-sVDA58zAw4eWAffKOaQH5/5j3XeayukzDk+ewSsnv3p4yJEZHCCzMDiZM8e0OUrRvmpGZ85jf4yDHkHsgBNr9Q==
+
 "@types/lodash-es@^4.17.12":
   version "4.17.12"
   resolved "https://registry.npmjs.org/@types/lodash-es/-/lodash-es-4.17.12.tgz"
@@ -141,6 +152,19 @@
   version "4.17.24"
   resolved "https://registry.npmjs.org/@types/lodash/-/lodash-4.17.24.tgz"
   integrity sha512-gIW7lQLZbue7lRSWEFql49QJJWThrTFFeIMJdp3eH4tKoxm1OvEPg02rm4wCCSHS0cL3/Fizimb35b7k8atwsQ==
+
+"@types/markdown-it@^14.1.2":
+  version "14.1.2"
+  resolved "https://registry.npmjs.org/@types/markdown-it/-/markdown-it-14.1.2.tgz"
+  integrity sha512-promo4eFwuiW+TfGxhi+0x3czqTYJkG8qB17ZUJiVF10Xm7NLVRSLUsfRTU/6h1e24VvRnXCx+hG7li58lkzog==
+  dependencies:
+    "@types/linkify-it" "^5"
+    "@types/mdurl" "^2"
+
+"@types/mdurl@^2":
+  version "2.0.0"
+  resolved "https://registry.npmjs.org/@types/mdurl/-/mdurl-2.0.0.tgz"
+  integrity sha512-RGdgjQUZba5p6QEFAVx2OGb8rQDL/cPRG7GiedRzMcJ1tYnUANBncjbSB1NRGwbvjcPeikRABz2nshyPk1bhWg==
 
 "@types/node@^18.0.0 || ^20.0.0 || >=22.0.0", "@types/node@^22.10.2":
   version "22.19.21"
@@ -404,6 +428,11 @@ fdir@^6.4.4, fdir@^6.5.0:
   resolved "https://registry.npmjs.org/fdir/-/fdir-6.5.0.tgz"
   integrity sha512-tIbYtZbucOs0BRGqPJkshJUYdL+SDH7dVM8gjy+ERp3WAUjLEFJE+02kanyHtwjWOnwrKYBiwAmM0p4kLJAnXg==
 
+fsevents@~2.3.2, fsevents@~2.3.3:
+  version "2.3.3"
+  resolved "https://registry.npmjs.org/fsevents/-/fsevents-2.3.3.tgz"
+  integrity sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==
+
 he@^1.2.0:
   version "1.2.0"
   resolved "https://registry.npmjs.org/he/-/he-1.2.0.tgz"
@@ -435,6 +464,11 @@ long@^5.3.2:
   version "5.3.2"
   resolved "https://registry.npmjs.org/long/-/long-5.3.2.tgz"
   integrity sha512-mNAgZ1GmyNhD7AuqnTG3/VQ26o760+ZYBPKjPvugO8+nLbYfX6TVpJPseBvopbdY+qpZ/lKUnmEc1LeZYS3QAA==
+
+lucide-vue-next@0.577.0:
+  version "0.577.0"
+  resolved "https://registry.npmjs.org/lucide-vue-next/-/lucide-vue-next-0.577.0.tgz"
+  integrity sha512-py05bAfv9SHVJqscbiOnjcnLlEmOffA58a+7XhZuFxrs6txe1E8VoR1ngWGTYO+9aVKABAz8l3ee3PqiQN9QPA==
 
 magic-string@^0.30.21:
   version "0.30.21"
@@ -472,7 +506,7 @@ muggle-string@^0.4.1:
   resolved "https://registry.npmjs.org/muggle-string/-/muggle-string-0.4.1.tgz"
   integrity sha512-VNTrAak/KhO2i8dqqnqnAHOa3cYBwXEZe9h+D5h/1ZqFSTEFHdM65lR7RoIqq3tBBYavsOXV84NoHXZ0AkPyqQ==
 
-naive-ui@^2.44.1:
+naive-ui@^2.44.0, naive-ui@^2.44.1:
   version "2.44.1"
   resolved "https://registry.npmjs.org/naive-ui/-/naive-ui-2.44.1.tgz"
   integrity sha512-reo8Esw0p58liZwbUutC7meW24Xbn3EwNv91zReWKm2W4JPu+zfgJRn/F7aO0BFmvN+h2brA2M5lRvYqLq4kuA==
@@ -642,7 +676,7 @@ vscode-uri@^3.0.8:
   resolved "https://registry.npmjs.org/vscode-uri/-/vscode-uri-3.1.0.tgz"
   integrity sha512-/BpdSx+yCQGnCvecbyXdxHDkuk55/G3xwnC0GqY4gmQ3j+A+g8kzzgB4Nk/SINjqn6+waqw3EgbVF2QKExkRxQ==
 
-vue-router@^4.6.4:
+vue-router@^4.6.0, vue-router@^4.6.4:
   version "4.6.4"
   resolved "https://registry.npmjs.org/vue-router/-/vue-router-4.6.4.tgz"
   integrity sha512-Hz9q5sa33Yhduglwz6g9skT8OBPii+4bFn88w6J+J4MfEo4KRRpmiNG/hHHkdbRFlLBOqxN8y8gf2Fb0MTUgVg==
@@ -657,7 +691,7 @@ vue-tsc@^2.1.10:
     "@volar/typescript" "2.4.15"
     "@vue/language-core" "2.2.12"
 
-vue@^3.0.0, vue@^3.0.11, vue@^3.2.25, vue@^3.5.0, vue@^3.5.13, vue@3.5.38:
+vue@^3.0.0, vue@^3.0.11, vue@^3.2.25, vue@^3.5.0, vue@^3.5.13, vue@>=3.0.1, vue@3.5.38:
   version "3.5.38"
   resolved "https://registry.npmjs.org/vue/-/vue-3.5.38.tgz"
   integrity sha512-vAMKHfImQlYSy0C+PBue4s3ERZ2xGKfgZg5GXAsLInq1dyh2H78ILVP5sK0KPFPVW4kv+OGCIvBEondcjpZp7A==
