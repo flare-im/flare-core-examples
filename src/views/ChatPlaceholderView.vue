@@ -3,7 +3,10 @@ import { computed } from "vue";
 import { ChatbubbleEllipsesOutline, FlaskOutline, SearchOutline } from "@vicons/ionicons5";
 import { NButton, NIcon } from "naive-ui";
 import { useRouter } from "vue-router";
-import { loginTransportDisplayName, useFlareWorkbenchUi } from "@flare-im/vue-ui/composables";
+import { useFlareWorkbenchUi } from "@flare-im/vue-ui/composables";
+// SDK 绑定符号走独立子路径：它们对 @flare-im/sdk 有运行时依赖，
+// 不能挂在会被主 barrel 带出去的 ./composables 上。
+import { loginTransportDisplayName } from "@flare-im/vue-ui/composables/sdk";
 import { useFlareI18n, useFlareSdk } from "@flare-im/vue-ui/app";
 
 const sdk = useFlareSdk();
