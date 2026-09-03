@@ -57,6 +57,7 @@ async function login(): Promise<void> {
     <AuthScreen
       v-model:user-id="sdk.form.userId"
       v-model:token="sdk.form.token"
+      v-model:token-secret="sdk.form.tokenSecret"
       v-model:transport-mode="sdk.form.transportMode"
       v-model:ws-url="sdk.form.wsUrl"
       v-model:quic-url="sdk.form.quicUrl"
