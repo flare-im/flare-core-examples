@@ -25,9 +25,9 @@ tests/                # Tauri renderer/platform smoke tests
 
 ## 开发
 
-本地 dev token 配置由当前 Tauri Vite 应用目录读取。`VITE_FLARE_TOKEN_SECRET` 必须与正在运行的
-access gateway 使用的 `ACCESS_GATEWAY_TOKEN_SECRET` 一致；默认本地服务脚本会把该值写到
-`../../../flare-im-core/logs/.dev-token-secret`。
+客户端不持有签名密钥：只输用户 ID 时，SDK 向 API 网关 `{httpUrl}/api/v1/auth/tokens` 签发接入 token
+并在到期前自动刷新（本地联调把网关起成 `FLARE_API_GATEWAY_AUTH_DEV_ISSUE=true`）；也可以在登录页高级区
+粘贴业务后端签好的 token（见 `flare-im-core/docs/AUTH-TOKEN-ISSUANCE.zh-CN.md`）。
 
 ```bash
 cd examples/flare-core-tauri-app
