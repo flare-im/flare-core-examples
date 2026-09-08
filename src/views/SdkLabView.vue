@@ -127,7 +127,7 @@ function back(): void {
         </div>
         <pre class="drawer-json">{{ diagnosticsText }}</pre>
       </n-tab-pane>
-      <n-tab-pane name="connection-session" tab="连接/会话">
+      <n-tab-pane name="connection-session" :tab="t(`sdklab.tabConnSession`)">
         <div class="lab-field">
           <span>Connection state</span>
           <div class="lab-grid">
@@ -171,11 +171,11 @@ function back(): void {
         <div class="lab-field">
           <span>Builder catalog</span>
           <n-select v-model:value="sdk.sdkLab.buildOp" :options="sdk.messageBuildOptions.value" filterable />
-          <n-input v-model:value="sdk.sdkLab.messageText" placeholder="消息正文 / 标题 / 摘要" />
+          <n-input v-model:value="sdk.sdkLab.messageText" :placeholder="t(`sdklab.messagePlaceholder`)" />
           <n-input
             v-model:value="sdk.sdkLab.jsonParams"
             type="textarea"
-            placeholder='附加 JSON，例如 {"title":"任务","description":"来自 SDK Lab"}'
+            :placeholder="t(`sdklab.jsonPlaceholder`)"
             :autosize="{ minRows: 3, maxRows: 8 }"
           />
           <div class="lab-grid">
@@ -185,21 +185,21 @@ function back(): void {
         </div>
         <pre class="drawer-json">{{ buildCatalogText }}</pre>
       </n-tab-pane>
-      <n-tab-pane name="message-dispatch" tab="消息操作">
+      <n-tab-pane name="message-dispatch" :tab="t(`sdklab.tabMessageOps`)">
         <div class="lab-field">
           <span>Message dispatch</span>
           <n-select v-model:value="sdk.sdkLab.dispatchOp" :options="sdk.messageDispatchOptions" filterable />
-          <n-input v-model:value="sdk.sdkLab.messageId" placeholder="message id，留空时使用当前会话最新消息" />
-          <n-input v-model:value="sdk.sdkLab.query" placeholder="搜索关键词" />
+          <n-input v-model:value="sdk.sdkLab.messageId" :placeholder="t(`sdklab.messageIdPlaceholder`)" />
+          <n-input v-model:value="sdk.sdkLab.query" :placeholder="t(`sdklab.searchKeyword`)" />
           <n-input v-model:value="sdk.sdkLab.reaction" placeholder="reaction / mark color" />
           <n-button type="primary" :loading="sdk.labBusy.value" @click="sdk.runDispatch()">Dispatch</n-button>
         </div>
         <pre class="drawer-json">{{ labResultText }}</pre>
       </n-tab-pane>
-      <n-tab-pane name="sync-presence" tab="同步/在线">
+      <n-tab-pane name="sync-presence" :tab="t(`sdklab.tabSyncPresence`)">
         <div class="lab-field">
           <span>Presence users</span>
-          <n-input v-model:value="sdk.sdkLab.userIds" placeholder="输入真实用户 ID，多个用逗号分隔" />
+          <n-input v-model:value="sdk.sdkLab.userIds" :placeholder="t(`sdklab.userIdsPlaceholder`)" />
         </div>
         <div class="lab-grid">
           <n-button secondary :loading="sdk.labBusy.value" @click="sdk.runSyncOperation('conversation')">Sync conversation</n-button>
@@ -211,7 +211,7 @@ function back(): void {
         </div>
         <pre class="drawer-json">{{ labResultText }}</pre>
       </n-tab-pane>
-      <n-tab-pane name="capability" tab="能力">
+      <n-tab-pane name="capability" :tab="t(`sdklab.tabCapability`)">
         <div class="lab-field">
           <span>Capability dispatch</span>
           <n-input v-model:value="sdk.sdkLab.capability" placeholder="rtc.call / plugin capability id" />
@@ -219,7 +219,7 @@ function back(): void {
           <n-input
             v-model:value="sdk.sdkLab.jsonParams"
             type="textarea"
-            placeholder='capability payload JSON，例如 {"roomId":"room-1"}'
+            :placeholder="t(`sdklab.capabilityPlaceholder`)"
             :autosize="{ minRows: 3, maxRows: 8 }"
           />
         </div>
@@ -233,7 +233,7 @@ function back(): void {
         </div>
         <pre class="drawer-json">{{ labResultText }}</pre>
       </n-tab-pane>
-      <n-tab-pane name="media" tab="媒体">
+      <n-tab-pane name="media" :tab="t(`sdklab.tabMedia`)">
         <div class="lab-field">
           <span>Media inputs</span>
           <n-input v-model:value="sdk.sdkLab.fileId" placeholder="file id / object key" />
@@ -266,11 +266,11 @@ function back(): void {
           <n-button secondary @click="sdk.runMediaOperation('cancel_download')">Cancel download</n-button>
           <n-button secondary @click="sdk.runMediaOperation('saved_path')">Saved path</n-button>
           <n-button secondary @click="sdk.runMediaOperation('delete_download')">Delete record</n-button>
-          <n-button secondary @click="sdk.runMediaOperation('clear')">清理媒体缓存</n-button>
+          <n-button secondary @click="sdk.runMediaOperation('clear')">{{ t("sdklab.clearMediaCache") }}</n-button>
         </div>
         <pre class="drawer-json">{{ labResultText }}</pre>
       </n-tab-pane>
-      <n-tab-pane name="events" tab="事件">
+      <n-tab-pane name="events" :tab="t(`sdklab.tabEvents`)">
         <div class="lab-grid">
           <n-button type="primary" :loading="sdk.labBusy.value" @click="sdk.runEventOperation()">
             Subscribe events

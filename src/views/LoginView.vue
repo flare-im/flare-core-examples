@@ -65,6 +65,7 @@ async function login(): Promise<void> {
       v-model:data-url="sdk.form.dataUrl"
       v-model:tenant-id="sdk.form.tenantId"
       :show-transport-selector="showTransportSelector"
+      :hide-token="true"
       :loading="sdk.busy.value"
       @login="login"
     />

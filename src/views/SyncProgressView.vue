@@ -3,9 +3,10 @@ import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { NButton, NIcon, NProgress, NTag, useMessage } from "naive-ui";
 import { ChatbubbleEllipsesOutline, CheckmarkCircleOutline, RefreshOutline } from "@vicons/ionicons5";
-import { useFlareSdk } from "@flare-im/vue-ui/app";
+import { useFlareI18n, useFlareSdk } from "@flare-im/vue-ui/app";
 
 const sdk = useFlareSdk();
+const { t } = useFlareI18n();
 const router = useRouter();
 const message = useMessage();
 const running = ref(false);
@@ -28,7 +29,7 @@ async function runSync(): Promise<void> {
     await router.replace({ name: "conversations" });
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
-    message.error(detail || "首页同步失败");
+    message.error(detail || t("workbench.homeSyncFailed"));
   } finally {
     running.value = false;
   }
@@ -65,28 +66,26 @@ onMounted(() => {
       <div class="sync-stats">
         <div>
           <strong>{{ sdk.conversations.value.length }}</strong>
-          <span>会话</span>
+          <span>{{ t("workbench.conversationsLabel") }}</span>
         </div>
         <div>
           <strong>{{ sdk.totalUnread.value }}</strong>
-          <span>未读</span>
+          <span>{{ t("workbench.unreadLabel") }}</span>
         </div>
         <div>
           <strong>{{ sdk.connectionState.value }}</strong>
-          <span>连接状态</span>
+          <span>{{ t("workbench.connectionState") }}</span>
         </div>
       </div>
 
       <div class="sync-footer">
         <n-tag :type="failed ? 'error' : done ? 'success' : 'info'" round>
-          {{ failed ? "同步失败" : done ? "已完成" : "同步中" }}
+          {{ failed ? t("chat.syncFailed") : done ? t("workbench.completed") : t("workbench.syncingState") }}
         </n-tag>
         <n-button v-if="failed" type="primary" :loading="running" @click="runSync">
           <template #icon>
             <n-icon :component="RefreshOutline" />
-          </template>
-          重试
-        </n-button>
+          </template>{{ t("common.retry") }}</n-button>
       </div>
     </section>
   </main>

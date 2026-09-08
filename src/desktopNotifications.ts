@@ -12,6 +12,7 @@ import {
   playDesktopNotificationSound,
   type DesktopNotificationPayload,
 } from "@flare-im/vue-ui/app";
+import { translateFlare } from "@flare-im/vue-ui/i18n";
 
 let permissionTask: Promise<boolean> | undefined;
 let trayTask: Promise<TrayIcon | null> | undefined;
@@ -29,7 +30,10 @@ export function configureTauriDesktopNotifications(): void {
       if (await ensureNotificationPermission()) {
         sendNotification({
           title: notificationText(payload.title, "Flare IM"),
-          body: notificationText(payload.body, "收到新的提醒"),
+          body: notificationText(
+            payload.body,
+            translateFlare("notifications.newAlert"),
+          ),
         });
       }
       if (payload.requireAttention !== false) {
@@ -58,7 +62,7 @@ function ensureTrayIcon(): Promise<TrayIcon | null> {
       items: [
         {
           id: "show",
-          text: "打开 Flare Core",
+          text: translateFlare("notifications.openApp"),
           action: () => {
             void revealMainWindow();
           },
@@ -103,7 +107,11 @@ async function updateTrayUnreadCount(count: number, trayOverride?: TrayIcon | nu
   if (!tray) return;
   const label = badgeLabel(count);
   await tray.setTitle(label || null);
-  await tray.setTooltip(label ? `Flare Core Tauri - ${label} 条未读` : "Flare Core Tauri");
+  await tray.setTooltip(
+    label
+      ? `Flare Core Tauri - ${translateFlare("notifications.trayUnread", { label })}`
+      : "Flare Core Tauri",
+  );
 }
 
 function ensureNotificationPermission(): Promise<boolean> {

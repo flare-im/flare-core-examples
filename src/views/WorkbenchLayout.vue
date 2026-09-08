@@ -32,7 +32,7 @@ import {
   useMessage,
 } from "naive-ui";
 import { useRoute, useRouter } from "vue-router";
-import { FlareStartConversationDialog, FlareWorkbenchShell } from "@flare-im/vue-ui/components";
+import { FlareFilterTabs, FlareStartConversationDialog, FlareWorkbenchShell } from "@flare-im/vue-ui/components";
 import type { FlareWorkbenchShellMode } from "@flare-im/vue-ui/contracts";
 import { provideFlareWorkbenchUi } from "@flare-im/vue-ui/composables";
 import { useFlareTheme, type FlareThemeMode, type FlareThemeVariant } from "@flare-im/vue-ui/theme";
@@ -149,7 +149,7 @@ const localeValue = computed({
   set: (value: FlareLocale) => setLocale(value),
 });
 
-const moreDrawerTitle = computed(() => (route.name === "chat" ? "聊天操作" : "更多"));
+const moreDrawerTitle = computed(() => (route.name === "chat" ? t("workbench.chatActions") : t("workbench.more")));
 const activeConversation = computed(() => sdk.activeConversation.value);
 const activeConversationUnread = computed(() => Math.max(0, Number(activeConversation.value?.unreadCount ?? 0) || 0));
 const activeConversationPinned = computed(() => Boolean(activeConversation.value?.isPinned));
@@ -160,28 +160,28 @@ const chatSearchCanSubmit = computed(() =>
   Boolean(sdk.activeConversationId.value && chatSearchQuery.value.trim() && !chatSearchLoading.value),
 );
 const chatSearchSummaryText = computed(() => {
-  if (chatSearchLoading.value) return "正在检索当前会话";
-  if (chatSearchError.value) return "搜索失败";
-  if (!chatSearchSearched.value) return "输入关键词开始搜索";
-  return `${chatSearchResults.value.length} 条结果`;
+  if (chatSearchLoading.value) return t("workbench.searchingCurrentConv");
+  if (chatSearchError.value) return t("workbench.searchFailed");
+  if (!chatSearchSearched.value) return t("workbench.searchStartHint");
+  return t("workbench.resultsCount", { count: chatSearchResults.value.length });
 });
 const chatSearchActiveConversationText = computed(() => {
   const target = activeConversation.value;
-  if (!target) return "未选择会话";
+  if (!target) return t("workbench.noConvSelected");
   return conversationTitle(target, sdk.currentUserId.value || sdk.form.userId) || target.conversationId;
 });
 const chatSearchLastKindLabel = computed(() =>
-  chatSearchKindOptions.find((option) => option.value === chatSearchLastKind.value)?.label ?? "全部",
+  chatSearchKindOptions.find((option) => option.value === chatSearchLastKind.value)?.label ?? t("workbench.kind.all"),
 );
 
 const chatSearchKindOptions = [
-  { label: "全部", value: "all", icon: ChatbubbleEllipsesOutline },
-  { label: "文本", value: "text", icon: DocumentTextOutline },
-  { label: "媒体", value: "media", icon: FileTrayOutline },
-  { label: "图片", value: "image", icon: ImageOutline },
-  { label: "视频", value: "video", icon: VideocamOutline },
-  { label: "音频", value: "audio", icon: MicOutline },
-  { label: "文件", value: "file", icon: FileTrayOutline },
+  { label: t("workbench.kind.all"), value: "all", icon: ChatbubbleEllipsesOutline },
+  { label: t("workbench.kind.text"), value: "text", icon: DocumentTextOutline },
+  { label: t("workbench.kind.media"), value: "media", icon: FileTrayOutline },
+  { label: t("workbench.kind.image"), value: "image", icon: ImageOutline },
+  { label: t("workbench.kind.video"), value: "video", icon: VideocamOutline },
+  { label: t("workbench.kind.audio"), value: "audio", icon: MicOutline },
+  { label: t("workbench.kind.file"), value: "file", icon: FileTrayOutline },
 ] satisfies Array<{ label: string; value: ChatSearchKindValue; icon: typeof SearchOutline }>;
 
 const connectionTone = computed(() => {
@@ -226,13 +226,13 @@ function chatSearchResultText(message: ChatSearchResultMessage): string {
 
 function chatSearchResultKindLabel(message: ChatSearchResultMessage & { readonly content?: { readonly contentType?: string } }): string {
   const type = message.content?.contentType ?? "";
-  if (type === "image") return "图片";
-  if (type === "video") return "视频";
-  if (type === "audio") return "音频";
-  if (type === "file") return "文件";
-  if (type === "sticker") return "贴纸";
-  if (type === "emoji") return "表情";
-  return "消息";
+  if (type === "image") return t("workbench.kind.image");
+  if (type === "video") return t("workbench.kind.video");
+  if (type === "audio") return t("workbench.kind.audio");
+  if (type === "file") return t("workbench.kind.file");
+  if (type === "sticker") return t("workbench.kind.sticker");
+  if (type === "emoji") return t("workbench.kind.emoji");
+  return t("workbench.kind.message");
 }
 
 function chatSearchResultIcon(message: ChatSearchResultMessage): typeof SearchOutline {
@@ -245,12 +245,12 @@ function chatSearchResultIcon(message: ChatSearchResultMessage): typeof SearchOu
 }
 
 function chatSearchResultSender(message: ChatSearchResultMessage): string {
-  return message.senderDisplayName?.trim() || message.senderName?.trim() || message.senderId || "未知成员";
+  return message.senderDisplayName?.trim() || message.senderName?.trim() || message.senderId || t("workbench.unknownMember");
 }
 
 function chatSearchResultTime(message: ChatSearchResultMessage): string {
   const timestamp = Number(message.createdAt || message.clientCreatedAt || 0);
-  if (!Number.isFinite(timestamp) || timestamp <= 0) return "刚刚";
+  if (!Number.isFinite(timestamp) || timestamp <= 0) return t("workbench.justNow");
   const date = new Date(timestamp);
   const now = new Date();
   const sameDay =
@@ -263,12 +263,12 @@ function chatSearchResultTime(message: ChatSearchResultMessage): string {
     hour12: false,
   }).format(date);
   if (sameDay) return time;
-  return `${date.getMonth() + 1}月${date.getDate()}日 ${time}`;
+  return t("workbench.monthDayTime", { month: date.getMonth() + 1, day: date.getDate(), time });
 }
 
 function chatSearchResultSeq(message: ChatSearchResultMessage): string {
   const seq = Number(message.conversationSeq);
-  return Number.isFinite(seq) && seq > 0 ? `seq ${seq}` : "本地消息";
+  return Number.isFinite(seq) && seq > 0 ? `seq ${seq}` : t("workbench.localMessage");
 }
 
 function openSearchResult(message: ChatSearchResultMessage): void {
@@ -336,7 +336,7 @@ async function searchMessages(): Promise<void> {
     return;
   }
   if (!sdk.activeConversationId.value) {
-    chatSearchError.value = "请先选择一个会话";
+    chatSearchError.value = t("workbench.selectOneConvFirst");
     return;
   }
   chatSearchLoading.value = true;
@@ -377,7 +377,7 @@ function operationErrorText(error: unknown, fallback: string): string {
 }
 
 function searchErrorText(error: unknown): string {
-  return operationErrorText(error, "搜索服务暂时不可用");
+  return operationErrorText(error, t("workbench.searchUnavailable"));
 }
 
 async function buildFromAction(op: string): Promise<void> {
@@ -385,7 +385,7 @@ async function buildFromAction(op: string): Promise<void> {
     await sdk.buildFromComposerAction(op, "");
     sdkBuildOpen.value = false;
   } catch (error) {
-    message.error(operationErrorText(error, "发送失败"));
+    message.error(operationErrorText(error, t("chat.sendFailed")));
   }
 }
 </script>
@@ -435,55 +435,55 @@ async function buildFromAction(op: string): Promise<void> {
       <section v-if="route.name === 'conversations'" class="account-sheet-header">
         <div class="account-avatar">{{ sdk.form.userId.slice(0, 1).toUpperCase() }}</div>
         <div>
-          <span>当前登录账号</span>
+          <span>{{ t("workbench.account") }}</span>
           <strong>{{ sdk.form.userId }}</strong>
         </div>
         <n-tag :type="connectionTone" round>{{ connectionText }}</n-tag>
       </section>
       <div class="more-action-list">
         <button v-if="route.name === 'conversations'" type="button" @click="startChatOpen = true; moreOpen = false">
-          <n-icon :component="AddOutline" /> 新建会话
+          <n-icon :component="AddOutline" /> {{ t("workbench.newChat") }}
         </button>
         <button v-if="route.name === 'chat'" type="button" @click="chatSearchOpen = true; moreOpen = false">
-          <n-icon :component="SearchOutline" /> 搜索消息
+          <n-icon :component="SearchOutline" /> {{ t("workbench.searchMessages") }}
         </button>
         <button v-if="route.name === 'conversations'" type="button" @click="conversationPullFromServer(); moreOpen = false">
-          <n-icon :component="SyncOutline" /> 从服务端拉取
+          <n-icon :component="SyncOutline" /> {{ t("workbench.pullFromServer") }}
         </button>
         <button v-if="route.name === 'chat'" type="button" @click="chatEnterLoadAndMarkRead(); moreOpen = false">
-          <n-icon :component="SyncOutline" /> 同步并标记已读
+          <n-icon :component="SyncOutline" /> {{ t("workbench.syncAndMarkRead") }}
         </button>
       </div>
       <div v-if="route.name === 'chat' && activeConversation" class="more-action-list more-action-list--grouped">
         <button type="button" @click="runActiveConversationAction(activeConversationUnread ? 'mark_read' : 'mark_unread')">
           <n-icon :component="activeConversationUnread ? CheckmarkDoneOutline : MailUnreadOutline" />
-          {{ activeConversationUnread ? "标为已读" : "标为未读" }}
+          {{ activeConversationUnread ? t("workbench.markRead") : t("workbench.markUnread") }}
         </button>
         <button type="button" @click="runActiveConversationAction(activeConversationPinned ? 'unpin' : 'pin')">
-          <n-icon :component="PinOutline" /> {{ activeConversationPinned ? "取消置顶" : "置顶会话" }}
+          <n-icon :component="PinOutline" /> {{ activeConversationPinned ? t("workbench.unpinConv") : t("workbench.pinConv") }}
         </button>
         <button type="button" @click="runActiveConversationAction(activeConversationMuted ? 'unmute' : 'mute')">
-          <n-icon :component="NotificationsOffOutline" /> {{ activeConversationMuted ? "取消免打扰" : "免打扰" }}
+          <n-icon :component="NotificationsOffOutline" /> {{ activeConversationMuted ? t("workbench.unmuteConv") : t("workbench.muteConv") }}
         </button>
         <button type="button" @click="runActiveConversationAction(activeConversationArchived ? 'unarchive' : 'archive')">
-          <n-icon :component="ArchiveOutline" /> {{ activeConversationArchived ? "取消归档" : "归档会话" }}
+          <n-icon :component="ArchiveOutline" /> {{ activeConversationArchived ? t("workbench.unarchiveConv") : t("workbench.archiveConv") }}
         </button>
         <button type="button" @click="runActiveConversationAction('clear_history')">
-          <n-icon :component="TrashOutline" /> 清空本地记录
+          <n-icon :component="TrashOutline" /> {{ t("workbench.clearLocalHistory") }}
         </button>
         <button type="button" class="more-action-danger" @click="runActiveConversationAction('delete')">
-          <n-icon :component="TrashOutline" /> 删除会话
+          <n-icon :component="TrashOutline" /> {{ t("workbench.deleteConv") }}
         </button>
       </div>
       <div class="more-action-list more-action-list--grouped">
         <button type="button" @click="navigate('sdk-lab'); moreOpen = false">
-          <n-icon :component="InformationCircleOutline" /> SDK 运行状态
+          <n-icon :component="InformationCircleOutline" /> {{ t("workbench.sdkRuntimeStatus") }}
         </button>
         <button type="button" @click="settingsOpen = true; moreOpen = false">
           <n-icon :component="SettingsOutline" /> {{ t("nav.settings") }}
         </button>
         <button type="button" class="more-action-danger" @click="logout(); moreOpen = false">
-          <n-icon :component="LogOutOutline" /> 退出登录
+          <n-icon :component="LogOutOutline" /> {{ t("common.logout") }}
         </button>
       </div>
     </template>
@@ -492,7 +492,7 @@ async function buildFromAction(op: string): Promise<void> {
       <form class="chat-search-panel" @submit.prevent="searchMessages">
         <header class="chat-search-panel__header">
           <div class="chat-search-panel__scope">
-            <span>当前会话</span>
+            <span>{{ t("workbench.currentConv") }}</span>
             <strong>{{ chatSearchActiveConversationText }}</strong>
           </div>
           <div class="chat-search-panel__summary">
@@ -507,7 +507,7 @@ async function buildFromAction(op: string): Promise<void> {
             round
             clearable
             :disabled="!sdk.activeConversationId.value"
-            placeholder="搜索聊天记录"
+            :placeholder="t(`workbench.searchChatHistory`)"
           >
             <template #prefix><n-icon :component="SearchOutline" /></template>
           </n-input>
@@ -516,25 +516,15 @@ async function buildFromAction(op: string): Promise<void> {
             attr-type="submit"
             :loading="chatSearchLoading"
             :disabled="!chatSearchCanSubmit"
-          >
-            搜索
-          </n-button>
+          >{{ t("workbench.searchBtn") }}</n-button>
         </div>
 
-        <div class="chat-search-panel__filters" role="tablist" aria-label="消息搜索类型">
-          <button
-            v-for="option in chatSearchKindOptions"
-            :key="option.value"
-            type="button"
-            role="tab"
-            :aria-selected="chatSearchKind === option.value"
-            :class="{ 'is-active': chatSearchKind === option.value }"
-            @click="selectChatSearchKind(option.value)"
-          >
-            <n-icon :component="option.icon" />
-            {{ option.label }}
-          </button>
-        </div>
+        <FlareFilterTabs
+          class="chat-search-panel__filters"
+          :options="chatSearchKindOptions"
+          :active="chatSearchKind"
+          @change="(v: string) => selectChatSearchKind(v as ChatSearchKindValue)"
+        />
 
         <div v-if="chatSearchSearched && !chatSearchError" class="chat-search-panel__meta">
           <span>{{ chatSearchLastKindLabel }}</span>
@@ -543,28 +533,28 @@ async function buildFromAction(op: string): Promise<void> {
 
         <div v-if="!sdk.activeConversationId.value" class="chat-search-panel__state">
           <n-icon :component="ChatbubbleEllipsesOutline" />
-          <strong>未选择会话</strong>
-          <span>暂无可搜索内容</span>
+          <strong>{{ t("workbench.noConvSelected") }}</strong>
+          <span>{{ t("workbench.searchNoContent") }}</span>
         </div>
         <div v-else-if="chatSearchError" class="chat-search-panel__state chat-search-panel__state--error">
           <n-icon :component="AlertCircleOutline" />
-          <strong>搜索失败</strong>
+          <strong>{{ t("workbench.searchFailed") }}</strong>
           <span>{{ chatSearchError }}</span>
         </div>
         <div v-else-if="chatSearchLoading" class="chat-search-panel__state">
           <span class="chat-search-panel__spinner" />
-          <strong>正在搜索</strong>
-          <span>正在从当前会话检索匹配消息</span>
+          <strong>{{ t("workbench.searchingTitle") }}</strong>
+          <span>{{ t("workbench.searchingHint") }}</span>
         </div>
         <div v-else-if="!chatSearchSearched" class="chat-search-panel__state chat-search-panel__state--idle">
           <n-icon :component="SearchOutline" />
-          <strong>搜索当前会话</strong>
-          <span>输入关键词开始搜索</span>
+          <strong>{{ t("workbench.searchCurrentConvTitle") }}</strong>
+          <span>{{ t("workbench.searchStartHint") }}</span>
         </div>
         <div v-else-if="!chatSearchResults.length" class="chat-search-panel__state">
           <n-icon :component="SearchOutline" />
-          <strong>没有找到相关消息</strong>
-          <span>换个关键词或类型再试试</span>
+          <strong>{{ t("workbench.noRelatedMsg") }}</strong>
+          <span>{{ t("workbench.tryOtherKeyword") }}</span>
         </div>
         <div v-else class="chat-search-results" role="list">
           <button
@@ -634,30 +624,30 @@ async function buildFromAction(op: string): Promise<void> {
   <n-modal v-model:show="settingsOpen" preset="card" :title="t('nav.settings')" style="max-width: 420px">
     <div class="settings-form">
       <label class="settings-field">
-        <span>主题模式</span>
+        <span>{{ t("workbench.themeMode") }}</span>
         <n-select
           v-model:value="themeModeValue"
           :options="[
-            { label: '跟随系统', value: 'system' },
-            { label: '浅色', value: 'light' },
-            { label: '深色', value: 'dark' },
+            { label: t('workbench.themeOpt.system'), value: 'system' },
+            { label: t('workbench.themeOpt.light'), value: 'light' },
+            { label: t('workbench.themeOpt.dark'), value: 'dark' },
           ]"
         />
       </label>
       <label class="settings-field">
-        <span>主题变体</span>
+        <span>{{ t("workbench.themeVariant") }}</span>
         <n-select
           v-model:value="themeVariantValue"
           :options="[
-            { label: '默认', value: 'default' },
-            { label: '紧凑', value: 'compact' },
-            { label: '通话深色', value: 'callDark' },
-            { label: '高对比', value: 'highContrast' },
+            { label: t('workbench.variantOpt.default'), value: 'default' },
+            { label: t('workbench.variantOpt.compact'), value: 'compact' },
+            { label: t('workbench.variantOpt.callDark'), value: 'callDark' },
+            { label: t('workbench.variantOpt.highContrast'), value: 'highContrast' },
           ]"
         />
       </label>
       <label class="settings-field">
-        <span>语言</span>
+        <span>{{ t("workbench.language") }}</span>
         <n-select
           v-model:value="localeValue"
           :options="[

@@ -21,6 +21,7 @@ import {
   FlareChatHeaderIdentity as ChatConversationHeaderIdentity,
   FlareComposer as EnhancedComposer,
   FlareComposerEmojiStickerPanel as ComposerEmojiStickerPanel,
+  FlareEmptyState,
   FlareMessageList as MessageList,
   FlarePinnedMessageBar as PinnedMessageBar,
 } from "@flare-im/vue-ui/components";
@@ -478,7 +479,7 @@ async function ensureMessageLocated(messageId: string): Promise<boolean> {
       await sdk.loadOlderMessages();
     } catch (error) {
       const detail = error instanceof Error ? error.message : String(error);
-      message.error(detail || "加载历史消息失败");
+      message.error(detail || t("chat.loadHistoryFailed"));
       return false;
     }
     await nextTick();
@@ -584,7 +585,7 @@ function prepareComposerSend(): void {
 }
 
 function composerSendTimeoutError(): Error {
-  const error = new Error("发送超时，请检查网络后重试");
+  const error = new Error(t("chat.sendTimeout"));
   (error as Error & { code?: string; operation?: string; details?: Record<string, string> }).code = "timeout";
   (error as Error & { code?: string; operation?: string; details?: Record<string, string> }).operation = "composer.send";
   (error as Error & { code?: string; operation?: string; details?: Record<string, string> }).details = {
@@ -602,12 +603,12 @@ function titleFromRichMarkdown(markdown: string): string {
     .split(/\r?\n/)
     .map((line) => line.trim())
     .find(Boolean) ?? "";
-  return (firstLine || "富文本").slice(0, 48);
+  return (firstLine || t("chat.richTextFallback")).slice(0, 48);
 }
 
 function buildRichTextPayload(markdown: string): ComposerPayloadRequest {
   const action = resolveComposerAction("create_rich_doc");
-  if (!action) throw new Error("富文本构建器不可用");
+  if (!action) throw new Error(t("chat.richTextBuilderUnavailable"));
   return action.buildRequest({
     markdown,
     title: titleFromRichMarkdown(markdown),
@@ -621,11 +622,11 @@ function textLooksLikeRichMarkdown(text: string): boolean {
 async function sendText(): Promise<void> {
   const text = composerText.value.trim();
   if (!text) {
-    message.warning("请输入要发送的内容");
+    message.warning(t("chat.inputRequired"));
     return;
   }
   if (!sdk.activeConversationId.value) {
-    message.warning("请先选择会话");
+    message.warning(t("chat.selectConversationFirst"));
     return;
   }
   if (sending.value) return;
@@ -668,7 +669,7 @@ async function sendText(): Promise<void> {
     await messageListRef.value?.scrollToBottom();
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
-    message.error(detail || "发送失败");
+    message.error(detail || t("chat.sendFailed"));
     if (!composerText.value.trim()) {
       setComposerTextSilently(text);
       void flushComposerDraftNow(sdk.activeConversationId.value, text);
@@ -683,7 +684,7 @@ async function reactMessage(id: string, emoji: string): Promise<void> {
     await operations.toggleReaction(id, emoji);
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
-    message.error(detail || "表情回应失败");
+    message.error(detail || t("chat.reactionFailed"));
   }
 }
 
@@ -698,19 +699,19 @@ async function recallMessage(id: string): Promise<void> {
     if (editingMessageId.value === id) cancelEditingMessage();
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
-    message.error(detail || "撤回失败");
+    message.error(detail || t("chat.recallFailed"));
   }
 }
 
 function editMessage(id: string): void {
   const target = findMessage(id);
   if (!target) {
-    message.warning("未找到要编辑的消息");
+    message.warning(t("chat.editTargetMissing"));
     return;
   }
   const text = getMessageText(target).trim();
   if (!text) {
-    message.warning("这条消息暂无可编辑文本");
+    message.warning(t("chat.editNoText"));
     return;
   }
   editingMessageId.value = id;
@@ -732,12 +733,12 @@ async function markMessage(id: string): Promise<void> {
 
 async function deleteMessage(id: string): Promise<void> {
   const result = await operations.deleteMessagesForSelf([id]);
-  showBatchResult("删除", result);
+  showBatchResult(t("chat.opDelete"), result);
 }
 
 async function pinMessage(id: string, pinned: boolean, scope: MessagePinScope = "conversation"): Promise<void> {
   const result = await operations.setMessagesPinned([id], pinned, scope);
-  showBatchResult(pinned ? "置顶" : "取消置顶", result);
+  showBatchResult(pinned ? t("chat.opPin") : t("chat.opUnpin"), result);
 }
 
 function startReply(id: string): void {
@@ -769,28 +770,42 @@ function forwardSelected(merge: boolean): void {
 
 async function deleteSelectedForSelf(): Promise<void> {
   const result = await operations.deleteMessagesForSelf(selectedMessageIds.value);
-  showBatchResult("删除", result);
+  showBatchResult(t("chat.opDelete"), result);
   if (!result.failed.length) exitMultiSelect();
 }
 
 async function pinSelected(): Promise<void> {
   const result = await operations.setMessagesPinned(selectedMessageIds.value, true, "conversation");
-  showBatchResult("置顶", result);
+  showBatchResult(t("chat.opPin"), result);
   if (!result.failed.length) exitMultiSelect();
 }
 
 async function pinSelectedForSelf(): Promise<void> {
   const result = await operations.setMessagesPinned(selectedMessageIds.value, true, "self");
-  showBatchResult("仅自己置顶", result);
+  showBatchResult(t("chat.opPinSelf"), result);
   if (!result.failed.length) exitMultiSelect();
 }
 
 function showBatchResult(action: string, result: BatchOperationResult): void {
   if (result.failed.length) {
-    message.error(`${action}完成 ${result.succeeded.length}/${result.total}，失败 ${result.failed.length} 项：${result.failed[0]?.reason ?? ""}`);
+    message.error(
+      t("chat.batchPartial", {
+        action,
+        succeeded: result.succeeded.length,
+        total: result.total,
+        failed: result.failed.length,
+        reason: result.failed[0]?.reason ?? "",
+      }),
+    );
     return;
   }
-  message.success(`${action}成功 ${result.succeeded.length}/${result.total}`);
+  message.success(
+    t("chat.batchSuccess", {
+      action,
+      succeeded: result.succeeded.length,
+      total: result.total,
+    }),
+  );
 }
 
 function openPreview(id: string): void {
@@ -873,7 +888,7 @@ async function downloadMediaSource(source: MessageMediaDownloadSource): Promise<
     const savedPath = savedPathFromResponse(response);
     if (savedPath) {
       setMediaDownloadState(source, "downloaded");
-      message.success("已下载");
+      message.success(t("chat.downloaded"));
       return;
     }
   } catch (error) {
@@ -886,7 +901,7 @@ async function downloadMediaSource(source: MessageMediaDownloadSource): Promise<
   const browserUrl = await resolveBrowserDownloadUrl(source);
   if (!browserUrl) {
     setMediaDownloadState(source, "notDownloaded");
-    throw new Error("没有可下载地址");
+    throw new Error(t("chat.noDownloadUrl"));
   }
   try {
     await startBrowserDownload(browserUrl, source.displayFileName);
@@ -919,7 +934,7 @@ async function openDownloadedMediaFolder(source: MessageMediaDownloadSource): Pr
       fileId: source.fileId,
     });
     setMediaDownloadState(source, "notDownloaded");
-    message.warning("本地文件不存在，请重新下载");
+    message.warning(t("chat.localFileMissing"));
   } catch (error) {
     if (!isNativeDownloadUnsupported(error)) {
       throw error;
@@ -943,7 +958,7 @@ async function handleMediaAction(id: string, action: MediaDownloadAction): Promi
     }
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
-    message.error(detail || "下载失败");
+    message.error(detail || t("chat.downloadFailed"));
   }
 }
 
@@ -1148,7 +1163,7 @@ async function sendMediaPreview(description: string): Promise<void> {
 
 async function buildFromAction(op: string): Promise<void> {
   if (!sdk.activeConversationId.value) {
-    message.warning("请先选择会话");
+    message.warning(t("chat.selectConversationFirst"));
     return;
   }
   const action = resolveComposerAction(op);
@@ -1177,7 +1192,7 @@ async function buildFromAction(op: string): Promise<void> {
     await messageListRef.value?.scrollToBottom();
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
-    message.error(detail || "发送失败");
+    message.error(detail || t("chat.sendFailed"));
   } finally {
     sending.value = false;
   }
@@ -1198,10 +1213,10 @@ async function sendComposerPayload(
     clearComposerDraft();
     composerPanel.value = null;
     await messageListRef.value?.scrollToBottom();
-    message.success(`${payload.previewText} 已发送`);
+    message.success(t("chat.sentSuffix", { preview: payload.previewText }));
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
-    message.error(detail || "发送失败");
+    message.error(detail || t("chat.sendFailed"));
     if (options.rethrow) throw error;
   } finally {
     sending.value = false;
@@ -1216,7 +1231,7 @@ async function confirmForward(payload: { targetConversationId: string; title: st
     title: payload.title,
     messageIds: selectedMessageIds.value,
   });
-  showBatchResult(mode === "merged" ? "合并转发" : "逐条转发", result);
+  showBatchResult(mode === "merged" ? t("chat.forwardMerged") : t("chat.forwardEach"), result);
   if (!result.failed.length) {
     interactions.closeForward();
     exitMultiSelect();
@@ -1231,7 +1246,7 @@ async function resendMessage(clientMsgId: string): Promise<void> {
     await messageListRef.value?.scrollToBottom();
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
-    message.error(detail || "重发失败");
+    message.error(detail || t("chat.resendFailed"));
   } finally {
     sending.value = false;
   }
@@ -1261,7 +1276,7 @@ function onSendStickerFromPanel(payload: { picks: ComposerStickerSendPick[] }): 
 
 async function sendStickerItem(sticker: ComposerStickerSendPick): Promise<void> {
   if (!sdk.activeConversationId.value) {
-    message.warning("请先选择会话");
+    message.warning(t("chat.selectConversationFirst"));
     return;
   }
   try {
@@ -1274,7 +1289,7 @@ async function sendStickerItem(sticker: ComposerStickerSendPick): Promise<void> 
     await messageListRef.value?.scrollToBottom();
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
-    message.error(detail || "贴纸发送失败");
+    message.error(detail || t("chat.stickerFailed"));
   }
 }
 
@@ -1344,7 +1359,7 @@ async function syncEmptyChat(): Promise<void> {
     await messageListRef.value?.scrollToBottom();
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
-    message.error(detail || "同步失败");
+    message.error(detail || t("chat.syncFailed"));
   }
 }
 
@@ -1353,7 +1368,7 @@ async function loadOlderMessages(): Promise<void> {
     await sdk.loadOlderMessages();
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
-    message.error(detail || "加载历史消息失败");
+    message.error(detail || t("chat.loadHistoryFailed"));
   }
 }
 
@@ -1375,7 +1390,7 @@ async function focusPinnedMessage(messageId: string): Promise<void> {
         <n-button
           circle
           quaternary
-          :aria-label="multiSelectMode ? '退出多选' : '返回会话列表'"
+          :aria-label="multiSelectMode ? t(`chat.exitMultiSelect`) : t(`chat.backToList`)"
           :class="{ 'chat-nav-back': !multiSelectMode }"
           @click="back"
         >
@@ -1395,7 +1410,7 @@ async function focusPinnedMessage(messageId: string): Promise<void> {
       </template>
       <template #actions>
         <template v-if="multiSelectMode">
-          <n-button circle quaternary :disabled="operationBusy || allSelected" title="全选" @click="interactions.selectAll">
+          <n-button circle quaternary :disabled="operationBusy || allSelected" :title="t(`chat.selectAll`)" @click="interactions.selectAll">
             <template #icon><n-icon :component="LibraryOutline" /></template>
           </n-button>
           <n-button circle quaternary :disabled="!selectedMessageIds.length" @click="forwardSelected(false)">
@@ -1407,7 +1422,7 @@ async function focusPinnedMessage(messageId: string): Promise<void> {
           <n-button circle quaternary :disabled="!selectedMessageIds.length" @click="pinSelected">
             <template #icon><n-icon :component="PinOutline" /></template>
           </n-button>
-          <n-button circle quaternary :disabled="!selectedMessageIds.length" title="仅自己置顶" @click="pinSelectedForSelf">
+          <n-button circle quaternary :disabled="!selectedMessageIds.length" :title="t(`chat.opPinSelf`)" @click="pinSelectedForSelf">
             <template #icon><n-icon :component="PinOutline" /></template>
           </n-button>
           <n-button circle quaternary :disabled="!selectedMessageIds.length" @click="deleteSelectedForSelf">
@@ -1415,19 +1430,19 @@ async function focusPinnedMessage(messageId: string): Promise<void> {
           </n-button>
         </template>
         <template v-else>
-          <n-button circle quaternary title="语音信令" @click="sdk.runCapabilityOperation('call_signal')">
+          <n-button circle quaternary :title="t(`chat.voiceSignal`)" @click="sdk.runCapabilityOperation('call_signal')">
             <template #icon><n-icon :component="CallOutline" /></template>
           </n-button>
-          <n-button circle quaternary title="视频信令" @click="sdk.runCapabilityOperation('call_signal')">
+          <n-button circle quaternary :title="t(`chat.videoSignal`)" @click="sdk.runCapabilityOperation('call_signal')">
             <template #icon><n-icon :component="VideocamOutline" /></template>
           </n-button>
-          <n-button circle quaternary title="搜索消息" @click="workbenchUi.openChatSearch()">
+          <n-button circle quaternary :title="t(`chat.searchMessages`)" @click="workbenchUi.openChatSearch()">
             <template #icon><n-icon :component="SearchOutline" /></template>
           </n-button>
-          <n-button circle quaternary title="SDK 消息类型" @click="workbenchUi.openSdkBuild()">
+          <n-button circle quaternary :title="t(`chat.sdkMessageType`)" @click="workbenchUi.openSdkBuild()">
             <template #icon><n-icon :component="LibraryOutline" /></template>
           </n-button>
-          <n-button circle quaternary title="更多" @click="workbenchUi.openMore()">
+          <n-button circle quaternary :title="t(`chat.more`)" @click="workbenchUi.openMore()">
             <template #icon><n-icon :component="EllipsisHorizontalOutline" /></template>
           </n-button>
         </template>
@@ -1488,24 +1503,19 @@ async function focusPinnedMessage(messageId: string): Promise<void> {
         @focus="focusPinnedMessage"
       />
       <template v-else>
-        <section
+        <FlareEmptyState
           v-if="!sdk.messages.value.length"
           class="flutter-empty chat-empty"
-          :class="{
-            'chat-empty--error': chatEmptyState.error,
-            'chat-empty--loading': chatEmptyState.loading,
-            'chat-empty--clickable': !chatEmptyState.loading,
-          }"
-          :role="chatEmptyState.loading ? 'status' : 'button'"
-          :tabindex="chatEmptyState.loading ? undefined : 0"
-          @click="!chatEmptyState.loading ? syncEmptyChat() : undefined"
-          @keydown.enter="!chatEmptyState.loading ? syncEmptyChat() : undefined"
+          :tone="chatEmptyState.error ? 'error' : 'normal'"
+          :loading="chatEmptyState.loading"
+          :title="chatEmptyState.title"
+          :description="chatEmptyState.detail"
+          v-on="chatEmptyState.loading ? {} : { tap: syncEmptyChat }"
         >
-          <span v-if="chatEmptyState.loading" class="chat-empty__spinner" aria-hidden="true" />
-          <n-icon v-else :component="ChatbubbleEllipsesOutline" :size="56" />
-          <strong>{{ chatEmptyState.title }}</strong>
-          <span>{{ chatEmptyState.detail }}</span>
-        </section>
+          <template #icon>
+            <n-icon :component="ChatbubbleEllipsesOutline" :size="56" />
+          </template>
+        </FlareEmptyState>
         <MessageList
           v-else
           ref="messageListRef"
@@ -1556,7 +1566,7 @@ async function focusPinnedMessage(messageId: string): Promise<void> {
         v-if="mediaPanelOpen"
         type="button"
         class="chat-media-dismiss"
-        aria-label="关闭表情与贴纸面板"
+        :aria-label="t(`chat.closeEmojiPanel`)"
         @click="dismissMediaPanel"
       />
     </div>

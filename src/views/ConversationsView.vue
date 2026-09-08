@@ -4,6 +4,7 @@ import { AddOutline, ChatbubbleEllipsesOutline, CloseOutline, EllipsisHorizontal
 import { NButton, NIcon, NInput } from "naive-ui";
 import { useRouter } from "vue-router";
 import type { FlareConversationAction } from "@flare-im/vue-ui/contracts";
+import { FlareEmptyState, FlareFilterTabs, FlareStatusBanner } from "@flare-im/vue-ui/components";
 import { useFlareWorkbenchUi } from "@flare-im/vue-ui/composables";
 import {
   ConversationList,
@@ -12,6 +13,21 @@ import {
   useFlareI18n,
 } from "@flare-im/vue-ui/app";
 import type { ConversationFilter } from "@flare-im/vue-ui/composables/sdk";
+
+type FlareBannerTone = "info" | "success" | "warning" | "danger" | "neutral";
+function statusTone(tone: string | undefined): FlareBannerTone {
+  switch (tone) {
+    case "success":
+    case "warning":
+    case "danger":
+    case "neutral":
+      return tone;
+    case "error":
+      return "danger";
+    default:
+      return "info";
+  }
+}
 
 const router = useRouter();
 const workbenchUi = useFlareWorkbenchUi();
@@ -39,7 +55,7 @@ const conversationStats = computed(() => {
 
 const conversationStatusText = computed(() => {
   const stats = conversationStats.value;
-  return `${stats.total} 会话 · ${stats.pinned} 置顶 · ${stats.state}`;
+  return `${stats.total} ${t("conversation.countUnit")} · ${stats.pinned} ${t("conversation.pinnedUnit")} · ${stats.state}`;
 });
 
 async function selectConversation(id: string): Promise<void> {
@@ -79,34 +95,26 @@ async function runConversationAction(action: FlareConversationAction, id: string
         <n-button
           circle
           secondary
-          :aria-label="conversationSearchOpen ? '关闭会话搜索' : '搜索会话'"
+          :aria-label="conversationSearchOpen ? t('conversation.searchClose') : t('conversation.searchOpen')"
           @click="conversationSearchOpen = !conversationSearchOpen"
         >
           <template #icon><n-icon :component="conversationSearchOpen ? CloseOutline : SearchOutline" /></template>
         </n-button>
-        <n-button circle type="primary" aria-label="新建会话" @click="workbenchUi.openStartChat()">
+        <n-button circle type="primary" :aria-label="t('conversation.newChat')" @click="workbenchUi.openStartChat()">
           <template #icon><n-icon :component="AddOutline" /></template>
         </n-button>
-        <n-button circle secondary aria-label="更多会话操作" @click="workbenchUi.openMore()">
+        <n-button circle secondary :aria-label="t('conversation.moreActions')" @click="workbenchUi.openMore()">
           <template #icon><n-icon :component="EllipsisHorizontalOutline" /></template>
         </n-button>
       </div>
     </header>
 
-    <div class="conversation-filter-row" role="tablist" aria-label="Conversation filters">
-      <button
-        v-for="option in filterOptions"
-        :key="option.value"
-        type="button"
-        class="conversation-filter"
-        :class="{ 'conversation-filter--active': activeFilter === option.value }"
-        role="tab"
-        :aria-selected="activeFilter === option.value"
-        @click="onFilterChange(option.value)"
-      >
-        {{ option.label }}
-      </button>
-    </div>
+    <FlareFilterTabs
+      class="conversation-filter-tabs"
+      :options="filterOptions"
+      :active="activeFilter"
+      @change="(v: string) => onFilterChange(v as ConversationFilter)"
+    />
 
     <div v-if="conversationSearchOpen" class="flutter-search">
       <n-input
@@ -120,11 +128,13 @@ async function runConversationAction(action: FlareConversationAction, id: string
       </n-input>
     </div>
 
-    <section v-if="runtimeStatus.show" class="runtime-status-banner" :class="`runtime-status-banner--${runtimeStatus.tone}`">
-      <span class="runtime-status-dot" :class="{ 'runtime-status-dot--busy': runtimeStatus.busy }" />
-      <strong>{{ runtimeStatus.title }}</strong>
-      <span>{{ runtimeStatus.detail }}</span>
-    </section>
+    <FlareStatusBanner
+      v-if="runtimeStatus.show"
+      class="runtime-status-tabs-banner"
+      :text="[runtimeStatus.title, runtimeStatus.detail].filter(Boolean).join(' · ')"
+      :tone="statusTone(runtimeStatus.tone)"
+      :pulse="runtimeStatus.busy"
+    />
 
     <div class="flutter-divider" />
 
@@ -134,20 +144,22 @@ async function runConversationAction(action: FlareConversationAction, id: string
         class="flutter-empty conversation-loading"
         role="status"
       >
-        <span class="chat-empty__spinner" aria-hidden="true" />
-        <strong>{{ t("connection.syncConversations") }}</strong>
-        <span>{{ t("connection.syncDetail") }}</span>
+        <FlareEmptyState
+          loading
+          :title="t('connection.syncConversations')"
+          :description="t('connection.syncDetail')"
+        />
       </section>
 
       <section v-else-if="!visibleConversations.pinned.length && !visibleConversations.rest.length" class="flutter-empty">
-        <n-icon :component="ChatbubbleEllipsesOutline" :size="56" />
-        <strong>{{ conversationSearchQuery ? t("conversation.emptySearchTitle") : t("conversation.emptyTitle") }}</strong>
-        <span>{{ conversationSearchQuery ? t("conversation.emptySearchHint") : t("conversation.emptyHint") }}</span>
-        <div v-if="!conversationSearchQuery" class="conversation-empty-actions">
-          <n-button type="primary" round @click="workbenchUi.openStartChat()">
-            {{ t("conversation.startChat") }}
-          </n-button>
-        </div>
+        <FlareEmptyState
+          :title="conversationSearchQuery ? t('conversation.emptySearchTitle') : t('conversation.emptyTitle')"
+          :description="conversationSearchQuery ? t('conversation.emptySearchHint') : t('conversation.emptyHint')"
+          :action-text="conversationSearchQuery ? undefined : t('conversation.startChat')"
+          @action="workbenchUi.openStartChat()"
+        >
+          <template #icon><n-icon :component="ChatbubbleEllipsesOutline" :size="56" /></template>
+        </FlareEmptyState>
       </section>
 
       <template v-else>
