@@ -1,4 +1,5 @@
 import path from "node:path";
+import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 import vue from "@vitejs/plugin-vue";
@@ -72,6 +73,11 @@ export default createFlareCoreWebAppViteConfig({
   loadEnv,
   vuePlugin: vue,
   extraAliases: [
+    ...(process.env.FLARE_USE_PUBLISHED_KIT !== "true" && existsSync(path.resolve(__dirname, "../../../flare-im-design/tokens/dist/tokens.js")) ? [
+      { find: "@flare-im/tokens/tokens.css", replacement: path.resolve(__dirname, "../../../flare-im-design/tokens/dist/tokens.css") },
+      { find: "@flare-im/tokens/theme", replacement: path.resolve(__dirname, "../../../flare-im-design/tokens/theme.js") },
+      { find: "@flare-im/tokens", replacement: path.resolve(__dirname, "../../../flare-im-design/tokens/dist/tokens.js") },
+    ] : []),
     {
       find: "@flare-im/sdk/transport",
       replacement: path.join(typeScriptSdkRoot, "adapters/_shared/transportProfile.ts"),

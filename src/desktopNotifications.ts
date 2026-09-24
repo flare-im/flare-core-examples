@@ -7,12 +7,14 @@ import {
   requestPermission,
   sendNotification,
 } from "@tauri-apps/plugin-notification";
-import {
-  configureDesktopNotifications,
-  playDesktopNotificationSound,
-  type DesktopNotificationPayload,
-} from "@flare-im/vue-ui/app";
 import { translateFlare } from "@flare-im/vue-ui/i18n";
+
+type DesktopNotificationPayload = {
+  title: string;
+  body: string;
+  kind?: "message" | "call";
+  requireAttention?: boolean;
+};
 
 let permissionTask: Promise<boolean> | undefined;
 let trayTask: Promise<TrayIcon | null> | undefined;
@@ -22,31 +24,23 @@ const trayId = "flare-core-tauri-tray";
 
 export function configureTauriDesktopNotifications(): void {
   void ensureTrayIcon();
-  configureDesktopNotifications({
-    async notify(payload) {
-      if (payload.playSound !== false) {
-        await playDesktopNotificationSound(payload.kind);
-      }
-      if (await ensureNotificationPermission()) {
-        sendNotification({
-          title: notificationText(payload.title, "Flare IM"),
-          body: notificationText(
-            payload.body,
-            translateFlare("notifications.newAlert"),
-          ),
-        });
-      }
-      if (payload.requireAttention !== false) {
-        await requestAttention(payload);
-      }
-    },
-    async setUnreadCount(count) {
-      const normalized = Math.max(0, Math.trunc(count));
-      currentUnreadCount = normalized;
-      await getCurrentWindow().setBadgeCount(normalized > 0 ? normalized : undefined);
-      await updateTrayUnreadCount(normalized);
-    },
-  });
+}
+
+export async function notifyDesktop(payload: DesktopNotificationPayload): Promise<void> {
+  if (await ensureNotificationPermission()) {
+    sendNotification({
+      title: notificationText(payload.title, "Flare IM"),
+      body: notificationText(payload.body, translateFlare("notifications.newAlert")),
+    });
+  }
+  if (payload.requireAttention !== false) await requestAttention(payload);
+}
+
+export async function setDesktopUnreadCount(count: number): Promise<void> {
+  const normalized = Math.max(0, Math.trunc(count));
+  currentUnreadCount = normalized;
+  await getCurrentWindow().setBadgeCount(normalized > 0 ? normalized : undefined);
+  await updateTrayUnreadCount(normalized);
 }
 
 function ensureTrayIcon(): Promise<TrayIcon | null> {

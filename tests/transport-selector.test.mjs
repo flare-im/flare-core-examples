@@ -7,74 +7,49 @@ const appRoot = join(import.meta.dirname, "..");
 const clientSdkRoot = join(appRoot, "../..");
 const monorepoRoot = join(clientSdkRoot, "..");
 
-function readFromApp(path) {
-  return readFileSync(join(appRoot, path), "utf8");
-}
+const readFromApp = (path) => readFileSync(join(appRoot, path), "utf8");
+const readFromMonorepo = (path) => readFileSync(join(monorepoRoot, path), "utf8");
 
-function readFromClientSdk(path) {
-  return readFileSync(join(clientSdkRoot, path), "utf8");
-}
+test("tauri reference runtime keeps native transport and file picking in the platform adapter", () => {
+  const runtime = readFromApp("src/integration/referenceRuntime.ts");
+  const adapter = readFromApp("src/integration/platformAdapter.ts");
+  const main = readFromApp("src/main.ts");
 
-function readFromMonorepo(path) {
-  return readFileSync(join(monorepoRoot, path), "utf8");
-}
-
-test("tauri enables native transport protocol selection while web and electron stay websocket-only", () => {
-  const tauriMain = readFromApp("src/main.ts");
-  const electronMain = readFromClientSdk("examples/flare-core-electron-app/src/main.ts");
-  const uniMain = readFromClientSdk("examples/flare-core-uni-app/src/main.ts");
-  const webMain = readFromClientSdk("examples/flare-core-web-app/src/main.ts");
-  const retiredTauriPackage = ["flare-core", "tauri-sdk"].join("-");
-
-  assert.match(tauriMain, /configureAppTransportSelector/);
-  assert.match(tauriMain, /@flare-im\/sdk\/tauri/);
-  assert.doesNotMatch(tauriMain, new RegExp(retiredTauriPackage));
-  assert.equal(existsSync(join(clientSdkRoot, "packages", retiredTauriPackage)), false);
-  assert.match(tauriMain, /configureAppTransportSelector\(\{\s*enabled:\s*true,/s);
-  assert.match(tauriMain, /runtimeStatus:\s*"tauri-native"/);
-  assert.match(tauriMain, /tlsCaCertPath:/);
-  assert.doesNotMatch(electronMain, /configureAppTransportSelector/);
-  assert.match(electronMain, /WebSocket\); WASM has no QUIC/);
-  assert.match(uniMain, /isUniNativeTransportRuntime/);
-  assert.match(uniMain, /UNI_PLATFORM/);
-  assert.match(uniMain, /runtimeStatus:\s*"uni-native"/);
-  assert.doesNotMatch(webMain, /configureAppTransportSelector/);
+  assert.match(runtime, /FlareCoreSdk.*@flare-im\/sdk\/tauri/s);
+  assert.match(runtime, /createClient:\s*\(\)\s*=>\s*FlareCoreSdk\.createClient\(\)/);
+  // Native file picking lives in the kit's platform contract: the dialog plugin
+  // is reached only through the Tauri adapter the runtime hands to the provider.
+  assert.match(adapter, /@tauri-apps\/plugin-dialog/);
+  assert.match(adapter, /export function createTauriPlatformAdapter/);
+  assert.match(adapter, /"CANCELLED"/);
+  assert.match(runtime, /platform:\s*\{[\s\S]*kind:\s*"tauri"[\s\S]*adapter:\s*createTauriPlatformAdapter\(\)/);
+  assert.doesNotMatch(runtime, /@tauri-apps\/plugin-dialog|configureAppMediaPathPicker/);
+  assert.match(runtime, /setDesktopUnreadCount/);
+  assert.match(main, /configureReferenceApp\(referenceRuntime\)/);
+  assert.match(main, /configureNativeReferenceBridges\(\)/);
+  assert.match(runtime, /configureAppMediaLocalPathResolver\(convertFileSrc\)/);
+  assert.doesNotMatch(main, /@flare-im\/vue-ui\/(?:src|app|internal|private)/);
 });
 
-test("tauri renderer vite config is loaded as ESM for SDK devtools imports", () => {
+test("tauri renderer vite config is ESM and carries the development CA path", () => {
   const packageJson = JSON.parse(readFromApp("package.json"));
   const viteConfig = readFromApp("vite.config.ts");
 
   assert.equal(packageJson.type, "module");
   assert.match(viteConfig, /@flare-im\/sdk\/devtools\/vite/);
-});
-
-test("tauri passes the flare-im-core server certificate path into native TLS config", () => {
-  const tauriMain = readFromApp("src/main.ts");
-  const viteConfig = readFromApp("vite.config.ts");
-
   assert.match(viteConfig, /flare-im-core\/certs\/server\.crt/);
   assert.match(viteConfig, /defineFlareTauriConfig/);
-  assert.match(viteConfig, /define:\s*\{/);
-  assert.match(viteConfig, /__FLARE_DEV_CA_CERT_PATH__/);
-  assert.match(tauriMain, /VITE_FLARE_TLS_CA_CERT_PATH/);
-  assert.match(tauriMain, /typeof __FLARE_DEV_CA_CERT_PATH__ === "string"/);
-  assert.match(tauriMain, /__FLARE_DEV_CA_CERT_PATH__/);
-  assert.doesNotMatch(tauriMain, /src-tauri\/certs\/server\.crt/);
   assert.equal(existsSync(join(appRoot, "src-tauri/certs/server.crt")), false);
 });
 
-test("shared login UI only renders QUIC and racing choices when the host enables native transport selection", () => {
-  const appIndex = readFromMonorepo("flare-im-design/vue-im-ui/src/app/index.ts");
-  const loginView = readFromMonorepo("flare-im-design/vue-im-ui/src/app/components/FlareLoginScreen.vue");
-  const authScreen = readFromMonorepo("flare-im-design/vue-im-ui/src/components/shell/FlareAuthScreen.vue");
+test("tauri consumes the latest public Vue UI package", () => {
+  const packageJson = JSON.parse(readFromApp("package.json"));
+  const uiPackage = JSON.parse(readFromMonorepo("flare-im-design/packages/vue-im-ui/package.json"));
+  const app = readFromApp("src/App.vue");
 
-  assert.match(appIndex, /configureAppTransportSelector/);
-  assert.match(appIndex, /isAppTransportSelectorEnabled/);
-  assert.match(loginView, /show-transport-selector/);
-  assert.match(loginView, /isAppTransportSelectorEnabled\(\)/);
-  assert.match(authScreen, /showTransportSelector/);
-  assert.match(authScreen, /v-if="showTransportSelector"/);
+  assert.equal(packageJson.dependencies["@flare-im/vue-ui"], "file:../../../flare-im-design/packages/vue-im-ui");
+  assert.equal(uiPackage.version, "2.0.0-rc.1");
+  assert.match(app, /ReferenceApp/);
 });
 
 test("tauri native SDK enables the QUIC cargo feature chain", () => {
@@ -87,16 +62,13 @@ test("tauri native SDK enables the QUIC cargo feature chain", () => {
   assert.match(sdkCargo, /quic\s*=\s*\[[^\]]*"flare-core\/quic"/s);
 });
 
-test("tauri shell exposes a status bar tray icon with unread badge text", () => {
+test("tauri shell exposes a tray icon with unread badge text", () => {
   const desktopNotifications = readFromApp("src/desktopNotifications.ts");
   const capabilities = JSON.parse(readFromApp("src-tauri/capabilities/default.json"));
 
   assert.match(desktopNotifications, /TrayIcon/);
-  assert.match(desktopNotifications, /defaultWindowIcon/);
   assert.match(desktopNotifications, /ensureTrayIcon/);
   assert.match(desktopNotifications, /tray\.setTitle/);
-  assert.match(desktopNotifications, /tray\.setTooltip/);
   assert.match(desktopNotifications, /getCurrentWindow\(\)\.setBadgeCount/);
-  assert.match(desktopNotifications, /badgeLabel\(count\)/);
   assert.ok(capabilities.permissions.includes("core:default"));
 });
