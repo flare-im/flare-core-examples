@@ -168,7 +168,7 @@ private fun AppMessage.toPresentation(deliveryState: MessageDeliveryState, pictu
             MessageDeliveryState.NONE -> FlareMessageDeliveryStatus.Sent
             MessageDeliveryState.SENDING -> FlareMessageDeliveryStatus.Sending
             MessageDeliveryState.FAILED -> FlareMessageDeliveryStatus.Failed
-            MessageDeliveryState.DELIVERED -> FlareMessageDeliveryStatus.Delivered
+            MessageDeliveryState.DELIVERED -> FlareMessageDeliveryStatus.Sent
             MessageDeliveryState.READ -> FlareMessageDeliveryStatus.Read
         },
         edited = core.isEdited,

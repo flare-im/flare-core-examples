@@ -109,9 +109,7 @@ private fun englishKitStrings() = FlareStrings {
     messageListLoadOlder = "Load earlier messages"
     messagePending = "Waiting to send"
     messageSending = "Sending"
-    messageRetrying = "Retrying"
     messageSent = "Sent"
-    messageDelivered = "Delivered"
     messageRead = "Read"
     messageFailed = "Failed to send"
 
