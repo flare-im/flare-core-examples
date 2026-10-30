@@ -47,6 +47,12 @@ async function pick(multiple: boolean, filters: DialogFilter[] | undefined): Pro
   }
 }
 
+/** The system folder chooser behind the download location setting; null when cancelled. */
+export async function pickDirectory(current: string | null | undefined): Promise<string | null> {
+  const picked = await open({ directory: true, multiple: false, defaultPath: current || undefined });
+  return typeof picked === "string" && picked ? picked : null;
+}
+
 /**
  * The Tauri host's implementation of the kit's platform contract: pickers
  * through the dialog plugin (a dismissed dialog is CANCELLED), no share surface.
