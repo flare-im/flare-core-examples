@@ -47,7 +47,11 @@ final class FlareAppStore: ObservableObject, AppLifecycle {
         for publisher in [session.objectWillChange, repository.objectWillChange, environment.objectWillChange] {
             publisher.sink { [weak self] in self?.objectWillChange.send() }.store(in: &cancellables)
         }
-        session.onViewUpdate = { [weak repository] update in repository?.apply(update) }
+        session.onViewUpdate = { [weak repository, weak session] update in
+            guard let repository, !repository.apply(update), let client = session?.client else { return }
+            // 时间线视图版本号跳了:取快照整体替换。
+            Task { @MainActor in try? await repository.resyncTimeline(client: client, viewId: update.viewId) }
+        }
         session.onMessageSendFailed = { [weak messagingViewModel] key in messagingViewModel?.markSendFailed(key) }
         repository.onLog = { [weak environment] operation, detail in environment?.appendLab(operation, status: "ok", detail: detail) }
         // 选择态留 store(List binding);会话列表变化后若选中项消失则重置(复刻原 delta/snapshot 行为)。

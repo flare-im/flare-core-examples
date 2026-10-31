@@ -21,6 +21,8 @@ final class ViewDataRepository: ObservableObject {
 
     private var conversationListViewId: String?
     private var timelineViewId: String?
+    /// 已应用到本地缓存的时间线视图版本号:view.updated 按版本号逐次加 1 推来,跳号时取快照整体替换。
+    private var timelineRevision: UInt64 = 0
     private var activeTimelineConversationId: String?
 
     nonisolated init() {}
@@ -89,7 +91,7 @@ final class ViewDataRepository: ObservableObject {
             messageLimit: 50
         ))
         timelineViewId = response.viewId
-        try applyTimelineSnapshot(response.snapshot, viewId: response.viewId)
+        try applyTimelineSnapshot(response.snapshot, viewId: response.viewId, revision: response.revision)
         onLog?("view.timeline.open", "\(reason): \(messagesByConversation[conversationId, default: []].count) messages")
     }
 
@@ -108,7 +110,8 @@ final class ViewDataRepository: ObservableObject {
         }
     }
 
-    /// 经观察时间线视图向上翻历史:core 扩窗并回 snapshot/delta,client 仅应用(不自取+合并+重排)。
+    /// 经观察时间线视图向上翻历史:core 扩窗并经 view.updated 推来这一页,client 仅应用(不自取+合并+重排)。
+    /// 返回值说这一页在哪个版本里;事件还没到时取快照,保证返回前已应用。
     func loadOlderTimeline(client: any FlareImClientProtocol, conversationId: String) async throws {
         guard let timelineViewId else { return }
         let response = try await client.views.loadOlderTimeline(LoadOlderTimelineViewRequest(
@@ -116,17 +119,31 @@ final class ViewDataRepository: ObservableObject {
             messageLimit: 30
         ))
         guard response.viewId == timelineViewId, activeTimelineConversationId == conversationId else { return }
-        hasMoreMessagesByConversation[conversationId] = response.hasMore
-        if let update = response.update {
-            apply(update)
+        if timelineRevision < response.revision {
+            try await resyncTimeline(client: client, viewId: response.viewId)
         }
+    }
+
+    /// 版本号跳了(或翻页结果还没随事件到达):取当前快照整体替换。
+    func resyncTimeline(client: any FlareImClientProtocol, viewId: String) async throws {
+        let response = try await client.views.timelineSnapshot(TimelineViewRequest(viewId: viewId))
+        guard viewId == timelineViewId, response.revision >= timelineRevision else { return }
+        try applyTimelineSnapshot(response.snapshot, viewId: viewId, revision: response.revision)
     }
 
     // MARK: - 应用 core 推来的视图更新(delta / 快照)
 
-    /// 事件入口:吞掉解码错误(与原 god-store 行为一致)。
-    func apply(_ update: ViewUpdate) {
+    /// 事件入口:吞掉解码错误(与原 god-store 行为一致)。返回 false 表示时间线视图版本号跳了,
+    /// 调用方应调 `resyncTimeline` 取快照。
+    @discardableResult
+    func apply(_ update: ViewUpdate) -> Bool {
+        if update.viewId == timelineViewId {
+            if update.revision <= timelineRevision { return true }
+            if update.revision != timelineRevision + 1 { return false }
+            timelineRevision = update.revision
+        }
         try? applyViewUpdate(update)
+        return true
     }
 
     private func applyViewUpdate(_ update: ViewUpdate) throws {
@@ -142,7 +159,7 @@ final class ViewDataRepository: ObservableObject {
         }
         if update.viewId == timelineViewId {
             guard let snapshot = update.snapshot else { return }
-            try applyTimelineSnapshot(snapshot, viewId: update.viewId)
+            try applyTimelineSnapshot(snapshot, viewId: update.viewId, revision: update.revision)
         }
     }
 
@@ -160,7 +177,7 @@ final class ViewDataRepository: ObservableObject {
         guard viewId == conversationListViewId else { return }
         conversations = try applyIndexedDeltaOps(
             current: conversations,
-            ops: delta.ops,
+            ops: delta.ops ?? [],
             keyOf: { $0.conversationId }
         ) { op in
             guard let item = op.item else { return nil }
@@ -170,6 +187,15 @@ final class ViewDataRepository: ObservableObject {
         }
     }
 
+    /// 时间线视图的行键:clientMsgId,没有时 serverId,都没有时 seq:<会话>:<seq>(与核心 row_key 相同)。
+    private func timelineRowKey(_ message: AppMessage) -> String {
+        if !message.clientMsgId.isEmpty { return message.clientMsgId }
+        if !message.serverId.isEmpty { return message.serverId }
+        return "seq:\(message.conversationId):\(message.seq)"
+    }
+
+    /// 按核心视图的增量规则应用:删 remove;原位替换 upsert;prepend 放最前、append 放最后;
+    /// reorder 非空时按它重排;最后取 hasOlder 与 conversation。
     private func applyTimelineDelta(viewId: String, delta: ViewDelta) throws {
         guard viewId == timelineViewId else { return }
         let conversationId = activeTimelineConversationId ?? ""
@@ -177,24 +203,29 @@ final class ViewDataRepository: ObservableObject {
         if let deltaConversationId = delta.conversation?.conversationId, !deltaConversationId.isEmpty {
             guard deltaConversationId == conversationId else { return }
         }
-        let current = messagesByConversation[conversationId, default: []]
-        messagesByConversation[conversationId] = try applyIndexedDeltaOps(
-            current: current,
-            ops: delta.ops,
-            keyOf: { $0.appStableId }
-        ) { op in
-            guard let item = op.item else { return nil }
-            let message = try messageFromJson(item)
-            let appMessage = SdkModelMapper.messageFromCore(message)
-            guard appMessage.appStableId.trimmed == op.key.trimmed else { return nil }
-            guard appMessage.conversationId == conversationId else { return nil }
-            return appMessage
+        let removed = Set(delta.remove ?? [])
+        var upserts: [String: AppMessage] = [:]
+        for message in SdkModelMapper.messagesFromCore(delta.upsert ?? []) {
+            upserts[timelineRowKey(message)] = message
         }
+        var next = messagesByConversation[conversationId, default: []]
+            .filter { !removed.contains(timelineRowKey($0)) }
+            .map { upserts[timelineRowKey($0)] ?? $0 }
+        next = SdkModelMapper.messagesFromCore(delta.prepend ?? []) + next
+            + SdkModelMapper.messagesFromCore(delta.append ?? [])
+        if let order = delta.reorder {
+            var byKey: [String: AppMessage] = [:]
+            for message in next {
+                byKey[timelineRowKey(message)] = message
+            }
+            next = order.compactMap { byKey[$0] }
+        }
+        messagesByConversation[conversationId] = next
         if let conversation = delta.conversation {
             replaceConversationSnapshot(SdkModelMapper.conversationFromCore(conversation))
         }
-        if let hasMore = delta.hasMore {
-            hasMoreMessagesByConversation[conversationId] = hasMore
+        if let hasOlder = delta.hasOlder {
+            hasMoreMessagesByConversation[conversationId] = hasOlder
         }
     }
 
@@ -246,15 +277,16 @@ final class ViewDataRepository: ObservableObject {
         conversations = SdkModelMapper.conversationsFromCore(home.conversations)
     }
 
-    private func applyTimelineSnapshot(_ snapshot: ViewSnapshot, viewId: String) throws {
+    private func applyTimelineSnapshot(_ snapshot: ViewSnapshot, viewId: String, revision: UInt64) throws {
         guard viewId == timelineViewId, snapshot.viewType == "timeline" else { return }
-        let timeline = try conversationTimelineSnapshotFromJson(snapshot.data)
+        timelineRevision = revision
+        let timeline = try timelineViewSnapshotFromJson(snapshot.data)
         let conversationId = timeline.conversation?.conversationId ?? activeTimelineConversationId ?? ""
         guard !conversationId.isEmpty, conversationId == activeTimelineConversationId else { return }
         if let conversation = timeline.conversation {
             replaceConversationSnapshot(SdkModelMapper.conversationFromCore(conversation))
         }
-        hasMoreMessagesByConversation[conversationId] = timeline.hasMore
+        hasMoreMessagesByConversation[conversationId] = timeline.hasOlder
         messagesByConversation[conversationId] = SdkModelMapper.messagesFromCore(timeline.messages)
             .sorted { $0.appSortTimestamp < $1.appSortTimestamp }
     }
