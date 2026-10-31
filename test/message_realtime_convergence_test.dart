@@ -171,20 +171,17 @@ void main() {
       _message('c1', 1, 'old', timestampMs: 1000, timelineKey: 'seq:1'),
     ]);
 
-    notifier.applyCoreDelta([
-      CoreViewDeltaOp(
-        op: 'insert',
-        key: 'seq:2',
-        index: 0,
-        item: _message(
+    notifier.applyCoreTimelineDelta(
+      append: [
+        _message(
           'c1',
           2,
           'delta-new',
           timestampMs: 2000,
           timelineKey: 'seq:2',
         ),
-      ),
-    ]);
+      ],
+    );
 
     final messages = container.read(messageProvider('c1'));
     expect(messages.map((m) => m.content.previewText), ['old', 'delta-new']);

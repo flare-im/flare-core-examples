@@ -100,26 +100,39 @@ class MessageListNotifier extends StateNotifier<List<Message>> {
     _cancelResolvedSendTracking();
   }
 
-  void applyCoreDelta(List<CoreViewDeltaOp<Message>> ops) {
-    if (ops.isEmpty) return;
-    final scopedOps = ops
-        .where(
-          (op) =>
-              op.item == null ||
-              op.item!.conversationId.trim() == conversationId,
-        )
-        .toList(growable: false);
-    if (scopedOps.isEmpty) return;
-    state = _reapplyPeerReadToMessages(
-      _timelineDisplayOrder(
-        _applyIndexedDeltaOps<Message>(
-          state,
-          scopedOps,
-          (item) => item.timelineKey.trim(),
-        ),
-      ),
-    );
+  /// 核心时间线视图的增量：删 `remove` 里的行键，原位替换 `upsert`，`prepend` 放最前、
+  /// `append` 放最后，再按时间线顺序排列（`reorder` 因此不用单独处理）。行键是
+  /// clientMsgId，没有时 serverId，都没有时 `seq:<会话>:<seq>`，发送确认前后不变。
+  void applyCoreTimelineDelta({
+    List<Message> prepend = const [],
+    List<Message> append = const [],
+    List<Message> upsert = const [],
+    List<String> remove = const [],
+  }) {
+    bool scoped(Message message) =>
+        message.conversationId.trim() == conversationId;
+    if (prepend.isEmpty && append.isEmpty && upsert.isEmpty && remove.isEmpty) {
+      return;
+    }
+    final removed = remove.toSet();
+    final upserts = {
+      for (final message in upsert.where(scoped)) _rowKey(message): message,
+    };
+    final next = [
+      ...prepend.where(scoped),
+      for (final message in state)
+        if (!removed.contains(_rowKey(message)))
+          upserts[_rowKey(message)] ?? message,
+      ...append.where(scoped),
+    ];
+    state = _reapplyPeerReadToMessages(_timelineDisplayOrder(next));
     _cancelResolvedSendTracking();
+  }
+
+  static String _rowKey(Message message) {
+    if (message.clientMsgId.isNotEmpty) return message.clientMsgId;
+    if (message.serverId.isNotEmpty) return message.serverId;
+    return 'seq:${message.conversationId}:${message.seq}';
   }
 
   void mergeIncomingMessages(List<Message> incoming) {
@@ -1314,49 +1327,6 @@ String stableTimelineSortKey(Message message) {
   final client = message.clientMsgId.trim();
   if (client.isNotEmpty) return 'c:$client';
   return 't:${message.timestamp.millisecondsSinceEpoch}:${message.senderId}';
-}
-
-List<T> _applyIndexedDeltaOps<T>(
-  List<T> current,
-  List<CoreViewDeltaOp<T>> ops,
-  String Function(T item) keyOf,
-) {
-  final next = [...current];
-  int indexByKey(String key) => next.indexWhere((item) => keyOf(item) == key);
-  int boundedIndex(int index) => index.clamp(0, next.length).toInt();
-
-  for (final op in ops) {
-    final key = op.key.trim();
-    if (key.isEmpty) continue;
-    switch (op.op) {
-      case 'remove':
-        final existing = indexByKey(key);
-        if (existing >= 0) next.removeAt(existing);
-        break;
-      case 'move':
-        final existing = indexByKey(key);
-        if (existing < 0) continue;
-        final item = next.removeAt(existing);
-        next.insert(boundedIndex(op.index), item);
-        break;
-      case 'insert':
-        final item = op.item;
-        if (item == null) continue;
-        final existing = indexByKey(key);
-        if (existing >= 0) next.removeAt(existing);
-        next.insert(boundedIndex(op.index), item);
-        break;
-      case 'update':
-        final item = op.item;
-        if (item == null) continue;
-        final existing = indexByKey(key);
-        if (existing >= 0) {
-          next[existing] = item;
-        }
-        break;
-    }
-  }
-  return next;
 }
 
 /// action：`1` = ADD，`2` = REMOVE（与 proto `ReactionAction` 一致）。

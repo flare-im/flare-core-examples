@@ -66,6 +66,9 @@ class _ImEventToStoreBridgeState extends ConsumerState<ImEventToStoreBridge>
       imEventBus.on<TimelineViewDeltaEvent>().listen(_onTimelineViewDelta),
     );
     _subs.add(
+      imEventBus.on<TimelineViewResyncEvent>().listen(_onTimelineViewResync),
+    );
+    _subs.add(
       imEventBus.on<IncomingMessagesEvent>().listen(_onIncomingMessages),
     );
     _subs.add(
@@ -205,9 +208,46 @@ class _ImEventToStoreBridgeState extends ConsumerState<ImEventToStoreBridge>
   void _onTimelineViewDelta(TimelineViewDeltaEvent e) {
     final cid = e.conversationId.trim();
     if (cid.isEmpty) return;
-    ref.read(messageProvider(cid).notifier).applyCoreDelta(e.ops);
-    debugPrint('flare app view.timeline.delta cid=$cid ops=${e.ops.length}');
+    ref
+        .read(messageProvider(cid).notifier)
+        .applyCoreTimelineDelta(
+          prepend: e.prepend,
+          append: e.append,
+          upsert: e.upsert,
+          remove: e.remove,
+        );
+    debugPrint(
+      'flare app view.timeline.delta cid=$cid prepend=${e.prepend.length} '
+      'append=${e.append.length} upsert=${e.upsert.length} '
+      'remove=${e.remove.length}',
+    );
     _markForegroundConversationReadIfVisible(cid);
+  }
+
+  Future<void> _onTimelineViewResync(TimelineViewResyncEvent e) async {
+    final view = timelineViews[e.viewId];
+    if (view == null) return;
+    try {
+      final response = await ref
+          .read(sdkWrapperProvider)
+          .timelineViewSnapshot(e.viewId);
+      final current = timelineViews[e.viewId];
+      final data = response.snapshot.data;
+      if (current == null ||
+          response.revision < current.revision ||
+          data is! core.TimelineViewSnapshot) {
+        return;
+      }
+      timelineViews[e.viewId] = (
+        conversationId: current.conversationId,
+        revision: response.revision,
+      );
+      ref
+          .read(messageProvider(current.conversationId).notifier)
+          .applyCoreSnapshot(SdkModelMapper.messagesFromCoreTimelineView(data));
+    } catch (error) {
+      debugPrint('flare app view.timeline.snapshot failed ${e.viewId}: $error');
+    }
   }
 
   void _onIncomingMessages(IncomingMessagesEvent e) {

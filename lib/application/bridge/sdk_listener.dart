@@ -263,8 +263,21 @@ final class _AppSdkEventListener extends core.FlareImEventListener {
     debugPrint(
       'flare sdk event view.updated kind=${event.kind} '
       'snapshot=${snapshot?.viewType ?? ''} delta=${delta?.viewType ?? ''} '
-      'ops=${delta?.ops.length ?? 0}',
+      'revision=${event.revision}',
     );
+    final timelineView = timelineViews[event.viewId];
+    if (timelineView != null) {
+      // 版本号逐次加 1；比已应用的旧就丢弃，跳号时取快照整体替换。
+      if (event.revision <= timelineView.revision) return;
+      if (event.revision != timelineView.revision + 1) {
+        imEventBus.fire(TimelineViewResyncEvent(event.viewId));
+        return;
+      }
+      timelineViews[event.viewId] = (
+        conversationId: timelineView.conversationId,
+        revision: event.revision,
+      );
+    }
     if (event.kind == 'delta') {
       if (delta == null) return;
       if (delta.viewType == 'conversationList') {
@@ -277,13 +290,23 @@ final class _AppSdkEventListener extends core.FlareImEventListener {
         return;
       }
       if (delta.viewType == 'timeline') {
-        final conversationId = delta.conversation?.conversationId.trim() ?? '';
+        final fromDelta = delta.conversation?.conversationId.trim() ?? '';
+        final conversationId = fromDelta.isNotEmpty
+            ? fromDelta
+            : timelineView?.conversationId ?? '';
         if (conversationId.isEmpty) return;
+        List<Message> rows(List<core.Message>? messages) => [
+          for (final message in messages ?? const <core.Message>[])
+            SdkModelMapper.messageFromCore(message),
+        ];
         imEventBus.fire(
           TimelineViewDeltaEvent(
             conversationId: conversationId,
-            ops: _messageDeltaOps(delta),
-            hasMore: delta.hasMore,
+            prepend: rows(delta.prepend),
+            append: rows(delta.append),
+            upsert: rows(delta.upsert),
+            remove: delta.remove ?? const [],
+            hasMore: delta.hasOlder,
           ),
         );
       }
@@ -301,18 +324,21 @@ final class _AppSdkEventListener extends core.FlareImEventListener {
       return;
     }
     if (snapshot.viewType == 'timeline' &&
-        data is core.ConversationTimelineSnapshot) {
-      final messages = SdkModelMapper.messagesFromCoreTimeline(data);
-      final conversationId = SdkModelMapper.conversationIdFromCoreTimeline(
+        data is core.TimelineViewSnapshot) {
+      final messages = SdkModelMapper.messagesFromCoreTimelineView(data);
+      final fromSnapshot = SdkModelMapper.conversationIdFromCoreTimelineView(
         data,
         messages,
       );
+      final conversationId = fromSnapshot.isNotEmpty
+          ? fromSnapshot
+          : timelineView?.conversationId ?? '';
       if (conversationId.isEmpty) return;
       imEventBus.fire(
         TimelineViewSnapshotEvent(
           conversationId: conversationId,
           messages: messages,
-          hasMore: data.hasMore,
+          hasMore: data.hasOlder,
         ),
       );
     }
@@ -322,7 +348,7 @@ final class _AppSdkEventListener extends core.FlareImEventListener {
     core.ViewDelta delta,
   ) {
     return [
-      for (final op in delta.ops)
+      for (final op in delta.ops ?? const <core.ViewDeltaOp>[])
         CoreViewDeltaOp<Conversation>(
           op: op.op,
           key: op.key,
@@ -333,21 +359,6 @@ final class _AppSdkEventListener extends core.FlareImEventListener {
               : SdkModelMapper.conversationFromCore(
                   core.conversationFromJson(op.item!),
                 ),
-        ),
-    ];
-  }
-
-  List<CoreViewDeltaOp<Message>> _messageDeltaOps(core.ViewDelta delta) {
-    return [
-      for (final op in delta.ops)
-        CoreViewDeltaOp<Message>(
-          op: op.op,
-          key: op.key,
-          index: op.index,
-          fromIndex: op.fromIndex,
-          item: op.item == null
-              ? null
-              : SdkModelMapper.messageFromCore(core.messageFromJson(op.item)),
         ),
     ];
   }

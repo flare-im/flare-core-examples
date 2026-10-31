@@ -98,6 +98,24 @@ class SdkModelMapper {
         .toList(growable: false);
   }
 
+  static List<Message> messagesFromCoreTimelineView(
+    core.TimelineViewSnapshot snapshot,
+  ) {
+    return snapshot.messages
+        .where((item) => item.conversationId.trim().isNotEmpty)
+        .map(messageFromCore)
+        .toList(growable: false);
+  }
+
+  static String conversationIdFromCoreTimelineView(
+    core.TimelineViewSnapshot snapshot,
+    List<Message> messages,
+  ) {
+    final fromConversation = snapshot.conversation?.conversationId.trim() ?? '';
+    if (fromConversation.isNotEmpty) return fromConversation;
+    return messages.isEmpty ? '' : messages.first.conversationId.trim();
+  }
+
   static String conversationIdFromCoreTimeline(
     core.ConversationTimelineSnapshot snapshot,
     List<Message> messages,

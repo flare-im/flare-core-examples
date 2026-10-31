@@ -333,14 +333,7 @@ void main() {
     imEventBus.fire(
       TimelineViewDeltaEvent(
         conversationId: 'c1',
-        ops: [
-          CoreViewDeltaOp(
-            op: 'insert',
-            key: 'seq:7',
-            index: 0,
-            item: _message('c1', 7, 'background-new', timestampMs: 7000),
-          ),
-        ],
+        append: [_message('c1', 7, 'background-new', timestampMs: 7000)],
       ),
     );
     imEventBus.fire(

@@ -57,18 +57,37 @@ final class TimelineViewSnapshotEvent {
   final bool hasMore;
 }
 
+/// 核心时间线视图的一次增量（按行键：clientMsgId，没有时 serverId，都没有时 `seq:<会话>:<seq>`）。
 @immutable
 final class TimelineViewDeltaEvent {
   const TimelineViewDeltaEvent({
     required this.conversationId,
-    required this.ops,
+    this.prepend = const [],
+    this.append = const [],
+    this.upsert = const [],
+    this.remove = const [],
     this.hasMore,
   });
 
   final String conversationId;
-  final List<CoreViewDeltaOp<Message>> ops;
+  final List<Message> prepend;
+  final List<Message> append;
+  final List<Message> upsert;
+  final List<String> remove;
   final bool? hasMore;
 }
+
+/// 时间线视图的版本号跳了：取 `view.timeline.snapshot` 整体替换。
+@immutable
+final class TimelineViewResyncEvent {
+  const TimelineViewResyncEvent(this.viewId);
+
+  final String viewId;
+}
+
+/// 打开着的核心时间线视图：视图 id → 会话 id 与已应用的版本号。增量只在会话摘要变化时才带
+/// `conversation`，按视图 id 找它属于哪个会话。
+final Map<String, ({String conversationId, int revision})> timelineViews = {};
 
 @immutable
 final class IncomingMessagesEvent {

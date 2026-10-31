@@ -716,6 +716,12 @@ final class SdkWrapper {
     );
   }
 
+  Future<core.ViewOpenResponse> timelineViewSnapshot(String viewId) {
+    return _client.views.timelineSnapshot(
+      core.TimelineViewRequest(viewId: viewId),
+    );
+  }
+
   Future<core.CloseViewResponse> closeView(String viewId) {
     return _client.views.close(core.CloseViewRequest(viewId: viewId));
   }

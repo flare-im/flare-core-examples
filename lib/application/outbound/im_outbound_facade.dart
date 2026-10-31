@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flare_core_flutter_sdk/flare_core_flutter_sdk.dart' as core;
+import 'package:flare_im/application/bus/event_bus.dart';
 import 'package:flare_im/application/providers/auth_state_provider.dart';
 import 'package:flare_im/application/providers/conversation_state_provider.dart';
 import 'package:flare_im/application/providers/message_state_provider.dart';
@@ -230,13 +231,17 @@ class ImOutboundFacade {
       return;
     }
     if (snapshot.viewType == 'timeline' &&
-        data is core.ConversationTimelineSnapshot) {
-      final messages = SdkModelMapper.messagesFromCoreTimeline(data);
-      final conversationId = SdkModelMapper.conversationIdFromCoreTimeline(
+        data is core.TimelineViewSnapshot) {
+      final messages = SdkModelMapper.messagesFromCoreTimelineView(data);
+      final conversationId = SdkModelMapper.conversationIdFromCoreTimelineView(
         data,
         messages,
       );
       if (conversationId.isNotEmpty) {
+        timelineViews[response.viewId] = (
+          conversationId: conversationId,
+          revision: response.revision,
+        );
         _messages(conversationId).applyCoreSnapshot(messages);
       }
     }
