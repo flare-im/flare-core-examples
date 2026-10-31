@@ -72,8 +72,8 @@ class ViewDataRepository {
     suspend fun loadOlderTimeline(client: FlareImClient, conversationId: String) {
         val viewId = timelineViewId ?: return
         if (activeTimelineConversationId != conversationId) return
-        val response = client.views.loadOlderTimeline(LoadOlderTimelineViewRequest(viewId, 30))
-        _hasMoreByConversation.update { it + (conversationId to response.hasMore) }
+        // 这一页经 view.updated 推来（返回值只有 loadedCount 与版本号）；这里照旧重取权威快照，hasMore 随快照更新。
+        client.views.loadOlderTimeline(LoadOlderTimelineViewRequest(viewId, 30))
         timelineLimit += 30
         refetchTimeline(client, conversationId)
     }
