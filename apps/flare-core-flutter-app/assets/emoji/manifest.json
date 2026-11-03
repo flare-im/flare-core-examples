@@ -1,0 +1,791 @@
+{
+  "source": "examples/flare-core-tauri/dist/assets",
+  "kind": "emoji",
+  "items": [
+    {
+      "id": "alien",
+      "label": "alien",
+      "asset": "assets/emoji/alien-Bh5nPlny.webp"
+    },
+    {
+      "id": "alien_monster",
+      "label": "alien monster",
+      "asset": "assets/emoji/alien_monster-B5_7dyxX.webp"
+    },
+    {
+      "id": "anger_symbol",
+      "label": "anger symbol",
+      "asset": "assets/emoji/anger_symbol-CUznbj8C.webp"
+    },
+    {
+      "id": "angry_face",
+      "label": "angry face",
+      "asset": "assets/emoji/angry_face-D89PfAOs.webp"
+    },
+    {
+      "id": "angry_face_with_horns",
+      "label": "angry face with horns",
+      "asset": "assets/emoji/angry_face_with_horns-CkpzAbq8.webp"
+    },
+    {
+      "id": "anguished_face",
+      "label": "anguished face",
+      "asset": "assets/emoji/anguished_face-BBYJVptM.webp"
+    },
+    {
+      "id": "anxious_face_with_sweat",
+      "label": "anxious face with sweat",
+      "asset": "assets/emoji/anxious_face_with_sweat-BMwy3ULi.webp"
+    },
+    {
+      "id": "astonished_face",
+      "label": "astonished face",
+      "asset": "assets/emoji/astonished_face-D6TA0ABX.webp"
+    },
+    {
+      "id": "beaming_face_with_smiling_eyes",
+      "label": "beaming face with smiling eyes-BxAw",
+      "asset": "assets/emoji/beaming_face_with_smiling_eyes-BxAw-sgr.webp"
+    },
+    {
+      "id": "beating_heart",
+      "label": "beating heart",
+      "asset": "assets/emoji/beating_heart-CUFh4IZX.webp"
+    },
+    {
+      "id": "blue_heart",
+      "label": "blue heart",
+      "asset": "assets/emoji/blue_heart-D8dHYtzT.webp"
+    },
+    {
+      "id": "broken_heart",
+      "label": "broken heart",
+      "asset": "assets/emoji/broken_heart-C2tCoKkS.webp"
+    },
+    {
+      "id": "brown_heart",
+      "label": "brown heart",
+      "asset": "assets/emoji/brown_heart-COcgZjvz.webp"
+    },
+    {
+      "id": "cat_with_tears_of_joy",
+      "label": "cat with tears of joy",
+      "asset": "assets/emoji/cat_with_tears_of_joy-B5LCoPnX.webp"
+    },
+    {
+      "id": "cat_with_wry_smile",
+      "label": "cat with wry smile",
+      "asset": "assets/emoji/cat_with_wry_smile-C94M1EoJ.webp"
+    },
+    {
+      "id": "check_mark_button",
+      "label": "check mark button",
+      "asset": "assets/emoji/check_mark_button-D71GzCMZ.webp"
+    },
+    {
+      "id": "clown_face",
+      "label": "clown face",
+      "asset": "assets/emoji/clown_face-Cgrl5YvG.webp"
+    },
+    {
+      "id": "cold_face",
+      "label": "cold face",
+      "asset": "assets/emoji/cold_face-C4aadDm3.webp"
+    },
+    {
+      "id": "collision",
+      "label": "collision",
+      "asset": "assets/emoji/collision-BAfbo5x_.webp"
+    },
+    {
+      "id": "confounded_face",
+      "label": "confounded face",
+      "asset": "assets/emoji/confounded_face-DSMZA7PW.webp"
+    },
+    {
+      "id": "confused_face",
+      "label": "confused face",
+      "asset": "assets/emoji/confused_face-D7oZ3Qbd.webp"
+    },
+    {
+      "id": "cowboy_hat_face",
+      "label": "cowboy hat face-DZgfu",
+      "asset": "assets/emoji/cowboy_hat_face-DZgfu-7Q.webp"
+    },
+    {
+      "id": "crying_cat",
+      "label": "crying cat",
+      "asset": "assets/emoji/crying_cat-DZNVVjrA.webp"
+    },
+    {
+      "id": "crying_face",
+      "label": "crying face",
+      "asset": "assets/emoji/crying_face-Co_mhL2G.webp"
+    },
+    {
+      "id": "disappointed_face",
+      "label": "disappointed face",
+      "asset": "assets/emoji/disappointed_face-D5u_tXfy.webp"
+    },
+    {
+      "id": "disguised_face",
+      "label": "disguised face",
+      "asset": "assets/emoji/disguised_face-L1BUgmnU.webp"
+    },
+    {
+      "id": "dizzy",
+      "label": "dizzy",
+      "asset": "assets/emoji/dizzy-Ctmhmj84.webp"
+    },
+    {
+      "id": "dotted_line_face",
+      "label": "dotted line face",
+      "asset": "assets/emoji/dotted_line_face-ufHRpwDa.webp"
+    },
+    {
+      "id": "downcast_face_with_sweat",
+      "label": "downcast face with sweat",
+      "asset": "assets/emoji/downcast_face_with_sweat-Yd1Gfhpi.webp"
+    },
+    {
+      "id": "drooling_face",
+      "label": "drooling face",
+      "asset": "assets/emoji/drooling_face-CcBBcsW4.webp"
+    },
+    {
+      "id": "enraged_face",
+      "label": "enraged face",
+      "asset": "assets/emoji/enraged_face-DE2UDTO3.webp"
+    },
+    {
+      "id": "exploding_head",
+      "label": "exploding head",
+      "asset": "assets/emoji/exploding_head-CT2Vk6dF.webp"
+    },
+    {
+      "id": "expressionless_face",
+      "label": "expressionless face",
+      "asset": "assets/emoji/expressionless_face-BRzhW8ZR.webp"
+    },
+    {
+      "id": "face_blowing_a_kiss",
+      "label": "face blowing a kiss",
+      "asset": "assets/emoji/face_blowing_a_kiss-NEl0mNSb.webp"
+    },
+    {
+      "id": "face_exhaling",
+      "label": "face exhaling-D2CN2H",
+      "asset": "assets/emoji/face_exhaling-D2CN2H-4.webp"
+    },
+    {
+      "id": "face_holding_back_tears",
+      "label": "face holding back tears",
+      "asset": "assets/emoji/face_holding_back_tears-D9Qav6lA.webp"
+    },
+    {
+      "id": "face_in_clouds",
+      "label": "face in clouds",
+      "asset": "assets/emoji/face_in_clouds-D2gWh_1i.webp"
+    },
+    {
+      "id": "face_savoring_food",
+      "label": "face savoring food",
+      "asset": "assets/emoji/face_savoring_food-OTRRneBF.webp"
+    },
+    {
+      "id": "face_screaming_in_fear",
+      "label": "face screaming in fear-BgHmpOR-",
+      "asset": "assets/emoji/face_screaming_in_fear-BgHmpOR-.webp"
+    },
+    {
+      "id": "face_vomiting",
+      "label": "face vomiting",
+      "asset": "assets/emoji/face_vomiting-vu4SsgkA.webp"
+    },
+    {
+      "id": "face_with_crossed_out_eyes",
+      "label": "face with crossed out eyes",
+      "asset": "assets/emoji/face_with_crossed_out_eyes-n8IS6jq0.webp"
+    },
+    {
+      "id": "face_with_diagonal_mouth",
+      "label": "face with diagonal mouth",
+      "asset": "assets/emoji/face_with_diagonal_mouth-Crxuy8X7.webp"
+    },
+    {
+      "id": "face_with_hand_over_mouth",
+      "label": "face with hand over mouth",
+      "asset": "assets/emoji/face_with_hand_over_mouth-DGT6FAuY.webp"
+    },
+    {
+      "id": "face_with_head_bandage",
+      "label": "face with head bandage",
+      "asset": "assets/emoji/face_with_head_bandage-CUUXE_EC.webp"
+    },
+    {
+      "id": "face_with_medical_mask",
+      "label": "face with medical mask",
+      "asset": "assets/emoji/face_with_medical_mask-DnxwM7RI.webp"
+    },
+    {
+      "id": "face_with_monocle",
+      "label": "face with monocle",
+      "asset": "assets/emoji/face_with_monocle-n4sPiktV.webp"
+    },
+    {
+      "id": "face_with_open_eyes_and_hand_over_mouth",
+      "label": "face with open eyes and hand over mouth",
+      "asset": "assets/emoji/face_with_open_eyes_and_hand_over_mouth-ps2IiFjZ.webp"
+    },
+    {
+      "id": "face_with_open_mouth",
+      "label": "face with open mouth",
+      "asset": "assets/emoji/face_with_open_mouth-DgGme8DK.webp"
+    },
+    {
+      "id": "face_with_peeking_eye",
+      "label": "face with peeking eye",
+      "asset": "assets/emoji/face_with_peeking_eye-Ni1taSUL.webp"
+    },
+    {
+      "id": "face_with_raised_eyebrow",
+      "label": "face with raised eyebrow",
+      "asset": "assets/emoji/face_with_raised_eyebrow-Cvr0jHnb.webp"
+    },
+    {
+      "id": "face_with_rolling_eyes",
+      "label": "face with rolling eyes",
+      "asset": "assets/emoji/face_with_rolling_eyes-B6mEx11l.webp"
+    },
+    {
+      "id": "face_with_spiral_eyes",
+      "label": "face with spiral eyes",
+      "asset": "assets/emoji/face_with_spiral_eyes-C4igFwJ0.webp"
+    },
+    {
+      "id": "face_with_steam_from_nose",
+      "label": "face with steam from nose",
+      "asset": "assets/emoji/face_with_steam_from_nose-cLK8jdfr.webp"
+    },
+    {
+      "id": "face_with_symbols_on_mouth",
+      "label": "face with symbols on mouth",
+      "asset": "assets/emoji/face_with_symbols_on_mouth-CSOT9v4t.webp"
+    },
+    {
+      "id": "face_with_tears_of_joy",
+      "label": "face with tears of joy",
+      "asset": "assets/emoji/face_with_tears_of_joy-CNC5V2aa.webp"
+    },
+    {
+      "id": "face_with_thermometer",
+      "label": "face with thermometer",
+      "asset": "assets/emoji/face_with_thermometer-DxjMlCT4.webp"
+    },
+    {
+      "id": "face_with_tongue",
+      "label": "face with tongue",
+      "asset": "assets/emoji/face_with_tongue-VNMWPSat.webp"
+    },
+    {
+      "id": "face_without_mouth",
+      "label": "face without mouth",
+      "asset": "assets/emoji/face_without_mouth-B_Po2SzJ.webp"
+    },
+    {
+      "id": "fearful_face",
+      "label": "fearful face",
+      "asset": "assets/emoji/fearful_face-DuH9AXOo.webp"
+    },
+    {
+      "id": "fire",
+      "label": "fire",
+      "asset": "assets/emoji/fire-CMFd3MkH.webp"
+    },
+    {
+      "id": "flushed_face",
+      "label": "flushed face",
+      "asset": "assets/emoji/flushed_face-CrIdQned.webp"
+    },
+    {
+      "id": "frowning_face",
+      "label": "frowning face",
+      "asset": "assets/emoji/frowning_face-BD9AsLRP.webp"
+    },
+    {
+      "id": "frowning_face_with_open_mouth",
+      "label": "frowning face with open mouth",
+      "asset": "assets/emoji/frowning_face_with_open_mouth-D7fMuGxw.webp"
+    },
+    {
+      "id": "ghost",
+      "label": "ghost",
+      "asset": "assets/emoji/ghost-B52zn_JM.webp"
+    },
+    {
+      "id": "goblin",
+      "label": "goblin",
+      "asset": "assets/emoji/goblin-Dz6vSIka.webp"
+    },
+    {
+      "id": "green_heart",
+      "label": "green heart",
+      "asset": "assets/emoji/green_heart-CRND0j8s.webp"
+    },
+    {
+      "id": "grimacing_face",
+      "label": "grimacing face",
+      "asset": "assets/emoji/grimacing_face-NPVNh5Gv.webp"
+    },
+    {
+      "id": "grinning_cat",
+      "label": "grinning cat",
+      "asset": "assets/emoji/grinning_cat-AIXcJkLL.webp"
+    },
+    {
+      "id": "grinning_cat_with_smiling_eyes",
+      "label": "grinning cat with smiling eyes",
+      "asset": "assets/emoji/grinning_cat_with_smiling_eyes-BLwE8VSq.webp"
+    },
+    {
+      "id": "grinning_face",
+      "label": "grinning face",
+      "asset": "assets/emoji/grinning_face-B8ROYfRP.webp"
+    },
+    {
+      "id": "grinning_face_with_big_eyes",
+      "label": "grinning face with big eyes",
+      "asset": "assets/emoji/grinning_face_with_big_eyes-DXDwosrm.webp"
+    },
+    {
+      "id": "grinning_face_with_smiling_eyes",
+      "label": "grinning face with smiling eyes",
+      "asset": "assets/emoji/grinning_face_with_smiling_eyes-Bj4XJhpY.webp"
+    },
+    {
+      "id": "grinning_face_with_sweat",
+      "label": "grinning face with sweat",
+      "asset": "assets/emoji/grinning_face_with_sweat-gmNppneJ.webp"
+    },
+    {
+      "id": "grinning_squinting_face",
+      "label": "grinning squinting face",
+      "asset": "assets/emoji/grinning_squinting_face-BHn7DXHy.webp"
+    },
+    {
+      "id": "growing_heart",
+      "label": "growing heart-gvzOa",
+      "asset": "assets/emoji/growing_heart-gvzOa-Cc.webp"
+    },
+    {
+      "id": "hear_no_evil_monkey",
+      "label": "hear no evil monkey-cEw",
+      "asset": "assets/emoji/hear_no_evil_monkey-cEw-UbJB.webp"
+    },
+    {
+      "id": "heart_decoration",
+      "label": "heart decoration",
+      "asset": "assets/emoji/heart_decoration-B2uqR4Yz.webp"
+    },
+    {
+      "id": "heart_exclamation",
+      "label": "heart exclamation",
+      "asset": "assets/emoji/heart_exclamation-vnWYnJRE.webp"
+    },
+    {
+      "id": "heart_on_fire",
+      "label": "heart on fire",
+      "asset": "assets/emoji/heart_on_fire-BC7Y9GVH.webp"
+    },
+    {
+      "id": "heart_with_arrow",
+      "label": "heart with arrow",
+      "asset": "assets/emoji/heart_with_arrow-Ckxg7HJd.webp"
+    },
+    {
+      "id": "heart_with_ribbon",
+      "label": "heart with ribbon",
+      "asset": "assets/emoji/heart_with_ribbon-4iy1AUAT.webp"
+    },
+    {
+      "id": "hot_face",
+      "label": "hot face-B9bprH",
+      "asset": "assets/emoji/hot_face-B9bprH-R.webp"
+    },
+    {
+      "id": "hundred_points",
+      "label": "hundred points-GE",
+      "asset": "assets/emoji/hundred_points-GE-ib8YV.webp"
+    },
+    {
+      "id": "hushed_face",
+      "label": "hushed face",
+      "asset": "assets/emoji/hushed_face-CMYAp_Y5.webp"
+    },
+    {
+      "id": "kiss_mark",
+      "label": "kiss mark",
+      "asset": "assets/emoji/kiss_mark-BhiAYUXX.webp"
+    },
+    {
+      "id": "kissing_cat",
+      "label": "kissing cat",
+      "asset": "assets/emoji/kissing_cat-FDdJMQJR.webp"
+    },
+    {
+      "id": "kissing_face",
+      "label": "kissing face",
+      "asset": "assets/emoji/kissing_face-BZjjsxEm.webp"
+    },
+    {
+      "id": "kissing_face_with_closed_eyes",
+      "label": "kissing face with closed eyes",
+      "asset": "assets/emoji/kissing_face_with_closed_eyes-Bk1H6KMo.webp"
+    },
+    {
+      "id": "loudly_crying_face",
+      "label": "loudly crying face-DRXKAB",
+      "asset": "assets/emoji/loudly_crying_face-DRXKAB-B.webp"
+    },
+    {
+      "id": "love_letter",
+      "label": "love letter",
+      "asset": "assets/emoji/love_letter-CgIVXp_P.webp"
+    },
+    {
+      "id": "lying_face",
+      "label": "lying face-1h94",
+      "asset": "assets/emoji/lying_face-1h94-zq4.webp"
+    },
+    {
+      "id": "melting_face",
+      "label": "melting face",
+      "asset": "assets/emoji/melting_face-BVGcR9G6.webp"
+    },
+    {
+      "id": "mending_heart",
+      "label": "mending heart",
+      "asset": "assets/emoji/mending_heart-CmNHVZb7.webp"
+    },
+    {
+      "id": "money_mouth_face",
+      "label": "money mouth face",
+      "asset": "assets/emoji/money_mouth_face-ChAZSclo.webp"
+    },
+    {
+      "id": "nauseated_face",
+      "label": "nauseated face",
+      "asset": "assets/emoji/nauseated_face-B2GdrWZ_.webp"
+    },
+    {
+      "id": "nerd_face",
+      "label": "nerd face",
+      "asset": "assets/emoji/nerd_face-BXjqO2D2.webp"
+    },
+    {
+      "id": "neutral_face",
+      "label": "neutral face-BCok",
+      "asset": "assets/emoji/neutral_face-BCok-hBH.webp"
+    },
+    {
+      "id": "ogre",
+      "label": "ogre",
+      "asset": "assets/emoji/ogre-FYkfe6QT.webp"
+    },
+    {
+      "id": "orange_heart",
+      "label": "orange heart",
+      "asset": "assets/emoji/orange_heart-Bc2EZ3FX.webp"
+    },
+    {
+      "id": "partying_face",
+      "label": "partying face",
+      "asset": "assets/emoji/partying_face-BmS9u6hr.webp"
+    },
+    {
+      "id": "pensive_face",
+      "label": "pensive face",
+      "asset": "assets/emoji/pensive_face-DKMoR89D.webp"
+    },
+    {
+      "id": "persevering_face",
+      "label": "persevering face",
+      "asset": "assets/emoji/persevering_face-CCO15jFA.webp"
+    },
+    {
+      "id": "pile_of_poo",
+      "label": "pile of poo",
+      "asset": "assets/emoji/pile_of_poo-H26XxqJs.webp"
+    },
+    {
+      "id": "pleading_face",
+      "label": "pleading face",
+      "asset": "assets/emoji/pleading_face-DSZkvikp.webp"
+    },
+    {
+      "id": "pouting_cat",
+      "label": "pouting cat",
+      "asset": "assets/emoji/pouting_cat-CHMLVrWJ.webp"
+    },
+    {
+      "id": "purple_heart",
+      "label": "purple heart",
+      "asset": "assets/emoji/purple_heart-BrYWKCpF.webp"
+    },
+    {
+      "id": "red_heart",
+      "label": "red heart",
+      "asset": "assets/emoji/red_heart-CevMMIPW.webp"
+    },
+    {
+      "id": "relieved_face",
+      "label": "relieved face",
+      "asset": "assets/emoji/relieved_face-1LsxsjfB.webp"
+    },
+    {
+      "id": "revolving_hearts",
+      "label": "revolving hearts",
+      "asset": "assets/emoji/revolving_hearts-JX0DM3Sa.webp"
+    },
+    {
+      "id": "right_anger_bubble",
+      "label": "right anger bubble",
+      "asset": "assets/emoji/right_anger_bubble-7bXRuYDE.webp"
+    },
+    {
+      "id": "robot",
+      "label": "robot",
+      "asset": "assets/emoji/robot-BNRfw0f_.webp"
+    },
+    {
+      "id": "rolling_on_the_floor_laughing",
+      "label": "rolling on the floor laughing",
+      "asset": "assets/emoji/rolling_on_the_floor_laughing-jS6AuX0k.webp"
+    },
+    {
+      "id": "sad_but_relieved_face",
+      "label": "sad but relieved face",
+      "asset": "assets/emoji/sad_but_relieved_face-tnFtmXcZ.webp"
+    },
+    {
+      "id": "saluting_face",
+      "label": "saluting face",
+      "asset": "assets/emoji/saluting_face-BOXdY38a.webp"
+    },
+    {
+      "id": "see_no_evil_monkey",
+      "label": "see no evil monkey",
+      "asset": "assets/emoji/see_no_evil_monkey-B56S4ovc.webp"
+    },
+    {
+      "id": "shushing_face",
+      "label": "shushing face",
+      "asset": "assets/emoji/shushing_face-B98HHjvX.webp"
+    },
+    {
+      "id": "skull",
+      "label": "skull",
+      "asset": "assets/emoji/skull-CMo_QoJf.webp"
+    },
+    {
+      "id": "skull_and_crossbones",
+      "label": "skull and crossbones-DgvAuA",
+      "asset": "assets/emoji/skull_and_crossbones-DgvAuA-q.webp"
+    },
+    {
+      "id": "sleeping_face",
+      "label": "sleeping face",
+      "asset": "assets/emoji/sleeping_face-DlM03NRA.webp"
+    },
+    {
+      "id": "sleepy_face",
+      "label": "sleepy face",
+      "asset": "assets/emoji/sleepy_face-BMquC2JS.webp"
+    },
+    {
+      "id": "slightly_frowning_face",
+      "label": "slightly frowning face",
+      "asset": "assets/emoji/slightly_frowning_face-Bi4yIBuw.webp"
+    },
+    {
+      "id": "slightly_smiling_face",
+      "label": "slightly smiling face",
+      "asset": "assets/emoji/slightly_smiling_face-CJmfH0YT.webp"
+    },
+    {
+      "id": "smiling_cat_with_heart_eyes",
+      "label": "smiling cat with heart eyes",
+      "asset": "assets/emoji/smiling_cat_with_heart_eyes-DNu7HyRP.webp"
+    },
+    {
+      "id": "smiling_face",
+      "label": "smiling face",
+      "asset": "assets/emoji/smiling_face-Dmu0Eo57.webp"
+    },
+    {
+      "id": "smiling_face_with_halo",
+      "label": "smiling face with halo",
+      "asset": "assets/emoji/smiling_face_with_halo-daw79n9T.webp"
+    },
+    {
+      "id": "smiling_face_with_hearts",
+      "label": "smiling face with hearts",
+      "asset": "assets/emoji/smiling_face_with_hearts-jDB9pAp9.webp"
+    },
+    {
+      "id": "smiling_face_with_horns",
+      "label": "smiling face with horns",
+      "asset": "assets/emoji/smiling_face_with_horns-DQAu99cG.webp"
+    },
+    {
+      "id": "smiling_face_with_open_hands",
+      "label": "smiling face with open hands-DMGJ",
+      "asset": "assets/emoji/smiling_face_with_open_hands-DMGJ-uhc.webp"
+    },
+    {
+      "id": "smiling_face_with_smiling_eyes",
+      "label": "smiling face with smiling eyes",
+      "asset": "assets/emoji/smiling_face_with_smiling_eyes-Bhm1j09F.webp"
+    },
+    {
+      "id": "smiling_face_with_sunglasses",
+      "label": "smiling face with sunglasses",
+      "asset": "assets/emoji/smiling_face_with_sunglasses-mUOpLJI_.webp"
+    },
+    {
+      "id": "smiling_face_with_tear",
+      "label": "smiling face with tear-C",
+      "asset": "assets/emoji/smiling_face_with_tear-C-zDKosC.webp"
+    },
+    {
+      "id": "smirking_face",
+      "label": "smirking face",
+      "asset": "assets/emoji/smirking_face-CRpTkZyc.webp"
+    },
+    {
+      "id": "sneezing_face",
+      "label": "sneezing face",
+      "asset": "assets/emoji/sneezing_face-Bj1ey0Fg.webp"
+    },
+    {
+      "id": "sparkling_heart",
+      "label": "sparkling heart",
+      "asset": "assets/emoji/sparkling_heart-CI9QI2dw.webp"
+    },
+    {
+      "id": "speak_no_evil_monkey",
+      "label": "speak no evil monkey",
+      "asset": "assets/emoji/speak_no_evil_monkey-CdXaofxW.webp"
+    },
+    {
+      "id": "speech_balloon",
+      "label": "speech balloon",
+      "asset": "assets/emoji/speech_balloon-DvNp5Pxj.webp"
+    },
+    {
+      "id": "squinting_face_with_tongue",
+      "label": "squinting face with tongue-C9tdzyp-",
+      "asset": "assets/emoji/squinting_face_with_tongue-C9tdzyp-.webp"
+    },
+    {
+      "id": "star_struck",
+      "label": "star struck",
+      "asset": "assets/emoji/star_struck-m1u8yj9b.webp"
+    },
+    {
+      "id": "strawberry",
+      "label": "strawberry",
+      "asset": "assets/emoji/strawberry-Bt8EPZ25.webp"
+    },
+    {
+      "id": "thinking_face",
+      "label": "thinking face",
+      "asset": "assets/emoji/thinking_face-DSgN1R6Y.webp"
+    },
+    {
+      "id": "thought_balloon",
+      "label": "thought balloon",
+      "asset": "assets/emoji/thought_balloon-CMuoc_di.webp"
+    },
+    {
+      "id": "tired_face",
+      "label": "tired face",
+      "asset": "assets/emoji/tired_face-Kh3tO2Sw.webp"
+    },
+    {
+      "id": "two_hearts",
+      "label": "two hearts",
+      "asset": "assets/emoji/two_hearts-BrwwWAdV.webp"
+    },
+    {
+      "id": "unamused_face",
+      "label": "unamused face",
+      "asset": "assets/emoji/unamused_face-BBV_7IJb.webp"
+    },
+    {
+      "id": "upside_down_face",
+      "label": "upside down face",
+      "asset": "assets/emoji/upside_down_face-CjI2V1UB.webp"
+    },
+    {
+      "id": "weary_cat",
+      "label": "weary cat",
+      "asset": "assets/emoji/weary_cat-DUckaZdn.webp"
+    },
+    {
+      "id": "weary_face",
+      "label": "weary face",
+      "asset": "assets/emoji/weary_face-ru_oHZir.webp"
+    },
+    {
+      "id": "white_heart",
+      "label": "white heart",
+      "asset": "assets/emoji/white_heart-DGMEPpj_.webp"
+    },
+    {
+      "id": "winking_face",
+      "label": "winking face",
+      "asset": "assets/emoji/winking_face-BfXKqSck.webp"
+    },
+    {
+      "id": "winking_face_with_tongue",
+      "label": "winking face with tongue",
+      "asset": "assets/emoji/winking_face_with_tongue-DtRZbLVh.webp"
+    },
+    {
+      "id": "woozy_face",
+      "label": "woozy face",
+      "asset": "assets/emoji/woozy_face-5aQXKSkH.webp"
+    },
+    {
+      "id": "worried_face",
+      "label": "worried face",
+      "asset": "assets/emoji/worried_face-CQN6_6I6.webp"
+    },
+    {
+      "id": "yawning_face",
+      "label": "yawning face",
+      "asset": "assets/emoji/yawning_face-DbXTHUhw.webp"
+    },
+    {
+      "id": "yellow_heart",
+      "label": "yellow heart",
+      "asset": "assets/emoji/yellow_heart-_3Et_ogM.webp"
+    },
+    {
+      "id": "zany_face",
+      "label": "zany face",
+      "asset": "assets/emoji/zany_face-7dr0brGg.webp"
+    },
+    {
+      "id": "zipper_mouth_face",
+      "label": "zipper mouth face",
+      "asset": "assets/emoji/zipper_mouth_face-B5j9gZrk.webp"
+    },
+    {
+      "id": "zzz",
+      "label": "zzz",
+      "asset": "assets/emoji/zzz-zj1NHTcQ.webp"
+    }
+  ]
+}

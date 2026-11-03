@@ -1,0 +1,55 @@
+# xcodegen spec — wraps the SwiftPM FlareImApp package into a runnable iOS app target.
+# Generate:  xcodegen generate   (after scripts/sync_ffi.sh)
+# Build sim: xcodebuild -project FlareImApp.xcodeproj -scheme FlareImExampleApp \
+#              -destination 'platform=iOS Simulator,name=iPhone 17' build
+#
+# FFI: the iOS NativeLibraryLoader resolves the C-ABI via dlopen(nil), so the static
+# slice must be (1) force-loaded (kept past dead-strip) and (2) export_dynamic (in the
+# dynamic symbol table so dlsym finds it).
+name: FlareImApp
+options:
+  bundleIdPrefix: com.flare.im.example
+  deploymentTarget:
+    iOS: "16.0"
+  createIntermediateGroups: true
+
+packages:
+  FlareImApp:
+    path: .
+
+targets:
+  FlareImExampleApp:
+    type: application
+    platform: iOS
+    sources:
+      - path: Sources/FlareImAppRunner
+    dependencies:
+      - package: FlareImApp
+        product: FlareImApp
+    # "Save" writes pictures, videos and files to Documents/flare (the core's iOS download location). These two
+    # keys put the app's Documents in the Files app (On My iPhone › FlareIM), where the person finds them. They
+    # have no INFOPLIST_KEY_* build setting, so they live in this partial Info.plist; the generated one keeps the rest.
+    info:
+      path: Resources/Info.plist
+      properties:
+        UIFileSharingEnabled: true
+        LSSupportsOpeningDocumentsInPlace: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.flare.im.example.app
+        GENERATE_INFOPLIST_FILE: "YES"
+        INFOPLIST_KEY_UILaunchScreen_Generation: "YES"
+        INFOPLIST_KEY_CFBundleDisplayName: FlareIM
+        INFOPLIST_KEY_NSMicrophoneUsageDescription: FlareIM needs microphone access to record and send voice messages.
+        ONLY_ACTIVE_ARCH: "YES"
+        SWIFT_VERSION: "6.0"
+        # Select the Rust target for the SDK and current architecture being linked.
+        "FLARE_FFI_TARGET[sdk=iphoneos*][arch=arm64]": aarch64-apple-ios
+        "FLARE_FFI_TARGET[sdk=iphonesimulator*][arch=arm64]": aarch64-apple-ios-sim
+        "FLARE_FFI_TARGET[sdk=iphonesimulator*][arch=x86_64]": x86_64-apple-ios
+        # dlopen(nil)+dlsym needs force_load + export_dynamic.
+        OTHER_LDFLAGS:
+          - -force_load
+          - $(PROJECT_DIR)/FFI/ios/$(FLARE_FFI_TARGET)/libflare_im_core_sdk_ffi.a
+          - -Xlinker
+          - -export_dynamic

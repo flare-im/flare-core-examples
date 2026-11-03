@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Flare Core Tauri</title>
+  </head>
+  <body>
+    <div id="app"></div>
+    <script>
+      const showBootError = (reason) => {
+        const detail = reason && reason.stack ? reason.stack : String(reason || "unknown error");
+        const app = document.getElementById("app");
+        if (!app || app.childElementCount > 0) return;
+        app.innerHTML =
+          '<pre style="box-sizing:border-box;margin:24px;padding:16px;white-space:pre-wrap;font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;color:#991b1b;background:#fff1f2;border:1px solid #fecdd3;border-radius:8px;">' +
+          detail.replace(/[&<>]/g, (ch) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" })[ch]) +
+          "</pre>";
+      };
+      window.addEventListener("error", (event) => showBootError(event.error || event.message));
+      window.addEventListener("unhandledrejection", (event) => showBootError(event.reason));
+    </script>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

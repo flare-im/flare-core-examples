@@ -1,0 +1,38 @@
+/* tslint:disable */
+/* eslint-disable */
+export const memory: WebAssembly.Memory;
+export const __wbg_flareimwasmruntime_free: (a: number, b: number) => void;
+export const createWasmRuntime: () => number;
+export const flareBindingContractJson: (a: number) => void;
+export const flareBindingContractVersion: (a: number) => void;
+export const flareClearEncryptionKey: () => void;
+export const flareClientConfigContractJson: (a: number) => void;
+export const flareClientInitExampleJson: (a: number) => void;
+export const flareEncryptionKeyLen: () => number;
+export const flareHasEncryptionKey: () => number;
+export const flareNowRfc3339: (a: number) => void;
+export const flareRuntimeId: (a: number) => void;
+export const flareSetEncryptionKey: (a: number, b: number, c: number) => void;
+export const flareSetEncryptionKeyHex: (a: number, b: number, c: number) => void;
+export const flareimwasmruntime_clearStorageHost: (a: number) => void;
+export const flareimwasmruntime_dispose: (a: number) => void;
+export const flareimwasmruntime_invoke: (a: number, b: number, c: number, d: number, e: number) => number;
+export const flareimwasmruntime_setEventCallback: (a: number, b: number) => void;
+export const flareimwasmruntime_setStorageHost: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number) => void;
+export const flareimwasmruntime_storageHostConfigured: (a: number) => number;
+export const wasm_start: () => void;
+export const flareimwasmruntime_new: () => number;
+export const flareWallClockMs: () => bigint;
+export const __wasm_bindgen_func_elem_10737: (a: number, b: number, c: number) => void;
+export const __wasm_bindgen_func_elem_10062: (a: number, b: number) => void;
+export const __wasm_bindgen_func_elem_11669: (a: number, b: number, c: number) => void;
+export const __wasm_bindgen_func_elem_11654: (a: number, b: number) => void;
+export const __wasm_bindgen_func_elem_11751: (a: number, b: number) => void;
+export const __wasm_bindgen_func_elem_11718: (a: number, b: number) => void;
+export const __wasm_bindgen_func_elem_11962: (a: number, b: number, c: number, d: number) => void;
+export const __wbindgen_export: (a: number, b: number) => number;
+export const __wbindgen_export2: (a: number, b: number, c: number, d: number) => number;
+export const __wbindgen_export3: (a: number) => void;
+export const __wbindgen_export4: (a: number, b: number, c: number) => void;
+export const __wbindgen_add_to_stack_pointer: (a: number) => number;
+export const __wbindgen_start: () => void;

@@ -1,0 +1,38 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Flare Core Tauri App",
+  "version": "0.1.0",
+  "identifier": "com.flare.core.tauri",
+  "build": {
+    "beforeDevCommand": "yarn dev:renderer",
+    "beforeBuildCommand": "yarn build",
+    "devUrl": "http://localhost:1432",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "macOSPrivateApi": true,
+    "windows": [
+      {
+        "title": "Flare Core Tauri",
+        "label": "main",
+        "width": 1280,
+        "height": 860,
+        "minWidth": 960,
+        "minHeight": 640,
+        "center": true,
+        "decorations": true
+      }
+    ],
+    "security": {
+      "csp": null,
+      "assetProtocol": {
+        "enable": true,
+        "scope": ["$HOME/**", "$DOCUMENT/**", "$DOWNLOAD/**", "$PICTURE/**", "$TEMP/**", "$CACHE/**"]
+      }
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all"
+  }
+}

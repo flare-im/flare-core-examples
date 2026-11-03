@@ -1,0 +1,32 @@
+[
+  {
+    "source": "https://github.com/flare-im/flare-core-web-demo.git",
+    "commit": "05db1293ebe87a84e824933a9bf34ddec7b0818e",
+    "old_path": "flare-core-sdk/examples/flare-core-web-app",
+    "path": "apps/flare-core-web-app"
+  },
+  {
+    "source": "https://github.com/flare-im/flare-core-tauri-demo.git",
+    "commit": "4ffce771676a4c2f1e050f091a2babab98ab96b1",
+    "old_path": "flare-core-sdk/examples/flare-core-tauri-app",
+    "path": "apps/flare-core-tauri-app"
+  },
+  {
+    "source": "https://github.com/flare-im/flare-core-flutter-demo.git",
+    "commit": "4608fd4587d9345946b2175546b07bd50299ac5c",
+    "old_path": "flare-core-sdk/examples/flare-core-flutter-app",
+    "path": "apps/flare-core-flutter-app"
+  },
+  {
+    "source": "https://github.com/flare-im/flare-core-ios-demo.git",
+    "commit": "af944821dae88fff485096518f02476aeeeb8489",
+    "old_path": "flare-core-sdk/examples/flare-core-ios-app",
+    "path": "apps/flare-core-ios-app"
+  },
+  {
+    "source": "https://github.com/flare-im/flare-core-android-demo.git",
+    "commit": "bc0a119160c05502f7dfe21eb745098a5a05c35b",
+    "old_path": "flare-core-sdk/examples/flare-core-android-app",
+    "path": "apps/flare-core-android-app"
+  }
+]

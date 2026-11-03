@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Language of the kit's own strings (KitStrings.kt); must match this resource set. -->
+    <string name="flare_kit_language">en</string>
+    <string name="app_name">FlareIM</string>
+
+    <!-- Navigation / sections -->
+    <string name="nav_messages">Messages</string>
+    <string name="nav_search">Search</string>
+    <string name="nav_sdk_status">SDK Status</string>
+    <string name="nav_settings">Settings</string>
+
+    <!-- Brand / shell -->
+    <string name="brand_eyebrow">FLARE CORE</string>
+    <string name="brand_name">flare IM</string>
+    <string name="brand_tagline">Secure, fast instant messaging</string>
+
+    <!-- Connection / runtime status -->
+    <string name="status_online">Online</string>
+    <string name="status_offline">Offline</string>
+    <string name="status_connecting">Connecting</string>
+    <string name="status_not_connected">Not connected</string>
+    <string name="status_needs_attention">Needs attention</string>
+    <string name="status_unavailable">Unavailable</string>
+
+    <!-- Conversation filters -->
+    <string name="filter_all">All</string>
+    <string name="filter_unread">Unread</string>
+    <string name="filter_mentions">Mentions</string>
+    <string name="filter_pinned">Pinned</string>
+    <string name="filter_archived">Archived</string>
+    <string name="filter_muted">Muted</string>
+    <string name="filter_drafts">Drafts</string>
+
+    <!-- Common actions -->
+    <string name="action_cancel">Cancel</string>
+    <string name="action_send">Send</string>
+    <string name="action_open">Open</string>
+    <string name="action_done">Done</string>
+    <string name="action_more">More</string>
+    <string name="action_logout">Logout</string>
+    <string name="action_retry">Retry</string>
+
+    <!-- Conversation list -->
+    <string name="conversations_title">Messages</string>
+    <string name="conversations_search_hint">Search conversations</string>
+    <string name="conversations_subtitle">%1$d chats · %2$d pinned · %3$s</string>
+    <string name="conversations_empty_title">No conversations</string>
+    <string name="conversations_empty_message">Tap the plus button to open a conversation</string>
+    <string name="conversations_start">Start a conversation</string>
+    <string name="conversation_no_messages">No messages</string>
+
+    <!-- Chat -->
+    <string name="chat_load_earlier">Load earlier messages</string>
+    <string name="chat_empty_title">No messages</string>
+    <string name="chat_empty_message">Send the first message, or use the tools below to build media, tasks, polls, and more.</string>
+    <string name="chat_search_title">Search in conversation</string>
+    <string name="chat_search_hint">Keyword</string>
+    <string name="chat_search_action">Search</string>
+    <string name="chat_search_empty">Enter a keyword to search this conversation</string>
+    <string name="composer_hint">Send to %1$s</string>
+    <string name="composer_form_send">Send</string>
+
+    <!-- Auth -->
+    <string name="auth_welcome">Welcome back</string>
+    <string name="auth_enter_id">Enter your user ID to sign in</string>
+    <string name="auth_user_id">User ID</string>
+    <string name="auth_sign_in">Sign in</string>
+    <string name="auth_signing_in">Signing in…</string>
+    <string name="auth_server_optional">Server address (optional)</string>
+    <string name="auth_id_hint">Your user ID is assigned by the system and shown in account settings</string>
+    <string name="auth_error_title">Sign-in failed</string>
+    <string name="auth_footer">ID-only sign-in · secure connection enabled</string>
+    <string name="auth_user_id_placeholder">Enter user ID</string>
+    <string name="auth_protocol">Protocol</string>
+    <string name="auth_server_address">Server address</string>
+    <string name="auth_ws_url">WebSocket URL</string>
+    <string name="auth_gateway_url">Gateway URL</string>
+    <string name="auth_gateway_hint">The SDK issues and refreshes access tokens from this gateway</string>
+    <string name="auth_quic_url">QUIC URL</string>
+    <string name="auth_transport_race">Race</string>
+
+    <!-- Settings -->
+    <string name="settings_appearance">Appearance</string>
+    <string name="settings_login_defaults">Login Defaults</string>
+    <string name="settings_session">Session</string>
+    <string name="settings_refresh_diagnostics">Refresh diagnostics</string>
+    <string name="settings_dispose">Dispose</string>
+    <string name="settings_media_cache">Media cache</string>
+    <string name="settings_cache_usage">Usage: %1$s</string>
+    <string name="settings_cache_refresh">Refresh</string>
+    <string name="settings_cache_clear">Clear cache</string>
+
+    <!-- SDK Lab -->
+    <string name="lab_title">SDK Status</string>
+    <string name="lab_no_ops">No lab operations yet.</string>
+    <string name="msg_action_edit_rich">Edit rich text</string>
+    <string name="msg_action_delete_everyone">Delete for everyone</string>
+    <string name="msg_state_recalled">Message recalled</string>
+    <string name="msg_state_failed">Failed · tap to retry</string>
+    <string name="msg_state_sending">Sending…</string>
+    <string name="msg_edit_title">Edit message</string>
+    <string name="msg_edit_hint">New message text</string>
+    <string name="action_confirm">OK</string>
+    <string name="composer_replying_to">Replying to %1$s: %2$s</string>
+    <string name="auth_http_url">Gateway HTTP URL</string>
+    <string name="auth_http_url_hint">e.g. http://10.0.2.2:50050 — the SDK issues access tokens from it</string>
+    <string name="auth_access_token">Access token (optional)</string>
+    <string name="auth_access_token_hint">Leave empty and the SDK issues one from the gateway and refreshes it; paste a backend-issued token to use it as-is</string>
+    <string name="auth_fallback_ws">Fallback (WebSocket)</string>
+    <string name="auth_token_rejected">The server rejected the access token: the signing secret or issuer does not match the server, or the token has expired. Check the signing secret and try again.</string>
+    <string name="conv_pin">Pin</string>
+    <string name="conv_unpin">Unpin</string>
+    <string name="conv_mute">Mute</string>
+    <string name="conv_unmute">Unmute</string>
+    <string name="conv_archive">Archive</string>
+    <string name="conv_unarchive">Unarchive</string>
+    <string name="conv_mark_unread">Mark as unread</string>
+    <string name="conv_clear_local">Clear local history</string>
+    <string name="conv_delete">Delete</string>
+    <string name="conv_direct">Direct</string>
+    <string name="conv_group">Group</string>
+    <string name="conv_member_ids">Member IDs (comma-separated)</string>
+    <string name="conv_peer_id">Peer ID</string>
+    <string name="msg_status_sending">Sending</string>
+    <string name="msg_status_failed_retry">Failed to send, tap to retry</string>
+    <string name="msg_status_read">Read</string>
+    <string name="msg_status_delivered">Delivered</string>
+    <string name="msg_preview_a11y">Preview</string>
+    <string name="msg_card_file">File</string>
+    <string name="msg_card_location">Location</string>
+    <string name="msg_card_contact">Contact</string>
+    <string name="msg_card_link">Link</string>
+    <string name="msg_card_miniprogram">Mini program</string>
+    <string name="msg_card_vote">Vote</string>
+    <string name="msg_card_task">Task</string>
+    <string name="msg_card_schedule">Schedule</string>
+    <string name="composer_send">Send</string>
+    <string name="composer_emoji_sticker">Emoji / stickers</string>
+    <string name="composer_mention">Mention</string>
+    <string name="composer_voice">Voice</string>
+    <string name="composer_image">Image</string>
+    <string name="composer_richtext">Rich text</string>
+    <string name="composer_more">More</string>
+    <string name="fmt_bold">Bold</string>
+    <string name="fmt_italic">Italic</string>
+    <string name="fmt_strike">Strikethrough</string>
+    <string name="fmt_code">Inline code</string>
+    <string name="fmt_heading">Heading</string>
+    <string name="fmt_quote">Quote</string>
+    <string name="fmt_bullet">Bulleted list</string>
+    <string name="fmt_ordered">Numbered list</string>
+    <string name="choose_conversation">Choose a conversation</string>
+    <string name="choose_conversation_hint">Open a conversation from the list to start reading.</string>
+
+    <!-- Save to device / download location / media cache -->
+    <string name="media_saving">Saving…</string>
+    <string name="media_saved_to">Saved to %1$s</string>
+    <string name="media_save_failed">Could not save. Try again.</string>
+    <string name="settings_download_location">Download location</string>
+    <string name="settings_download_location_change">Change location</string>
+    <string name="settings_download_location_reset">Use the default location</string>
+    <string name="settings_download_location_unwritable">This folder cannot be written to. Choose another one.</string>
+    <string name="settings_download_location_pick_failed">Could not use that folder. Try another one.</string>
+    <string name="settings_not_loaded">Not loaded</string>
+    <string name="settings_cache_size">Image and file cache</string>
+    <string name="settings_clear_cache_confirm">Pictures you have seen will be downloaded again.</string>
+    <string name="settings_clear_cache_failed">Could not clear the cache. Try again.</string>
+    <string name="settings_cache_cleared">Cache cleared</string>
+</resources>

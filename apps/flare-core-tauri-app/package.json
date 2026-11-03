@@ -1,0 +1,39 @@
+{
+  "name": "flare-core-tauri-app",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Production-oriented IM app template for @flare-im/sdk/tauri (Tauri desktop).",
+  "scripts": {
+    "dev": "yarn tauri dev",
+    "dev:renderer": "vite --host 0.0.0.0 --port 1432",
+    "build": "vue-tsc --noEmit -p tsconfig.json && vite build && node ../../packages/flare-core-typescript-sdk/scripts/check-vite-bundle-budget.mjs dist 1400",
+    "tauri": "RUSTC_WRAPPER= tauri",
+    "tauri:build": "yarn tauri build",
+    "test": "node --test tests/*.test.mjs",
+    "typecheck": "vue-tsc --noEmit -p tsconfig.json"
+  },
+  "dependencies": {
+    "@flare-im/sdk": "file:../../packages/flare-core-typescript-sdk",
+    "@flare-im/tokens": "file:../../../flare-im-design/tokens",
+    "@flare-im/vue-ui": "file:../../../flare-im-design/packages/vue-im-ui",
+    "@tauri-apps/api": "2.11.0",
+    "@tauri-apps/plugin-dialog": "2.7.1",
+    "@tauri-apps/plugin-notification": "2.3.3",
+    "@tauri-apps/plugin-opener": "2.5.4",
+    "@vicons/ionicons5": "^0.13.0",
+    "markdown-it": "^14.2.0",
+    "naive-ui": "^2.44.1",
+    "protobufjs": "^8.6.5",
+    "vue": "^3.5.42",
+    "vue-router": "^4.6.4"
+  },
+  "devDependencies": {
+    "@tauri-apps/cli": "2.11.0",
+    "@types/node": "^22.10.2",
+    "@vitejs/plugin-vue": "^5.2.1",
+    "typescript": "~5.6.2",
+    "vite": "^6.0.3",
+    "vue-tsc": "^2.1.10"
+  }
+}

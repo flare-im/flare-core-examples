@@ -1,0 +1,20 @@
+{
+  "name": "flare-im-core-sdk-wasm",
+  "type": "module",
+  "collaborators": [
+    "Flare Team"
+  ],
+  "description": "Flare IM Core SDK WebAssembly binding",
+  "version": "0.2.0",
+  "license": "Apache-2.0",
+  "files": [
+    "flare_im_core_sdk_bg.wasm",
+    "flare_im_core_sdk.js",
+    "flare_im_core_sdk.d.ts"
+  ],
+  "main": "flare_im_core_sdk.js",
+  "types": "flare_im_core_sdk.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}

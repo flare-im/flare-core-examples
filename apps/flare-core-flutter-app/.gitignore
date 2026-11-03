@@ -1,0 +1,82 @@
+# Miscellaneous
+*.class
+*.log
+logs/
+*.pyc
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+.codegraph/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+/coverage/
+flutter_*.png
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+android/.gradle/
+android/.cxx/
+android/local.properties
+android/captures/
+
+# iOS：Rust FFI 静态库（由 `make flutter-sync` 从 bindings/c 拷贝）
+ios/FFI/build/
+# Android：Rust FFI .so（由 `make flutter-sync` 拷贝）
+android/app/src/main/jniLibs/
+
+# Apple build products and CocoaPods
+ios/Pods/
+ios/.symlinks/
+ios/Flutter/ephemeral/
+ios/Flutter/Generated.xcconfig
+ios/Flutter/flutter_export_environment.sh
+ios/Flutter/.last_build_id
+ios/build/
+macos/Pods/
+macos/.symlinks/
+macos/Flutter/ephemeral/
+macos/Flutter/GeneratedPluginRegistrant.swift
+macos/Flutter/GeneratedPluginRegistrant.swift.tmp
+macos/build/
+
+# Local env and signing secrets
+.env
+.env.*
+!.env.example
+!.env.*.example
+*.jks
+*.keystore
+key.properties
+
+# Gradle build output under android/ (root /build/ rule does not reach it)
+android/build/

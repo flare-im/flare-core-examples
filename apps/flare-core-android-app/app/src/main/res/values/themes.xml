@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 无 ActionBar：登录/工作台均为 Compose 自绘，框架默认主题的 ActionBar(显示 app label)
+         会盖住渐变品牌头，故移除；状态/导航栏透明，配合 enableEdgeToEdge 全屏铺底。 -->
+    <style name="Theme.FlareIM" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowBackground">@android:color/white</item>
+    </style>
+</resources>

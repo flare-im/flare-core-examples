@@ -1,0 +1,384 @@
+{
+  "source": "examples/flare-core-tauri/dist/assets",
+  "kind": "sticker_packs",
+  "packs": [
+    {
+      "id": "compressed",
+      "title": "Compressed Tauri Pack",
+      "items": [
+        {
+          "id": "001-BKiYnxGR",
+          "asset": "assets/stickers/compressed/001-BKiYnxGR.webp"
+        },
+        {
+          "id": "001-D_JQnxJT",
+          "asset": "assets/stickers/compressed/001-D_JQnxJT.webp"
+        },
+        {
+          "id": "002-01aqoyAS",
+          "asset": "assets/stickers/compressed/002-01aqoyAS.webp"
+        },
+        {
+          "id": "002-C1A-R1c_",
+          "asset": "assets/stickers/compressed/002-C1A-R1c_.webp"
+        },
+        {
+          "id": "003-ArfDjLHU",
+          "asset": "assets/stickers/compressed/003-ArfDjLHU.webp"
+        },
+        {
+          "id": "003-Bts7jPQR",
+          "asset": "assets/stickers/compressed/003-Bts7jPQR.webp"
+        },
+        {
+          "id": "004-4B73wCX4",
+          "asset": "assets/stickers/compressed/004-4B73wCX4.webp"
+        },
+        {
+          "id": "004-DPgVOi8I",
+          "asset": "assets/stickers/compressed/004-DPgVOi8I.webp"
+        },
+        {
+          "id": "005-DmVQtkGa",
+          "asset": "assets/stickers/compressed/005-DmVQtkGa.webp"
+        },
+        {
+          "id": "005-DxcAOu1R",
+          "asset": "assets/stickers/compressed/005-DxcAOu1R.webp"
+        },
+        {
+          "id": "006-C4OKxDza",
+          "asset": "assets/stickers/compressed/006-C4OKxDza.webp"
+        },
+        {
+          "id": "006-Q7leo8RH",
+          "asset": "assets/stickers/compressed/006-Q7leo8RH.webp"
+        },
+        {
+          "id": "007-B0B5U8qw",
+          "asset": "assets/stickers/compressed/007-B0B5U8qw.webp"
+        },
+        {
+          "id": "007-Bakdlwpt",
+          "asset": "assets/stickers/compressed/007-Bakdlwpt.webp"
+        },
+        {
+          "id": "008-DSnNHaPs",
+          "asset": "assets/stickers/compressed/008-DSnNHaPs.webp"
+        },
+        {
+          "id": "008-DnSHCrPR",
+          "asset": "assets/stickers/compressed/008-DnSHCrPR.webp"
+        },
+        {
+          "id": "009-B_sTpwP4",
+          "asset": "assets/stickers/compressed/009-B_sTpwP4.webp"
+        },
+        {
+          "id": "009-BhzdQthV",
+          "asset": "assets/stickers/compressed/009-BhzdQthV.webp"
+        },
+        {
+          "id": "010-BrvhTSUu",
+          "asset": "assets/stickers/compressed/010-BrvhTSUu.webp"
+        },
+        {
+          "id": "010-Y80_BHOe",
+          "asset": "assets/stickers/compressed/010-Y80_BHOe.webp"
+        },
+        {
+          "id": "011-BEv1vHAv",
+          "asset": "assets/stickers/compressed/011-BEv1vHAv.webp"
+        },
+        {
+          "id": "011-CpZy0soF",
+          "asset": "assets/stickers/compressed/011-CpZy0soF.webp"
+        },
+        {
+          "id": "012-C8MhckZ-",
+          "asset": "assets/stickers/compressed/012-C8MhckZ-.webp"
+        },
+        {
+          "id": "012-CGVT2q5H",
+          "asset": "assets/stickers/compressed/012-CGVT2q5H.webp"
+        },
+        {
+          "id": "013-BSwOo6g-",
+          "asset": "assets/stickers/compressed/013-BSwOo6g-.webp"
+        },
+        {
+          "id": "013-SrfNAvOT",
+          "asset": "assets/stickers/compressed/013-SrfNAvOT.webp"
+        },
+        {
+          "id": "014-Bo8PTobb",
+          "asset": "assets/stickers/compressed/014-Bo8PTobb.webp"
+        },
+        {
+          "id": "014-CkRUez23",
+          "asset": "assets/stickers/compressed/014-CkRUez23.webp"
+        },
+        {
+          "id": "015-DohvO_bp",
+          "asset": "assets/stickers/compressed/015-DohvO_bp.webp"
+        },
+        {
+          "id": "015-kVXYAadC",
+          "asset": "assets/stickers/compressed/015-kVXYAadC.webp"
+        },
+        {
+          "id": "016-BCLQ64Iy",
+          "asset": "assets/stickers/compressed/016-BCLQ64Iy.webp"
+        },
+        {
+          "id": "016-sg99eE6U",
+          "asset": "assets/stickers/compressed/016-sg99eE6U.webp"
+        },
+        {
+          "id": "017-BUgoDRB8",
+          "asset": "assets/stickers/compressed/017-BUgoDRB8.webp"
+        },
+        {
+          "id": "017-CXwbReea",
+          "asset": "assets/stickers/compressed/017-CXwbReea.webp"
+        },
+        {
+          "id": "018-CCfcV8ko",
+          "asset": "assets/stickers/compressed/018-CCfcV8ko.webp"
+        },
+        {
+          "id": "018-ClaUSrgG",
+          "asset": "assets/stickers/compressed/018-ClaUSrgG.webp"
+        },
+        {
+          "id": "019-C-2EDrpj",
+          "asset": "assets/stickers/compressed/019-C-2EDrpj.webp"
+        },
+        {
+          "id": "019-DB-UwzpV",
+          "asset": "assets/stickers/compressed/019-DB-UwzpV.webp"
+        },
+        {
+          "id": "020-D58qLRfA",
+          "asset": "assets/stickers/compressed/020-D58qLRfA.webp"
+        },
+        {
+          "id": "020-HD6EWgc3",
+          "asset": "assets/stickers/compressed/020-HD6EWgc3.webp"
+        },
+        {
+          "id": "021-IEzdchtf",
+          "asset": "assets/stickers/compressed/021-IEzdchtf.webp"
+        },
+        {
+          "id": "021-Nv1chfRl",
+          "asset": "assets/stickers/compressed/021-Nv1chfRl.webp"
+        },
+        {
+          "id": "022-BVq5a8uB",
+          "asset": "assets/stickers/compressed/022-BVq5a8uB.webp"
+        },
+        {
+          "id": "022-DegcwNfY",
+          "asset": "assets/stickers/compressed/022-DegcwNfY.webp"
+        },
+        {
+          "id": "023--ZrgOHqT",
+          "asset": "assets/stickers/compressed/023--ZrgOHqT.webp"
+        },
+        {
+          "id": "023-BqPueyDA",
+          "asset": "assets/stickers/compressed/023-BqPueyDA.webp"
+        },
+        {
+          "id": "024-8w11yx-l",
+          "asset": "assets/stickers/compressed/024-8w11yx-l.webp"
+        },
+        {
+          "id": "024-ByWSh4D0",
+          "asset": "assets/stickers/compressed/024-ByWSh4D0.webp"
+        },
+        {
+          "id": "025-BPp0VBmY",
+          "asset": "assets/stickers/compressed/025-BPp0VBmY.webp"
+        },
+        {
+          "id": "025-RRd1A_2Z",
+          "asset": "assets/stickers/compressed/025-RRd1A_2Z.webp"
+        },
+        {
+          "id": "026-fxpWDr_m",
+          "asset": "assets/stickers/compressed/026-fxpWDr_m.webp"
+        },
+        {
+          "id": "027-DCsdmicc",
+          "asset": "assets/stickers/compressed/027-DCsdmicc.webp"
+        },
+        {
+          "id": "028-BXMuvGXF",
+          "asset": "assets/stickers/compressed/028-BXMuvGXF.webp"
+        },
+        {
+          "id": "029-BcTE1pUx",
+          "asset": "assets/stickers/compressed/029-BcTE1pUx.webp"
+        },
+        {
+          "id": "030-CwmuwLfQ",
+          "asset": "assets/stickers/compressed/030-CwmuwLfQ.webp"
+        },
+        {
+          "id": "031-Cw_EffyY",
+          "asset": "assets/stickers/compressed/031-Cw_EffyY.webp"
+        },
+        {
+          "id": "032-C36WCPIW",
+          "asset": "assets/stickers/compressed/032-C36WCPIW.webp"
+        },
+        {
+          "id": "033-CKVJkxAn",
+          "asset": "assets/stickers/compressed/033-CKVJkxAn.webp"
+        },
+        {
+          "id": "034-DoCX0w2C",
+          "asset": "assets/stickers/compressed/034-DoCX0w2C.webp"
+        },
+        {
+          "id": "035-tZl86RWr",
+          "asset": "assets/stickers/compressed/035-tZl86RWr.webp"
+        },
+        {
+          "id": "036-BsqPelxX",
+          "asset": "assets/stickers/compressed/036-BsqPelxX.webp"
+        },
+        {
+          "id": "037-0Wehr4Ju",
+          "asset": "assets/stickers/compressed/037-0Wehr4Ju.webp"
+        },
+        {
+          "id": "038-DXpWtKMv",
+          "asset": "assets/stickers/compressed/038-DXpWtKMv.webp"
+        },
+        {
+          "id": "039-Cj29Aod4",
+          "asset": "assets/stickers/compressed/039-Cj29Aod4.webp"
+        },
+        {
+          "id": "040-G6LETit2",
+          "asset": "assets/stickers/compressed/040-G6LETit2.webp"
+        },
+        {
+          "id": "041-DRNMB7Si",
+          "asset": "assets/stickers/compressed/041-DRNMB7Si.webp"
+        },
+        {
+          "id": "042-DlrxTmcZ",
+          "asset": "assets/stickers/compressed/042-DlrxTmcZ.webp"
+        },
+        {
+          "id": "043-DdcJ7TrI",
+          "asset": "assets/stickers/compressed/043-DdcJ7TrI.webp"
+        },
+        {
+          "id": "044-BasZgd_H",
+          "asset": "assets/stickers/compressed/044-BasZgd_H.webp"
+        },
+        {
+          "id": "045-B5RM3sVL",
+          "asset": "assets/stickers/compressed/045-B5RM3sVL.webp"
+        },
+        {
+          "id": "046-DyJA150s",
+          "asset": "assets/stickers/compressed/046-DyJA150s.webp"
+        },
+        {
+          "id": "047-BIc36KgH",
+          "asset": "assets/stickers/compressed/047-BIc36KgH.webp"
+        },
+        {
+          "id": "048-BVh8CyAn",
+          "asset": "assets/stickers/compressed/048-BVh8CyAn.webp"
+        },
+        {
+          "id": "049-D6Pw_JUL",
+          "asset": "assets/stickers/compressed/049-D6Pw_JUL.webp"
+        },
+        {
+          "id": "050-NE_lcKH-",
+          "asset": "assets/stickers/compressed/050-NE_lcKH-.webp"
+        },
+        {
+          "id": "051-CHnaKqvO",
+          "asset": "assets/stickers/compressed/051-CHnaKqvO.webp"
+        },
+        {
+          "id": "052-qoMLebXF",
+          "asset": "assets/stickers/compressed/052-qoMLebXF.webp"
+        },
+        {
+          "id": "053-CS2q6Q-h",
+          "asset": "assets/stickers/compressed/053-CS2q6Q-h.webp"
+        },
+        {
+          "id": "054-Bry1MGFH",
+          "asset": "assets/stickers/compressed/054-Bry1MGFH.webp"
+        },
+        {
+          "id": "055-DHAhT7Uf",
+          "asset": "assets/stickers/compressed/055-DHAhT7Uf.webp"
+        },
+        {
+          "id": "056-C9nvhc0e",
+          "asset": "assets/stickers/compressed/056-C9nvhc0e.webp"
+        },
+        {
+          "id": "057-CSDvQ61Q",
+          "asset": "assets/stickers/compressed/057-CSDvQ61Q.webp"
+        },
+        {
+          "id": "058-CjWozLrZ",
+          "asset": "assets/stickers/compressed/058-CjWozLrZ.webp"
+        },
+        {
+          "id": "059-Df8irbNx",
+          "asset": "assets/stickers/compressed/059-Df8irbNx.webp"
+        },
+        {
+          "id": "060-BFS7ixK0",
+          "asset": "assets/stickers/compressed/060-BFS7ixK0.webp"
+        },
+        {
+          "id": "061-CdIMp0Ee",
+          "asset": "assets/stickers/compressed/061-CdIMp0Ee.webp"
+        },
+        {
+          "id": "062-uCcSF2ZU",
+          "asset": "assets/stickers/compressed/062-uCcSF2ZU.webp"
+        },
+        {
+          "id": "063-DSZ2CfeM",
+          "asset": "assets/stickers/compressed/063-DSZ2CfeM.webp"
+        },
+        {
+          "id": "064-DfSE0YMd",
+          "asset": "assets/stickers/compressed/064-DfSE0YMd.webp"
+        },
+        {
+          "id": "065-Bo_3UV3h",
+          "asset": "assets/stickers/compressed/065-Bo_3UV3h.webp"
+        },
+        {
+          "id": "066-C0bbFb-F",
+          "asset": "assets/stickers/compressed/066-C0bbFb-F.webp"
+        },
+        {
+          "id": "067-B_qEFvHD",
+          "asset": "assets/stickers/compressed/067-B_qEFvHD.webp"
+        },
+        {
+          "id": "068-ye_6TgAT",
+          "asset": "assets/stickers/compressed/068-ye_6TgAT.webp"
+        }
+      ]
+    }
+  ]
+}
