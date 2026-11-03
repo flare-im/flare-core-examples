@@ -122,7 +122,7 @@ class AppDefaults {
     // 被伪造 token。占位串换来的是启动时一次明确的失败，比一个"能跑但不安全"
     // 的默认值好。
     //
-    // 本机的真实值在 flare-im-core/logs/.dev-token-secret（起后端时生成），
+    // 本机的真实值在 flare-core-server/logs/.dev-token-secret（起后端时生成），
     // 或用 --dart-define=FLARE_TOKEN_SECRET=... 传入。
     defaultUserId: '',
     login: LoginCopy.fallback,

@@ -25,7 +25,7 @@
 ## 再试运行
 
 ```bash
-cd flare-im-core-client-sdk/examples/flare-core-flutter-app
+cd flare-core-sdk/examples/flare-core-flutter-app
 ./scripts/setup_ios.sh
 flutter run -d "iPhone 17 Pro"
 ```
@@ -34,12 +34,12 @@ flutter run -d "iPhone 17 Pro"
 
 ## `未生成静态库` / `aws-lc-sys` CMake 报错
 
-`bindings/c` 属于 **workspace**，Rust 产物在 **`flare-im-core-sdk/target/<triple>/release/`**；`scripts/ensure_ios_ffi_staticlib.sh` 从该目录拷贝或 `lipo` 到 Flutter 工程。
+`bindings/c` 属于 **workspace**，Rust 产物在 **`flare-core-sdk-engine/target/<triple>/release/`**；`scripts/ensure_ios_ffi_staticlib.sh` 从该目录拷贝或 `lipo` 到 Flutter 工程。
 
 若 `cargo` 在编译 `aws-lc-sys` 时失败（CMake 提示缺少 `tool` 目录、`go_tests.txt` 等），多半是 **中途失败留下的损坏 CMake 缓存**。在仓库根下执行：
 
 ```bash
-rm -rf flare-im-core-sdk/target/aarch64-apple-ios-sim/release/build/aws-lc-sys-*
+rm -rf flare-core-sdk-engine/target/aarch64-apple-ios-sim/release/build/aws-lc-sys-*
 # Intel 模拟器则换 x86_64-apple-ios；真机换 aarch64-apple-ios
 ```
 

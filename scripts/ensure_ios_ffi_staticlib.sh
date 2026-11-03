@@ -6,7 +6,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 APP_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 CLIENT_SDK_ROOT="$(cd "$APP_ROOT/../.." && pwd)"
 FLARE_IM_ROOT="$(cd "$CLIENT_SDK_ROOT/.." && pwd)"
-CORE_SDK_ROOT="$FLARE_IM_ROOT/flare-im-core-sdk"
+CORE_SDK_ROOT="$FLARE_IM_ROOT/flare-core-sdk-engine"
 CORE_MANIFEST="$CORE_SDK_ROOT/Cargo.toml"
 FFI_PACKAGE="flare-im-core-sdk-ffi"
 STATIC_LIB="libflare_im_core_sdk_ffi.a"
@@ -175,9 +175,9 @@ rust_inputs_newer_than_archive() {
     "$CORE_SDK_ROOT/bindings/c/build.rs" \
     "$CORE_SDK_ROOT/bindings/shared/Cargo.toml" \
     "$CORE_SDK_ROOT/storage/sqlite/Cargo.toml" \
-    "$FLARE_IM_ROOT/flare-core/Cargo.toml" \
-    "$FLARE_IM_ROOT/flare-proto/Cargo.toml" \
-    "$FLARE_IM_ROOT/flare-grpc-proto/Cargo.toml"; do
+    "$FLARE_IM_ROOT/flare-transport/Cargo.toml" \
+    "$FLARE_IM_ROOT/flare-protocol/Cargo.toml" \
+    "$FLARE_IM_ROOT/flare-protocol-grpc/Cargo.toml"; do
     [[ -e "$file" && "$file" -nt "$OUT_LIB" ]] && return 0
   done
 
@@ -188,9 +188,9 @@ rust_inputs_newer_than_archive() {
       "$CORE_SDK_ROOT/bindings/c/src" \
       "$CORE_SDK_ROOT/bindings/shared/src" \
       "$CORE_SDK_ROOT/storage/sqlite/src" \
-      "$FLARE_IM_ROOT/flare-core/src" \
-      "$FLARE_IM_ROOT/flare-proto/src" \
-      "$FLARE_IM_ROOT/flare-grpc-proto/src" \
+      "$FLARE_IM_ROOT/flare-transport/src" \
+      "$FLARE_IM_ROOT/flare-protocol/src" \
+      "$FLARE_IM_ROOT/flare-protocol-grpc/src" \
       -type f \( -name '*.rs' -o -name '*.proto' \) \
       -newer "$OUT_LIB" \
       -print \
