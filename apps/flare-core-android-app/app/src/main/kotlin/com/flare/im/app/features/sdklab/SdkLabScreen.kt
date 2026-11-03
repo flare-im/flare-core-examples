@@ -64,7 +64,7 @@ fun SdkLabScreen(store: FlareAppStore) {
             ))
             LabGroup("Capabilities", listOf(
                 "list" to { lab.refreshCapabilities() }, "dispatch" to { lab.runDispatchCapability() }, "grant" to { lab.runGrantCapability() },
-                "revoke" to { lab.runRevokeCapability() }, "callSignal" to { lab.runSendCallSignal() },
+                "revoke" to { lab.runRevokeCapability() },
             ))
             LabGroup("Presence", listOf("current" to { lab.runPresenceCurrent() }, "batch+sub" to { lab.runPresenceBatchSubscribe() }))
             LabGroup("Sync", listOf("summaries" to { lab.runSyncSummaries() }, "conversation" to { lab.runSyncConversation(cid) }, "messages" to { lab.runSyncMessages(cid) }))

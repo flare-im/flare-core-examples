@@ -29,7 +29,6 @@ data class LabDraft(
     val capabilityUserId: String = "",
     val capability: String = "rtc.call",
     val operation: String = "invite",
-    val callSignalType: String = "offer",
     val payloadJson: String = "{}",
 )
 
@@ -168,9 +167,6 @@ class SdkLabViewModel(
     }
     fun runRevokeCapability() = probe("capabilities.revokeCapability") {
         it.capabilities.revokeCapability(mapOf("userId" to draft.value.capabilityUserId, "capability" to draft.value.capability))
-    }
-    fun runSendCallSignal() = probe("capabilities.sendCallSignal") {
-        it.capabilities.sendCallSignal(mapOf("type" to draft.value.callSignalType, "payload" to draft.value.payloadJson))
     }
 
     // ---- Media center ----
