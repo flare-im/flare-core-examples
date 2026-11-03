@@ -16,7 +16,7 @@ APK          := app/build/outputs/apk/debug/app-debug.apk
 # 后端联调用 flare_chat_server(flare-core 示例),默认空闲端口 60099
 CHAT_PORT    ?= 60099
 CHAT_BIN     ?= $(abspath ../../../../target/debug/examples/flare_chat_server)
-CHAT_SRC     ?= $(abspath ../../../../flare-core)
+CHAT_SRC     ?= $(abspath ../../../../flare-transport)
 
 # 工具
 ADB       := $(ANDROID_HOME)/platform-tools/adb
