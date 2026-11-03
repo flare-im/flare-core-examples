@@ -1,1 +1,1 @@
-export { router, type WorkbenchRouteName } from "../../shared/vue-reference/router";
+export { router, type WorkbenchRouteName } from "../../../../flare-core-sdk/examples/shared/vue-reference/router";

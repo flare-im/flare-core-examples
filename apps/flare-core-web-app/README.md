@@ -8,7 +8,7 @@ canonical UI migration, not a claim that every screen is already migrated.
 
 ## Architecture
 
-`src/App.vue` mounts `../shared/vue-reference/ReferenceApp.vue`. Web and Tauri
+`src/App.vue` mounts `../../../flare-core-sdk/examples/shared/vue-reference/ReferenceApp.vue`. Web and Tauri
 share routing, SDK-to-UI adapters and workbench composition under
 `examples/shared/vue-reference/workbench`. Reusable presentation belongs in
 `flare-im-design`; moving code into shared composition does not exempt it from
@@ -48,7 +48,7 @@ For bounded unit-test execution use `npx vitest run --maxWorkers=1 --no-file-par
 The runnable app uses the real SDK. There is no automatic fake-data fallback.
 Unit/widget fixtures are test inputs, not a supported product demo mode. Shared
 scenario-driven offline data and complete five-platform feature parity remain
-tracked in [the migration report](../CANONICAL_UI_MIGRATION_REPORT.md).
+tracked in [the migration report](../../../flare-core-sdk/examples/CANONICAL_UI_MIGRATION_REPORT.md).
 
 ## Real SDK Mode
 
@@ -61,7 +61,7 @@ keys in UI code. Use isolated test accounts for destructive or send workflows.
 Conversation/message flows are the Core scope: session initialization, list,
 opening a conversation, timeline, composer, send/retry, message actions, search,
 media and SDK diagnostics. Integration and canonical-renderer coverage differ by
-platform; see the [feature matrix and remaining gaps](../CANONICAL_UI_MIGRATION_REPORT.md).
+platform; see the [feature matrix and remaining gaps](../../../flare-core-sdk/examples/CANONICAL_UI_MIGRATION_REPORT.md).
 Contact-directory, group-directory and relationship navigation require a Social
 adapter. Group conversations are messaging targets, not group administration.
 

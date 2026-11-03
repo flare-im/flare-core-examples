@@ -1,7 +1,7 @@
 import { FlareCoreSdk } from "@flare-im/sdk/tauri";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { revealItemInDir } from "@tauri-apps/plugin-opener";
-import type { ReferenceRuntime } from "../../../shared/vue-reference/runtime";
+import type { ReferenceRuntime } from "../../../../../flare-core-sdk/examples/shared/vue-reference/runtime";
 import { notifyDesktop, setDesktopUnreadCount } from "../desktopNotifications";
 import {
   configureAppMediaLocalPathResolver,
@@ -9,7 +9,7 @@ import {
   configureDesktopNotifications,
   configureDownloadDirectoryPicker,
   configureNativeMediaActions,
-} from "../../../shared/vue-reference/workbench/app";
+} from "../../../../../flare-core-sdk/examples/shared/vue-reference/workbench/app";
 import { createTauriPlatformAdapter, pickDirectory } from "./platformAdapter";
 
 declare const __FLARE_DEV_CA_CERT_PATH__: string;

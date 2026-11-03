@@ -25,7 +25,7 @@
 ## 再试运行
 
 ```bash
-cd flare-core-sdk/examples/flare-core-flutter-app
+cd flare-core-examples/apps/flare-core-flutter-app
 ./scripts/setup_ios.sh
 flutter run -d "iPhone 17 Pro"
 ```

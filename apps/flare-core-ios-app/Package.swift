@@ -10,7 +10,7 @@ let package = Package(
         .executable(name: "FlareImAppRunner", targets: ["FlareImAppRunner"]),
     ],
     dependencies: [
-        .package(path: "../../packages/flare-core-apple-sdk"),
+        .package(path: "../../../flare-core-sdk/packages/flare-core-apple-sdk"),
         .package(path: "../../../flare-im-design/packages/ios-im-ui"),
     ],
     targets: [

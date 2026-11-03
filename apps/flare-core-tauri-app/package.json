@@ -7,14 +7,14 @@
   "scripts": {
     "dev": "yarn tauri dev",
     "dev:renderer": "vite --host 0.0.0.0 --port 1432",
-    "build": "vue-tsc --noEmit -p tsconfig.json && vite build && node ../../packages/flare-core-typescript-sdk/scripts/check-vite-bundle-budget.mjs dist 1400",
+    "build": "vue-tsc --noEmit -p tsconfig.json && vite build && node ../../../flare-core-sdk/packages/flare-core-typescript-sdk/scripts/check-vite-bundle-budget.mjs dist 1400",
     "tauri": "RUSTC_WRAPPER= tauri",
     "tauri:build": "yarn tauri build",
     "test": "node --test tests/*.test.mjs",
     "typecheck": "vue-tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
-    "@flare-im/sdk": "file:../../packages/flare-core-typescript-sdk",
+    "@flare-im/sdk": "file:../../../flare-core-sdk/packages/flare-core-typescript-sdk",
     "@flare-im/tokens": "file:../../../flare-im-design/tokens",
     "@flare-im/vue-ui": "file:../../../flare-im-design/packages/vue-im-ui",
     "@tauri-apps/api": "2.11.0",

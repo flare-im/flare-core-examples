@@ -4,7 +4,7 @@ import {
   wrapWebHostBridge,
   type FlareWasmRuntime,
 } from "@flare-im/sdk/web";
-import type { ReferenceRuntime } from "../../../shared/vue-reference/runtime";
+import type { ReferenceRuntime } from "../../../../../flare-core-sdk/examples/shared/vue-reference/runtime";
 import { createWebPlatformAdapter } from "@flare-im/vue-ui/composables";
 
 type WasmModule = {

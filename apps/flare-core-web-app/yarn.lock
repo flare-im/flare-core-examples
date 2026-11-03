@@ -47,9 +47,9 @@
   resolved "https://registry.npmjs.org/@esbuild/darwin-arm64/-/darwin-arm64-0.25.12.tgz"
   integrity sha512-N3zl+lxHCifgIlcMUP5016ESkeQjLj/959RxxNYIthIg+CQHInujFuXeWbWMgnTo4cp5XVHqFPmpyu9J65C1Yg==
 
-"@flare-im/sdk@file:../../packages/flare-core-typescript-sdk":
+"@flare-im/sdk@file:../../../flare-core-sdk/packages/flare-core-typescript-sdk":
   version "1.0.6"
-  resolved "file:../../packages/flare-core-typescript-sdk"
+  resolved "file:../../../flare-core-sdk/packages/flare-core-typescript-sdk"
   dependencies:
     protobufjs "^8.6.5"
 

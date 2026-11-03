@@ -8,7 +8,7 @@ import { defineConfig, loadEnv } from "vite";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const monorepoRoot = path.resolve(__dirname, "../../..");
-const typeScriptSdkRoot = path.resolve(__dirname, "../../packages/flare-core-typescript-sdk/src");
+const typeScriptSdkRoot = path.resolve(__dirname, "../../../flare-core-sdk/packages/flare-core-typescript-sdk/src");
 const flareCoreDevCaCertPath = path.resolve(monorepoRoot, "flare-core-server/certs/server.crt");
 
 function normalizedBuildId(id: string): string {

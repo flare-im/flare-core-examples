@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { test } from "node:test";
 
 const appRoot = join(import.meta.dirname, "..");
-const clientSdkRoot = join(appRoot, "../..");
+const clientSdkRoot = join(appRoot, "../../../../flare-core-sdk/examples");
 const monorepoRoot = join(clientSdkRoot, "..");
 
 const readFromApp = (path) => readFileSync(join(appRoot, path), "utf8");
@@ -47,7 +47,7 @@ test("tauri consumes the latest public Vue UI package", () => {
   const uiPackage = JSON.parse(readFromMonorepo("flare-im-design/packages/vue-im-ui/package.json"));
   const app = readFromApp("src/App.vue");
 
-  assert.equal(packageJson.dependencies["@flare-im/vue-ui"], "file:../../../flare-im-design/packages/vue-im-ui");
+  assert.equal(packageJson.dependencies["@flare-im/vue-ui"], "file:../../../../flare-core-sdk/flare-im-design/packages/vue-im-ui");
   assert.equal(uiPackage.version, "2.0.0-rc.1");
   assert.match(app, /ReferenceApp/);
 });

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import ReferenceApp from "../../shared/vue-reference/ReferenceApp.vue";
+import ReferenceApp from "../../../../flare-core-sdk/examples/shared/vue-reference/ReferenceApp.vue";
 </script>
 
 <template>

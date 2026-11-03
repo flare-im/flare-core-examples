@@ -25,10 +25,10 @@
     // 而不是维护两套清单或切换脚本。
     "paths": {
       "@vicons/ionicons5": ["../../../flare-im-design/node_modules/@vicons/ionicons5"],
-      "@flare-im/sdk/web": ["../../packages/flare-core-typescript-sdk/src/adapters/web/index.ts"],
-      "@flare-im/sdk/transport": ["../../packages/flare-core-typescript-sdk/src/adapters/_shared/transportProfile.ts"],
-      "@flare-im/sdk/*": ["../../packages/flare-core-typescript-sdk/src/*"],
-      "@flare-im/sdk": ["../../packages/flare-core-typescript-sdk/src/index.ts"],
+      "@flare-im/sdk/web": ["../../../flare-core-sdk/packages/flare-core-typescript-sdk/src/adapters/web/index.ts"],
+      "@flare-im/sdk/transport": ["../../../flare-core-sdk/packages/flare-core-typescript-sdk/src/adapters/_shared/transportProfile.ts"],
+      "@flare-im/sdk/*": ["../../../flare-core-sdk/packages/flare-core-typescript-sdk/src/*"],
+      "@flare-im/sdk": ["../../../flare-core-sdk/packages/flare-core-typescript-sdk/src/index.ts"],
       "@flare-im/vue-ui": ["../../../flare-im-design/packages/vue-im-ui/src/index.ts"],
       "@flare-im/vue-ui/style.css": ["../../../flare-im-design/packages/vue-im-ui/src/design-system/styles/index.css"],
       "@flare-im/vue-ui/theme": ["../../../flare-im-design/packages/vue-im-ui/src/design-system/theme/index.ts"],

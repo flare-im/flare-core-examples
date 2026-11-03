@@ -8,7 +8,7 @@ import { defineConfig, loadEnv, type UserConfig } from "vite";
 import type { OutputOptions } from "rollup";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const typeScriptSdkRoot = path.resolve(__dirname, "../../packages/flare-core-typescript-sdk/src");
+const typeScriptSdkRoot = path.resolve(__dirname, "../../../flare-core-sdk/packages/flare-core-typescript-sdk/src");
 
 export default createFlareCoreWebAppViteConfig({
   appDir: __dirname,

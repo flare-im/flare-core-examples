@@ -6,7 +6,7 @@ import { defineConfig } from "vitest/config";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const repoRoot = path.resolve(__dirname, "../../..");
-const typeScriptSdkRoot = path.resolve(__dirname, "../../packages/flare-core-typescript-sdk/src");
+const typeScriptSdkRoot = path.resolve(__dirname, "../../../flare-core-sdk/packages/flare-core-typescript-sdk/src");
 const vueImUiRoot = path.resolve(__dirname, "../../../flare-im-design/packages/vue-im-ui/src");
 
 export default defineConfig({
@@ -62,7 +62,7 @@ export default defineConfig({
         find: "@flare-im/sdk",
         replacement: path.join(typeScriptSdkRoot, "index.ts"),
       },
-      // Shared reference-app tests (../shared/vue-reference) mount components; the
+      // Shared reference-app tests (../../../flare-core-sdk/examples/shared/vue-reference) mount components; the
       // DOM test utils live in this app's node_modules, outside their lookup path.
       {
         find: "@vue/test-utils",
@@ -94,8 +94,8 @@ export default defineConfig({
     server: { deps: { inline: [/node_modules\/@lucide\/vue\//] } },
     include: [
       "src/**/*.test.ts",
-      "../shared/vue-reference/**/*.test.ts",
-      "../../packages/flare-core-typescript-sdk/src/**/*.test.ts",
+      "../../../flare-core-sdk/examples/shared/vue-reference/**/*.test.ts",
+      "../../../flare-core-sdk/packages/flare-core-typescript-sdk/src/**/*.test.ts",
     ],
   },
 });
