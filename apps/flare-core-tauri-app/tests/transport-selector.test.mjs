@@ -4,8 +4,7 @@ import { join } from "node:path";
 import { test } from "node:test";
 
 const appRoot = join(import.meta.dirname, "..");
-const clientSdkRoot = join(appRoot, "../../../../flare-core-sdk/examples");
-const monorepoRoot = join(clientSdkRoot, "..");
+const monorepoRoot = join(appRoot, "../../..");
 
 const readFromApp = (path) => readFileSync(join(appRoot, path), "utf8");
 const readFromMonorepo = (path) => readFileSync(join(monorepoRoot, path), "utf8");
@@ -37,7 +36,7 @@ test("tauri renderer vite config is ESM and carries the development CA path", ()
 
   assert.equal(packageJson.type, "module");
   assert.match(viteConfig, /@flare-im\/sdk\/devtools\/vite/);
-  assert.match(viteConfig, /flare-im-core\/certs\/server\.crt/);
+  assert.match(viteConfig, /flare-core-server\/certs\/server\.crt/);
   assert.match(viteConfig, /defineFlareTauriConfig/);
   assert.equal(existsSync(join(appRoot, "src-tauri/certs/server.crt")), false);
 });
