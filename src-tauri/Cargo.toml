@@ -6,7 +6,7 @@ edition = "2021"
 [workspace]
 
 [dependencies]
-flare-im-core-sdk-tauri = { path = "../../../../flare-im-core-sdk/bindings/tauri", features = ["quic"] }
+flare-im-core-sdk-tauri = { path = "../../../../flare-core-sdk-engine/bindings/tauri", features = ["quic"] }
 tauri = { version = "2.11", features = ["macos-private-api", "protocol-asset"] }
 tauri-plugin-dialog = "2.7.1"
 tauri-plugin-notification = "2.3.3"

@@ -54,8 +54,8 @@ test("tauri consumes the latest public Vue UI package", () => {
 
 test("tauri native SDK enables the QUIC cargo feature chain", () => {
   const tauriCargo = readFromApp("src-tauri/Cargo.toml");
-  const tauriBindingCargo = readFromMonorepo("flare-im-core-sdk/bindings/tauri/Cargo.toml");
-  const sdkCargo = readFromMonorepo("flare-im-core-sdk/Cargo.toml");
+  const tauriBindingCargo = readFromMonorepo("flare-core-sdk-engine/bindings/tauri/Cargo.toml");
+  const sdkCargo = readFromMonorepo("flare-core-sdk-engine/Cargo.toml");
 
   assert.match(tauriCargo, /flare-im-core-sdk-tauri\s*=\s*\{[^}]*features\s*=\s*\[[^\]]*"quic"/s);
   assert.match(tauriBindingCargo, /quic\s*=\s*\[[^\]]*"flare-im-core-sdk\/quic"/s);

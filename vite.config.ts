@@ -9,7 +9,7 @@ import { defineConfig, loadEnv } from "vite";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const monorepoRoot = path.resolve(__dirname, "../../..");
 const typeScriptSdkRoot = path.resolve(__dirname, "../../packages/flare-core-typescript-sdk/src");
-const flareCoreDevCaCertPath = path.resolve(monorepoRoot, "flare-im-core/certs/server.crt");
+const flareCoreDevCaCertPath = path.resolve(monorepoRoot, "flare-core-server/certs/server.crt");
 
 function normalizedBuildId(id: string): string {
   return id.replace(/\\/g, "/");
@@ -23,7 +23,7 @@ function tauriManualChunks(id: string): string | undefined {
   if (normalized.includes("node_modules/@vicons")) {
     return "icon-runtime";
   }
-  if (normalized.includes("@flare-im/sdk") || normalized.includes("flare-im-core-sdk/bindings")) {
+  if (normalized.includes("@flare-im/sdk") || normalized.includes("flare-core-sdk-engine/bindings")) {
     return "flare-sdk";
   }
   if (normalized.includes("@flare-im/vue-ui") || normalized.includes("node_modules")) {
