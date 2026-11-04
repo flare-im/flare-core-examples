@@ -5,6 +5,8 @@ import com.flare.im.api.ConnectionState
 import com.flare.im.api.FlareImClient
 import com.flare.im.app.core.domain.EventLogEntry
 import com.flare.im.app.core.domain.LoginDraft
+import com.flare.im.bridge.FlareAppInfo
+import com.flare.im.bridge.JniNativeBridge
 import com.flare.im.listener.EventSubscription
 import com.flare.im.model.entity.ViewUpdate
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,7 +20,10 @@ import org.json.JSONObject
  * 拥有客户端生命周期 + 认证态 + 连接态 + 原始事件流，
  * 事件经 `onViewUpdate` / `onMessageSendFailed` 钩子路由给数据层/聊天层。
  */
-class AppSession {
+class AppSession(
+    /** 本应用的版本信息：随 init 交给引擎，CONNECT 时上报真实 app_version / app_build。 */
+    private val appInfo: FlareAppInfo? = null,
+) {
     private val _currentUserId = MutableStateFlow<String?>(null)
     val currentUserId: StateFlow<String?> = _currentUserId.asStateFlow()
 
@@ -44,6 +49,10 @@ class AppSession {
     private var lastDraft: LoginDraft? = null
     private var nativeEventSubscription: Any? = null
 
+    private fun newClient(): FlareImClient =
+        appInfo?.let { FlareCoreSdk.createClientWithBridge(JniNativeBridge(appInfo = it)) }
+            ?: FlareCoreSdk.createClient()
+
     /** 创建 → 订阅 → init → 取 token → 登录。`progress` 回报阶段。 */
     suspend fun start(
         draft: LoginDraft,
@@ -51,7 +60,7 @@ class AppSession {
         progress: (String) -> Unit,
     ): FlareImClient {
         progress("Creating Android SDK client")
-        val sdk = FlareCoreSdk.createClient()
+        val sdk = newClient()
 
         subscribeEvents(sdk)
         subscribeNativeEvents(sdk)
@@ -118,7 +127,7 @@ class AppSession {
         progress: (String) -> Unit,
     ): FlareImClient {
         progress("Creating Android SDK client")
-        val sdk = FlareCoreSdk.createClient()
+        val sdk = newClient()
         subscribeEvents(sdk)
         subscribeNativeEvents(sdk)
 

@@ -7,6 +7,7 @@ import com.flare.im.app.core.domain.RuntimeStatus
 import com.flare.im.app.core.session.AppLifecycle
 import com.flare.im.app.core.session.AppSession
 import com.flare.im.app.core.session.SavedSessionStore
+import com.flare.im.bridge.FlareAppInfo
 import com.flare.im.model.command.NetworkChangeRequest
 import com.flare.im.model.command.SetHeartbeatAppStateRequest
 import com.flare.im.model.entity.HeartbeatAppState
@@ -28,8 +29,9 @@ class FlareAppStore(
     private val dataDir: String,
     private val scope: CoroutineScope,
     private val savedSessionStore: SavedSessionStore? = null,
+    appInfo: FlareAppInfo? = null,
 ) : AppLifecycle {
-    val session = AppSession()
+    val session = AppSession(appInfo)
     val repository = ViewDataRepository()
     val environment = AppEnvironment()
 

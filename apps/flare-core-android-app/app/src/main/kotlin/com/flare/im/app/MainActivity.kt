@@ -7,6 +7,7 @@ import androidx.activity.enableEdgeToEdge
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.flare.im.app.core.platform.AndroidPlatformAdapter
 import com.flare.im.app.features.shell.FlareApp
+import com.flare.im.bridge.FlareAppInfo
 import com.flare.im.ui.FlarePlatformProvider
 
 /**
@@ -36,7 +37,13 @@ class MainActivity : ComponentActivity() {
         )
         setContent {
             val root: FlareRootViewModel =
-                viewModel(factory = FlareRootViewModel.factory(dataDir, savedSessionStore))
+                viewModel(
+                    factory = FlareRootViewModel.factory(
+                        dataDir,
+                        savedSessionStore,
+                        FlareAppInfo.fromContext(applicationContext),
+                    ),
+                )
             FlarePlatformProvider(platform) {
                 FlareApp(root.store)
             }
