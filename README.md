@@ -2,7 +2,7 @@
 
 English · [Simplified Chinese](README.zh-CN.md)
 
-Reference applications for Web, Tauri, Flutter, iOS, and Android. [Migration sources](migration-sources.json) records the original repositories and imported revisions.
+Reference applications for Web, Tauri, Flutter, iOS, and Android.
 
 ## Setup
 

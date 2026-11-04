@@ -46,9 +46,7 @@ For bounded unit-test execution use `npx vitest run --maxWorkers=1 --no-file-par
 ## Demo Mode
 
 The runnable app uses the real SDK. There is no automatic fake-data fallback.
-Unit/widget fixtures are test inputs, not a supported product demo mode. Shared
-scenario-driven offline data and complete five-platform feature parity remain
-tracked in [the migration report](../../../flare-core-sdk/examples/CANONICAL_UI_MIGRATION_REPORT.md).
+Unit/widget fixtures are test inputs, not a supported product demo mode.
 
 ## Real SDK Mode
 
@@ -61,7 +59,7 @@ keys in UI code. Use isolated test accounts for destructive or send workflows.
 Conversation/message flows are the Core scope: session initialization, list,
 opening a conversation, timeline, composer, send/retry, message actions, search,
 media and SDK diagnostics. Integration and canonical-renderer coverage differ by
-platform; see the [feature matrix and remaining gaps](../../../flare-core-sdk/examples/CANONICAL_UI_MIGRATION_REPORT.md).
+platform. See the [UI reuse policy](https://github.com/flare-im/flare-im-design/blob/main/docs/ui-component-reuse-policy.md) for component ownership.
 Contact-directory, group-directory and relationship navigation require a Social
 adapter. Group conversations are messaging targets, not group administration.
 
@@ -77,10 +75,3 @@ VITE_MEDIA_API_PROXY_TARGET=https://your-server/api npm run dev:web -- --port 14
 
 Set HTTP gateway to `http://127.0.0.1:1431/__flare-media-api`; WebSocket remains
 the real server's `wss://...` endpoint. Do not disable browser CORS protections.
-
-## Migration Status
-
-Web/Tauri now share the full real workbench, not the earlier simplified demo.
-Some account/search/menu composition and legacy kit workbench classes remain;
-canonical ownership is not yet complete. Run the three `reference-app-*` gates
-from the SDK root and consult the report before making completion claims.

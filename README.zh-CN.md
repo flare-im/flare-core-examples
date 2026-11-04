@@ -2,7 +2,7 @@
 
 [English](README.md) · 简体中文
 
-本仓包含 Web、Tauri、Flutter、iOS 和 Android 参考应用。[迁移记录](migration-sources.json)列出了原仓与导入的提交。
+本仓包含 Web、Tauri、Flutter、iOS 和 Android 参考应用。
 
 ## 本地运行
 

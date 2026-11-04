@@ -41,9 +41,7 @@ Tauri IPC bridge and cannot substitute for native SDK testing.
 ## Demo Mode
 
 The runnable app uses the real SDK. There is no automatic fake-data fallback.
-Unit/widget fixtures are test inputs, not a supported product demo mode. Shared
-scenario-driven offline data and complete five-platform feature parity remain
-tracked in [the migration report](../../../flare-core-sdk/examples/CANONICAL_UI_MIGRATION_REPORT.md).
+Unit/widget fixtures are test inputs, not a supported product demo mode.
 
 ## Real SDK Mode
 
@@ -56,7 +54,7 @@ keys in UI code. Use isolated test accounts for destructive or send workflows.
 Conversation/message flows are the Core scope: session initialization, list,
 opening a conversation, timeline, composer, send/retry, message actions, search,
 media and SDK diagnostics. Integration and canonical-renderer coverage differ by
-platform; see the [feature matrix and remaining gaps](../../../flare-core-sdk/examples/CANONICAL_UI_MIGRATION_REPORT.md).
+platform. See the [UI reuse policy](https://github.com/flare-im/flare-im-design/blob/main/docs/ui-component-reuse-policy.md) for component ownership.
 Contact-directory, group-directory and relationship navigation require a Social
 adapter. Group conversations are messaging targets, not group administration.
 
@@ -65,9 +63,3 @@ adapter. Group conversations are messaging targets, not group administration.
 Native filesystem paths, file dialog, tray, window lifecycle, notifications,
 unread badge, permissions and certificate paths stay in Tauri. The transport
 selector is capability-driven; unsupported transports are not simulated.
-
-## Migration Status
-
-Frontend tests/build and Rust check pass. Native GUI send/receive, permission,
-notification and file-bridge E2E were not executed in this migration. Shared
-composition parity is not proof of native runtime parity.

@@ -37,9 +37,7 @@ export ANDROID_HOME=/path/to/android/sdk
 ## Demo Mode
 
 The runnable app uses the real SDK. There is no automatic fake-data fallback.
-Unit/widget fixtures are test inputs, not a supported product demo mode. Shared
-scenario-driven offline data and complete five-platform feature parity remain
-tracked in [the migration report](../../../flare-core-sdk/examples/CANONICAL_UI_MIGRATION_REPORT.md).
+Unit/widget fixtures are test inputs, not a supported product demo mode.
 
 ## Real SDK Mode
 
@@ -52,7 +50,7 @@ keys in UI code. Use isolated test accounts for destructive or send workflows.
 Conversation/message flows are the Core scope: session initialization, list,
 opening a conversation, timeline, composer, send/retry, message actions, search,
 media and SDK diagnostics. Integration and canonical-renderer coverage differ by
-platform; see the [feature matrix and remaining gaps](../../../flare-core-sdk/examples/CANONICAL_UI_MIGRATION_REPORT.md).
+platform. See the [UI reuse policy](https://github.com/flare-im/flare-im-design/blob/main/docs/ui-component-reuse-policy.md) for component ownership.
 Contact-directory, group-directory and relationship navigation require a Social
 adapter. Group conversations are messaging targets, not group administration.
 
@@ -61,14 +59,3 @@ adapter. Group conversations are messaging targets, not group administration.
 Activity lifecycle, system back, IME, navigation, permissions, file/camera
 selection and JNI loading are host responsibilities. Use `scripts/sync_ffi.sh`
 after building the matching native SDK artifacts.
-
-## Migration Status
-
-Unit-test/lint/assemble tasks pass. Instrumentation compile reports NO-SOURCE;
-that is not a Compose UI test pass. No Android device was attached. Typography
-and spacing aliases now use kit tokens, but native menu/workspace and six-brand
-integration remain incomplete.
-
-The [migration report](../../../flare-core-sdk/examples/CANONICAL_UI_MIGRATION_REPORT.md) records the current
-feature matrix, test evidence and outstanding P1/P2 work. Reusable UI fixes
-belong in the design kit, not in local visual overrides.
