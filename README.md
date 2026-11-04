@@ -1,8 +1,12 @@
 # Flare Core Examples
 
-Reference applications for Web, Tauri, Flutter, iOS, and Android. [Migration sources](migration-sources.json) records the imported commits and their original repositories.
+English · [Simplified Chinese](README.zh-CN.md)
 
-Clone `flare-core-sdk`, `flare-core-sdk-engine`, and `flare-im-design` alongside this repository.
+Reference applications for Web, Tauri, Flutter, iOS, and Android. [Migration sources](migration-sources.json) records the original repositories and imported revisions.
+
+## Setup
+
+Clone `flare-core-sdk`, `flare-core-sdk-engine`, and `flare-im-design` alongside this repository. Follow the [Core server quickstart](https://github.com/flare-im/flare-core-server/blob/main/docs/QUICKSTART.md) for the local messaging endpoint.
 
 | Platform | App |
 | --- | --- |
@@ -12,4 +16,4 @@ Clone `flare-core-sdk`, `flare-core-sdk-engine`, and `flare-im-design` alongside
 | ios | [`apps/flare-core-ios-app`](apps/flare-core-ios-app) |
 | android | [`apps/flare-core-android-app`](apps/flare-core-android-app) |
 
-Each app includes its platform setup and build commands. The apps use the shared SDK and UI packages from the sibling checkouts.
+Follow each app’s README for platform tooling, local configuration, and build commands. Shared behavior lives in the sibling SDK and UI repositories.
