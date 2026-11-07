@@ -23,21 +23,68 @@ enum FlareDesign {
         #endif
     }
 
-    static let brand = themed(FlareColors.light.primary, FlareColors.dark.primary)
-    static let brandSoft = themed(FlareColors.light.bgSelected, FlareColors.dark.bgSelected)
-    static let accent = themed(FlareColors.light.info, FlareColors.dark.info)
-    static let appBackground = themed(FlareColors.light.bgSecondary, FlareColors.dark.bgSecondary)
-    static let surface = themed(FlareColors.light.bgPrimary, FlareColors.dark.bgPrimary)
-    static let surfaceAlt = themed(FlareColors.light.bgTertiary, FlareColors.dark.bgTertiary)
-    static let textPrimary = themed(FlareColors.light.textPrimary, FlareColors.dark.textPrimary)
-    static let textSecondary = themed(FlareColors.light.textSecondary, FlareColors.dark.textSecondary)
-    static let textTertiary = themed(FlareColors.light.textTertiary, FlareColors.dark.textTertiary)
-    static let success = themed(FlareColors.light.success, FlareColors.dark.success)
-    static let warning = themed(FlareColors.light.warning, FlareColors.dark.warning)
-    static let danger = themed(FlareColors.light.error, FlareColors.dark.error)
-    static let incoming = themed(FlareColors.light.messageIncomingBackground, FlareColors.dark.messageIncomingBackground)
-    static let outgoing = themed(FlareColors.light.messageOutgoingBackground, FlareColors.dark.messageOutgoingBackground)
-    static let outgoingText = themed(FlareColors.light.messageOutgoingForeground, FlareColors.dark.messageOutgoingForeground)
+    /// 一套 light/dark 色。资源包改颜色时整套换掉，不在每次读取时新建 `Color`。
+    private struct Palette {
+        let brand: Color
+        let brandSoft: Color
+        let accent: Color
+        let appBackground: Color
+        let surface: Color
+        let surfaceAlt: Color
+        let textPrimary: Color
+        let textSecondary: Color
+        let textTertiary: Color
+        let success: Color
+        let warning: Color
+        let danger: Color
+        let incoming: Color
+        let outgoing: Color
+        let outgoingText: Color
+
+        init(light: FlareColors, dark: FlareColors) {
+            brand = themed(light.primary, dark.primary)
+            brandSoft = themed(light.bgSelected, dark.bgSelected)
+            accent = themed(light.info, dark.info)
+            appBackground = themed(light.bgSecondary, dark.bgSecondary)
+            surface = themed(light.bgPrimary, dark.bgPrimary)
+            surfaceAlt = themed(light.bgTertiary, dark.bgTertiary)
+            textPrimary = themed(light.textPrimary, dark.textPrimary)
+            textSecondary = themed(light.textSecondary, dark.textSecondary)
+            textTertiary = themed(light.textTertiary, dark.textTertiary)
+            success = themed(light.success, dark.success)
+            warning = themed(light.warning, dark.warning)
+            danger = themed(light.error, dark.error)
+            incoming = themed(light.messageIncomingBackground, dark.messageIncomingBackground)
+            outgoing = themed(light.messageOutgoingBackground, dark.messageOutgoingBackground)
+            outgoingText = themed(light.messageOutgoingForeground, dark.messageOutgoingForeground)
+        }
+    }
+
+    private static var palette = Palette(light: .light, dark: .dark)
+    private static var followed = FlareBrandTheme.violet.name
+
+    /// 换成 `theme` 的颜色。视图读的是这里的静态值，不是环境，所以读到新颜色要靠 `flareDesignFollowsTheme()` 重建。
+    static func follow(_ theme: FlareBrandTheme) {
+        guard theme.name != followed else { return }
+        followed = theme.name
+        palette = Palette(light: theme.light, dark: theme.dark)
+    }
+
+    static var brand: Color { palette.brand }
+    static var brandSoft: Color { palette.brandSoft }
+    static var accent: Color { palette.accent }
+    static var appBackground: Color { palette.appBackground }
+    static var surface: Color { palette.surface }
+    static var surfaceAlt: Color { palette.surfaceAlt }
+    static var textPrimary: Color { palette.textPrimary }
+    static var textSecondary: Color { palette.textSecondary }
+    static var textTertiary: Color { palette.textTertiary }
+    static var success: Color { palette.success }
+    static var warning: Color { palette.warning }
+    static var danger: Color { palette.danger }
+    static var incoming: Color { palette.incoming }
+    static var outgoing: Color { palette.outgoing }
+    static var outgoingText: Color { palette.outgoingText }
 
     /// 向后兼容别名：等价于 `Radius.medium`。新代码直接用 `FlareDesign.Radius.*`。
     static let radius: CGFloat = Radius.medium
@@ -81,5 +128,23 @@ enum FlareDesign {
         case .warning: return warning
         case .danger: return danger
         }
+    }
+}
+
+private struct FlareDesignFollower: ViewModifier {
+    @Environment(\.flareBrandTheme) private var brand
+
+    func body(content: Content) -> some View {
+        FlareDesign.follow(brand)
+        // 只有 token 包到达时主题名才变，一次运行最多一次；下面的视图都读静态值，只能这样全部重建。
+        return content.id(brand.name)
+    }
+}
+
+extension View {
+    /// 让 `FlareDesign` 跟上环境里的 kit 主题（资源包的颜色从这里来）。放在 `flareUpdateResources` 里层。
+    /// 主题名变化时这一层以下的视图状态会重置。
+    func flareDesignFollowsTheme() -> some View {
+        modifier(FlareDesignFollower())
     }
 }

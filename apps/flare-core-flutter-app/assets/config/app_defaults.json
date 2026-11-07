@@ -1,5 +1,3 @@
 {
-  "defaultWsUrl": "ws://127.0.0.1:60051/ws",
-  "tenantId": "0",
-  "defaultHttpUrl": "http://127.0.0.1:50050"
+  "tenantId": "0"
 }

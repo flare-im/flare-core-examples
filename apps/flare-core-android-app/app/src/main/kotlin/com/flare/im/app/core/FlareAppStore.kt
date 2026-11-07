@@ -7,16 +7,16 @@ import com.flare.im.app.core.domain.RuntimeStatus
 import com.flare.im.app.core.session.AppLifecycle
 import com.flare.im.app.core.session.AppSession
 import com.flare.im.app.core.session.SavedSessionStore
-import com.flare.im.bridge.FlareAppInfo
-import com.flare.im.model.command.NetworkChangeRequest
-import com.flare.im.model.command.SetHeartbeatAppStateRequest
-import com.flare.im.model.entity.HeartbeatAppState
-import com.flare.im.model.entity.NetworkInterfaceKind
+import com.flare.im.api.FlareImClient
 import com.flare.im.app.features.auth.AuthViewModel
 import com.flare.im.app.features.messaging.MessagingViewModel
 import com.flare.im.app.features.search.SearchViewModel
+import com.flare.im.app.features.settings.AccessDiagnosticsHost
 import com.flare.im.app.features.sdklab.SdkLabViewModel
 import com.flare.im.app.features.settings.SettingsViewModel
+import com.flare.im.update.ClientUpdateEngine
+import com.flare.im.update.FlareUpdateController
+import com.flare.im.update.FlareUpdateInstaller
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
@@ -29,9 +29,10 @@ class FlareAppStore(
     private val dataDir: String,
     private val scope: CoroutineScope,
     private val savedSessionStore: SavedSessionStore? = null,
-    appInfo: FlareAppInfo? = null,
+    updateInstaller: FlareUpdateInstaller,
+    newClient: () -> FlareImClient,
 ) : AppLifecycle {
-    val session = AppSession(appInfo)
+    val session = AppSession(newClient)
     val repository = ViewDataRepository()
     val environment = AppEnvironment()
 
@@ -44,12 +45,25 @@ class FlareAppStore(
         onCacheCleared = { messagingViewModel.forgetResolvedPictures() },
     )
 
+    /** The network and line page. `access.*` needs no session, so it reads before sign-in as well. */
+    val accessDiagnostics = AccessDiagnosticsHost(
+        access = { session.accessClient(environment.loginDraft.value, dataDir).access },
+        subscribeLinkEvents = session::subscribeLinkEvents,
+        scope = scope,
+    )
+
+    private val updateEngine = ClientUpdateEngine { session.accessClient(environment.loginDraft.value, dataDir) }
+
+    /** The update center. `update.*` needs no session: a build too old to sign in has to hear about it first. */
+    val updateCenter = FlareUpdateController(updateEngine, updateInstaller)
+
     init {
         // 反应式接线：core 推 ViewUpdate → 重投影本地视图（在 scope 上 re-fetch）。
         session.onViewUpdate = { update ->
             scope.launch { session.client?.let { repository.apply(it, update) } }
         }
         session.onMessageSendFailed = { key -> messagingViewModel.markSendFailed(key) }
+        session.onUpdateState = updateEngine::receive
         repository.onLog = { operation, detail -> environment.appendLab(operation, "ok", detail) }
         // 装配后回填生命周期（破 store↔VM 环）。
         messagingViewModel.bind(this)
@@ -68,6 +82,7 @@ class FlareAppStore(
             environment.setRuntimeStatus(RuntimeStatus.Ready)
             session.client?.let { repository.openConversationList(it, "login") }
         }
+        if (session.isLoggedIn.value) updateCenter.onLoginSucceeded() else updateCenter.onLoginFailed()
     }
 
     /**
@@ -87,6 +102,7 @@ class FlareAppStore(
             session.client?.let { repository.openConversationList(it, "session_resume") }
             scope.launch {
                 session.connectInBackground()
+                updateCenter.onLoginSucceeded()
                 session.client?.let { repository.openConversationList(it, "session_resume_connected") }
             }
             true
@@ -95,32 +111,6 @@ class FlareAppStore(
             environment.setRuntimeStatus(RuntimeStatus.Idle)
             environment.appendLab("session_resume", "error", it.message ?: it.toString())
             false
-        }
-    }
-
-    /** 平台网络变化 → core 主动重连（策略全在 core，这里只喂原始信号）。 */
-    fun notifyNetworkChange(available: Boolean, interfaceKind: NetworkInterfaceKind, reason: String) {
-        val sdk = session.client ?: return
-        scope.launch {
-            runCatching {
-                sdk.connection.notifyNetworkChange(
-                    NetworkChangeRequest(available = available, `interface` = interfaceKind, reason = reason),
-                )
-            }.onFailure { environment.appendLab("network_change", "error", it.message ?: "$it") }
-        }
-    }
-
-    /** 前后台切换 → core 心跳降配 + 前台立即收敛。 */
-    fun setAppForeground(foreground: Boolean) {
-        val sdk = session.client ?: return
-        scope.launch {
-            runCatching {
-                sdk.setHeartbeatAppState(
-                    SetHeartbeatAppStateRequest(
-                        if (foreground) HeartbeatAppState.FOREGROUND else HeartbeatAppState.BACKGROUND,
-                    ),
-                )
-            }.onFailure { environment.appendLab("heartbeat_app_state", "error", it.message ?: "$it") }
         }
     }
 

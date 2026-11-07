@@ -1,20 +1,26 @@
 import FlareIMUI
+import FlarePlatformUpdate
+import FlareUpdateUI
 import SwiftUI
 
 struct RootWorkbenchView: View {
     @EnvironmentObject private var store: FlareAppStore
     @EnvironmentObject private var environment: AppEnvironment
     @State private var sessionResumeAttempted = false
+    /// A recovery link that arrived while the saved session was still resuming: the SDK is busy coming up.
+    @State private var pendingRecoveryLink: String?
 
     var body: some View {
         ZStack {
             FlareDesign.appBackground.ignoresSafeArea()
             if store.isLoggedIn {
                 WorkbenchView()
+                    .overlay(alignment: .top) { ConnectionBanner() }
             } else if sessionResumeAttempted {
                 LoginView()
             }
         }
+        .flareDesignFollowsTheme()
         .preferredColorScheme(colorScheme)
         .disabled(environment.isBusy)
         .overlay {
@@ -22,10 +28,33 @@ struct RootWorkbenchView: View {
                 ToastView(message: String(localized: "Loading"), variant: .loading)
             }
         }
+        .modifier(AccessDiagnosticsPresenter(model: store.accessDiagnostics))
+        // The update prompt over everything, in either sign-in state.
+        .flareUpdatePrompt(controller: store.updateCenter)
+        // Resource packs over the built-in strings and colours, once they are read; nothing here waits for them.
+        .flareUpdateResources(controller: store.updateCenter, locale: KitStrings.localeTag)
         .task {
             guard !sessionResumeAttempted else { return }
             await store.resumeSavedSession()
             sessionResumeAttempted = true
+            // The update center reads through the client, which the resume brings up: it starts right after, signed in or not.
+            store.updateCenter.install()
+            if let link = pendingRecoveryLink {
+                pendingRecoveryLink = nil
+                store.accessDiagnostics.openRecoveryLink(link)
+            }
+            // The app has no language of its own to switch: iOS restarts it for a new one.
+            await store.updateCenter.setLocale(KitStrings.localeTag)
+        }
+        // Recovery link `flare-recover://v1?…` (URL scheme in project.yml): imported in either sign-in state, and the
+        // page says what became of it.
+        .onOpenURL { url in
+            guard let link = parseRecoveryLink(url.absoluteString) else { return }
+            if sessionResumeAttempted {
+                store.accessDiagnostics.openRecoveryLink(link)
+            } else {
+                pendingRecoveryLink = link
+            }
         }
     }
 
@@ -38,10 +67,29 @@ struct RootWorkbenchView: View {
     }
 }
 
+/// The connection notice over the signed-in workbench: the kit's ``ConnectionNoticeView`` reads the core SDK's
+/// `connection://status` and decides what shows, when, and which action. 立即重试 asks the SDK for its next round now;
+/// 重新登录 (kicked, expired) signs out locally and returns to sign-in; 诊断 opens the network and line page.
+private struct ConnectionBanner: View {
+    @EnvironmentObject private var store: FlareAppStore
+
+    var body: some View {
+        ConnectionNoticeView(status: store.session.kitConnectionStatus, floating: true,
+                             onRetry: { Task { try? await store.session.reconnectNow() } },
+                             onSignIn: { Task { await store.logout() } },
+                             onUpdate: { Task { await store.updateCenter.update() } },
+                             onDiagnose: { store.accessDiagnostics.presented = true })
+            .padding(.horizontal, FlareSizes.spacingMd)
+            .padding(.top, FlareSizes.spacingXs)
+    }
+}
+
 private struct WorkbenchView: View {
     @EnvironmentObject private var search: SearchViewModel
     @EnvironmentObject private var messaging: MessagingViewModel
     @EnvironmentObject private var environment: AppEnvironment
+    @EnvironmentObject private var updateCenter: FlareUpdateController
+    @Environment(\.flareStrings) private var strings
     @State private var mobileChatOpen = false
 
     var body: some View {
@@ -105,7 +153,12 @@ private struct WorkbenchView: View {
                     ),
                     .init(id: "search", label: String(localized: "Search messages"), icon: "search"),
                     .init(id: "media", label: "Media", icon: "image", enabled: false),
-                    .init(id: "settings", label: String(localized: "Settings"), icon: "settings"),
+                    .init(
+                        id: "settings",
+                        label: String(localized: "Settings"),
+                        icon: "settings",
+                        badge: updateCenter.status?.prompt == .badge ? .init(kind: .dot, label: strings.settingsRowBadge) : nil
+                    ),
                     .init(id: "sdk-lab", label: String(localized: "SDK Status"), icon: "diagnostics")
                 ]
             )

@@ -1,7 +1,7 @@
 # flare-core-android-app — 开发/运行命令
 #
 # 用法: make <target>   (不带参数 = make help)
-# 覆盖变量示例: make run WS=ws://10.0.2.2:60099/ws
+# 覆盖变量示例: make run DEV_WS=ws://10.0.2.2:60099
 #
 # 依赖: JDK17(Lombok/AGP 需要)、Android SDK、已提交的 gradlew、模拟器 AVD。
 
@@ -11,7 +11,7 @@ ANDROID_HOME ?= $(HOME)/Library/Android/sdk
 AVD          ?= Pixel_9_API_35
 APP_ID       ?= com.flare.im.app
 ACTIVITY     ?= $(APP_ID)/.MainActivity
-APK          := app/build/outputs/apk/debug/app-debug.apk
+APK          := app/build/outputs/apk/direct/debug/app-direct-debug.apk
 
 # 后端联调用 flare_chat_server(flare-core 示例),默认空闲端口 60099
 CHAT_PORT    ?= 60099
@@ -21,9 +21,11 @@ CHAT_SRC     ?= $(abspath ../../../../flare-transport)
 # 工具
 ADB       := $(ANDROID_HOME)/platform-tools/adb
 EMULATOR  := $(ANDROID_HOME)/emulator/emulator
-# WS= 覆盖默认服务地址(注入 BuildConfig.DEFAULT_WS_URL)。例: make run WS=ws://10.0.2.2:60099/ws
-WS        ?=
-WS_PROP   := $(if $(WS),-PwsUrl=$(WS),)
+# DEV_WS= 覆盖开发模式的 IM 入口(注入 BuildConfig.FLARE_DEV_WS_URL,组装 access.developmentEndpoints)。
+# 其余接入设置(FLARE_ACCESS_JSON、FLARE_DEV_CORE_API_URL 等)用同名环境变量或 -P 传,见 README。
+# 接入 token 由 SDK 托管(auth: {}),在开发模式的 Core API(FLARE_DEV_CORE_API_URL)上签发,没有单独的签发地址设置。
+DEV_WS    ?=
+WS_PROP   := $(if $(DEV_WS),-PFLARE_DEV_WS_URL=$(DEV_WS),)
 GRADLE    := JAVA_HOME="$(JAVA_HOME)" ANDROID_HOME="$(ANDROID_HOME)" ./gradlew $(WS_PROP)
 SHOT_DIR  ?= /tmp
 
@@ -40,7 +42,7 @@ help: ## 列出所有命令
 	  awk 'BEGIN{FS=":.*?## "}{printf "  \033[36m%-18s\033[0m %s\n", $$1, $$2}'
 	@echo ""
 	@echo "常用流程: make emulator-classic  →  make chat-server  →  make run"
-	@echo "覆盖服务地址:   make run WS=ws://10.0.2.2:$(CHAT_PORT)/ws"
+	@echo "覆盖 IM 入口:   make run DEV_WS=ws://10.0.2.2:$(CHAT_PORT)"
 
 # ---- 构建门禁 ------------------------------------------------------------
 env: ## 打印生效的工具链路径
@@ -48,13 +50,13 @@ env: ## 打印生效的工具链路径
 	@$(ADB) version | head -1
 
 compile: ## 快速门禁: 只编译 Kotlin(最快, 抓编译错)
-	$(GRADLE) :app:compileDebugKotlin --console=plain
+	$(GRADLE) :app:compileDirectDebugKotlin --console=plain
 
-build: ## 出包: assembleDebug -> $(APK)
-	$(GRADLE) :app:assembleDebug --console=plain
+build: ## 出包: assembleDirectDebug -> $(APK)
+	$(GRADLE) :app:assembleDirectDebug --console=plain
 
-test: ## 单元测试: testDebugUnitTest
-	$(GRADLE) :app:testDebugUnitTest --console=plain
+test: ## 单元测试: testDirectDebugUnitTest
+	$(GRADLE) :app:testDirectDebugUnitTest --console=plain
 
 check: compile test ## 编译 + 单测(提交前)
 

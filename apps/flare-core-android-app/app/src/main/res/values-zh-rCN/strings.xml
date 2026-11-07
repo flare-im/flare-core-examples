@@ -8,9 +8,9 @@
     <string name="nav_sdk_status">SDK 运行状态</string>
     <string name="nav_settings">设置</string>
 
-    <string name="brand_eyebrow">FLARE CORE</string>
-    <string name="brand_name">flare IM</string>
-    <string name="brand_tagline">安全、快速的即时通讯</string>
+    <string name="brand_eyebrow">账号登录</string>
+    <string name="brand_name">Flare IM</string>
+    <string name="brand_tagline">即时沟通 · 多端连接</string>
 
     <string name="status_online">在线</string>
     <string name="status_offline">离线</string>
@@ -53,6 +53,8 @@
     <string name="composer_hint">发送给 %1$s</string>
     <string name="composer_form_send">发送</string>
 
+    <string name="auth_headline">让沟通，\n自然发生。</string>
+    <string name="auth_description">与重要的人保持连接。消息、文件与群组，在你的设备间轻松衔接。</string>
     <string name="auth_welcome">欢迎回来</string>
     <string name="auth_enter_id">请输入您的用户 ID 完成登录</string>
     <string name="auth_user_id">用户 ID</string>
@@ -61,21 +63,15 @@
     <string name="auth_server_optional">服务器地址（可选）</string>
     <string name="auth_id_hint">用户 ID 由系统分配，可在账号设置中查看</string>
     <string name="auth_error_title">登录失败</string>
-    <string name="auth_footer">仅支持 ID 登录 · 安全连接已启用</string>
+    <string name="auth_footer">你的消息、联系人与会话，都在这里。</string>
     <string name="auth_user_id_placeholder">请输入用户 ID</string>
-    <string name="auth_protocol">连接协议</string>
-    <string name="auth_server_address">服务器地址</string>
-    <string name="auth_ws_url">WebSocket 地址</string>
-    <string name="auth_gateway_url">Gateway 地址</string>
-    <string name="auth_gateway_hint">SDK 通过该网关签发并自动刷新接入 token</string>
-    <string name="auth_quic_url">QUIC 地址</string>
-    <string name="auth_transport_race">竞速</string>
 
     <string name="settings_appearance">外观</string>
     <string name="settings_login_defaults">登录默认值</string>
     <string name="settings_session">会话</string>
     <string name="settings_refresh_diagnostics">刷新诊断</string>
     <string name="settings_dispose">释放</string>
+    <string name="settings_access_pin_failed">这条线路已不可用，列表已刷新</string>
     <string name="settings_media_cache">媒体缓存</string>
     <string name="settings_cache_usage">占用：%1$s</string>
     <string name="settings_cache_refresh">刷新</string>
@@ -92,8 +88,6 @@
     <string name="msg_edit_hint">新的消息内容</string>
     <string name="action_confirm">确定</string>
     <string name="composer_replying_to">正在回复 %1$s：%2$s</string>
-    <string name="auth_http_url">网关 HTTP 地址</string>
-    <string name="auth_http_url_hint">如 http://10.0.2.2:50050 —— SDK 向它签发接入 Token</string>
     <string name="auth_access_token">接入 token（可选）</string>
     <string name="auth_access_token_hint">留空则由 SDK 向网关签发并自动刷新；填入业务后端签好的 token 则原样使用</string>
     <string name="auth_fallback_ws">备用通道（WebSocket）</string>

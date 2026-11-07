@@ -1,18 +1,12 @@
 import { expect, test, type Browser, type Page, type TestInfo } from "@playwright/test";
 
+// The service is the one the dev server was started for: VITE_FLARE_ACCESS_JSON, or the local stack without it.
 test.skip(process.env.FLARE_REAL_SERVICE !== "1", "Requires the explicitly selected development service");
 
 async function login(browser: Browser, id: string) {
   const context = await browser.newContext({ viewport: { width: 1440, height: 900 }, reducedMotion: "reduce" });
   const page = await context.newPage();
   await page.goto("/#/login");
-  await page.getByRole("button", { name: /连接设置|Connection settings/i }).click();
-  if (process.env.FLARE_TEST_WS_URL) {
-    await page.getByLabel(/WebSocket 网关地址|WebSocket gateway URL/i).fill(process.env.FLARE_TEST_WS_URL);
-  }
-  if (process.env.FLARE_TEST_HTTP_URL) {
-    await page.getByLabel(/HTTP 网关地址|HTTP gateway URL/i).fill(process.env.FLARE_TEST_HTTP_URL);
-  }
   await page.getByPlaceholder(/请输入用户 ID|Enter user ID/i).fill(id);
   await page.getByRole("button", { name: /立即登录|Log in|Sign in/i }).click();
   await expect(page).toHaveURL(/#\/conversations/, { timeout: 60_000 });

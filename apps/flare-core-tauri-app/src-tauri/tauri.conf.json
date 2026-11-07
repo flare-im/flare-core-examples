@@ -10,7 +10,6 @@
     "frontendDist": "../dist"
   },
   "app": {
-    "macOSPrivateApi": true,
     "windows": [
       {
         "title": "Flare Core Tauri",
@@ -28,6 +27,13 @@
       "assetProtocol": {
         "enable": true,
         "scope": ["$HOME/**", "$DOCUMENT/**", "$DOWNLOAD/**", "$PICTURE/**", "$TEMP/**", "$CACHE/**"]
+      }
+    }
+  },
+  "plugins": {
+    "deep-link": {
+      "desktop": {
+        "schemes": ["flare-recover"]
       }
     }
   },

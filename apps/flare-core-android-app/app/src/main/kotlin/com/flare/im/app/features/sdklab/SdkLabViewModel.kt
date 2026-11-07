@@ -4,15 +4,12 @@ import com.flare.im.api.FlareImClient
 import com.flare.im.app.core.data.AppEnvironment
 import com.flare.im.app.core.session.AppLifecycle
 import com.flare.im.app.core.session.AppSession
-import com.flare.im.model.command.NetworkChangeRequest
-import com.flare.im.model.command.SetHeartbeatAppStateRequest
 import com.flare.im.model.command.SetHeartbeatNatTimeoutRequest
 import com.flare.im.model.command.NormalizeRichDocFromDocJsonRequest
 import com.flare.im.model.command.NormalizeRichDocFromHtmlRequest
 import com.flare.im.model.command.NormalizeRichDocFromMarkdownRequest
 import com.flare.im.model.command.message.SendMessageRequest
 import com.flare.im.model.command.message.build.BuildTextMessageRequest
-import com.flare.im.model.entity.HeartbeatAppState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -51,7 +48,7 @@ class SdkLabViewModel(
 
     val labResults get() = environment.labResults
     val eventLog get() = session.eventLog
-    val connectionState get() = session.connectionState
+    val connectionStatus get() = session.connectionStatus
     val currentUserId get() = session.currentUserId
 
     private val _draft = MutableStateFlow(LabDraft())
@@ -79,7 +76,6 @@ class SdkLabViewModel(
     fun runUninit() = probe("session.uninit") { it.uninit() }
     fun runHardReset() = probe("session.hardReset") { it.hardReset() }
     fun runHeartbeatInterval() = probe("session.heartbeatEffectiveInterval") { it.heartbeatEffectiveInterval() }
-    fun runSetHeartbeatAppState() = probe("session.setHeartbeatAppState") { it.setHeartbeatAppState(SetHeartbeatAppStateRequest(HeartbeatAppState.FOREGROUND)) }
     fun runSetHeartbeatNatTimeout() = probe("session.setHeartbeatNatTimeout") { it.setHeartbeatNatTimeout(SetHeartbeatNatTimeoutRequest(30)) }
     fun runUpdateAccessToken() = probe("session.updateAccessToken") { it.updateAccessToken(mapOf("token" to "")) }
     fun runIsConnected() = probe("session.isConnected") { it.isConnected() }
@@ -87,10 +83,10 @@ class SdkLabViewModel(
     fun runConnect() = probe("session.connect") { it.connect(emptyMap()) }
     fun runCurrentUserId() = probe("session.currentUserId") { it.currentUserId() }
     fun runDisconnect() = probe("connection.disconnect") { it.connection.disconnect() }
-    fun runConnectionState() = probe("connection.getConnectionState") { it.connection.getConnectionState() }
-    fun runNotifyNetworkChange() = probe("connection.notifyNetworkChange") {
-        it.connection.notifyNetworkChange(NetworkChangeRequest(available = true, expensive = false, metered = false, reason = "lab"))
-    }
+    fun runConnectionStatus() = probe("connection.getStatus") { it.connection.getStatus() }
+    fun runReconnectNow() = probe("connection.reconnectNow") { it.connection.reconnectNow() }
+    fun runAccessStatus() = probe("access.getStatus") { it.access.getStatus() }
+    fun runListAccessPoints() = probe("access.listAccessPoints") { it.access.listAccessPoints() }
 
     // ---- Conversation probes ----
     fun runListConversations() = probe("conversations.listConversations") { it.conversations.listConversations() }

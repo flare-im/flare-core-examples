@@ -6,6 +6,8 @@ import 'package:flare_im/infrastructure/sdk/flare_core_sdk_wrapper.dart';
 import 'package:flare_im/shared/config/app_defaults_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'support/dev_access.dart';
+
 /// 用**服务端签好的 token** 连真实网关，跑通登录 → 会话列表 → 打开时间线。
 ///
 /// 与 sdk_login_business_flow_test 的区别：那条不传 token（SDK 向网关签发），
@@ -18,10 +20,10 @@ import 'package:flutter_test/flutter_test.dart';
 ///   `FLARE_E2E_USER=user flutter test test/sdk_remote_token_flow_test.dart`
 void main() {
   test('用服务端签发的 token 登录远端网关并拉起会话', () async {
-    final wsUrl = Platform.environment['FLARE_E2E_WS_URL'];
+    final ws = Platform.environment['FLARE_E2E_WS_URL'];
     final token = Platform.environment['FLARE_E2E_TOKEN'];
     final userId = Platform.environment['FLARE_E2E_USER'];
-    if (wsUrl == null || token == null || userId == null) {
+    if (ws == null || token == null || userId == null) {
       // 没给环境变量就跳过，保持默认 `flutter test` 不依赖外部环境。
       return;
     }
@@ -39,9 +41,8 @@ void main() {
     await sdk
         .init(
           SdkConfig(
-            wsUrl: wsUrl,
+            access: devAccess(ws),
             tenantId: defaults.tenantId,
-            httpUrl: 'http://127.0.0.1:50050',
             dataUrl: toFileDataUrl(root.path),
           ),
         )
@@ -50,11 +51,11 @@ void main() {
     await sdk.login(userId, token).timeout(const Duration(seconds: 30));
     expect(await sdk.currentUserId(), userId);
 
-    final state = await sdk.getConnectionState();
+    final status = await sdk.connectionStatus();
     expect(
-      state,
-      isIn([core.ConnectionState.connected, core.ConnectionState.ready]),
-      reason: '登录后连接应当已建立，实际是 $state',
+      status.phase,
+      core.ConnectionPhase.online,
+      reason: '登录后连接应当已建立，实际是 ${status.phase.name}',
     );
 
     await sdk.syncConversationSummaries().timeout(const Duration(seconds: 30));

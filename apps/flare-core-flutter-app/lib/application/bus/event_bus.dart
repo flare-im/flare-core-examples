@@ -1,4 +1,6 @@
 import 'package:event_bus/event_bus.dart';
+import 'package:flare_core_flutter_sdk/flare_core_flutter_sdk.dart'
+    show ConnectionStatus;
 import 'package:flare_im/domain/entities/conversation.dart';
 import 'package:flare_im/domain/entities/message.dart';
 import 'package:flare_im/domain/entities/user.dart';
@@ -191,12 +193,6 @@ final class SdkLifecycleUpdatedEvent {
 }
 
 @immutable
-final class SdkConnectionUpdatedEvent {
-  const SdkConnectionUpdatedEvent(this.payload);
-  final Map<String, dynamic> payload;
-}
-
-@immutable
 final class SdkSyncUpdatedEvent {
   const SdkSyncUpdatedEvent(this.payload);
   final Map<String, dynamic> payload;
@@ -221,7 +217,9 @@ final class PresenceUpdateEvent {
   final bool isOnline;
 }
 
+/// The core's `connection://status`, replaced whole on every event.
 @immutable
-final class ConnectionChangedEvent {
-  const ConnectionChangedEvent();
+final class ConnectionStatusChangedEvent {
+  const ConnectionStatusChangedEvent(this.status);
+  final ConnectionStatus status;
 }

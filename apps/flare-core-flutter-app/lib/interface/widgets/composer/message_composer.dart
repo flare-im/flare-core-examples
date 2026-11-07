@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:flare_core_flutter_update_ui/flare_core_flutter_update_ui.dart'
+    show FlareUpdateScope;
 import 'package:flare_im/application/providers/chat_outbound_provider.dart';
 import 'package:flare_im/application/providers/locale_provider.dart';
 import 'package:flare_im/infrastructure/media/plain_text_markdown_detect.dart';
@@ -293,6 +295,8 @@ class MessageComposerState extends ConsumerState<MessageComposer> {
   @override
   Widget build(BuildContext context) {
     ref.watch(flareMessagesProvider);
+    // 只读：本地会话和消息照常看，发不出去，提示写在输入框里。
+    final readOnly = FlareUpdateScope.readOnlyOf(context);
     return FlareComposer(
       key: _kitKey,
       conversationKey: widget.conversationId,
@@ -302,8 +306,10 @@ class MessageComposerState extends ConsumerState<MessageComposer> {
         inlineSize: 22,
         localeTag: Localizations.maybeLocaleOf(context)?.toLanguageTag(),
       ),
-      placeholder: _effectiveHint,
-      disabled: widget.disabled,
+      placeholder: readOnly
+          ? FlareStrings.of(context).composerReadOnlyUpdate
+          : _effectiveHint,
+      disabled: widget.disabled || readOnly,
       maxLength: widget.maxLength,
       enableVoice: widget.onVoiceSend != null,
       onVoiceSend: widget.onVoiceSend,

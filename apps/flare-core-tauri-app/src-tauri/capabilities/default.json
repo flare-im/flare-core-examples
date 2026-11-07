@@ -8,8 +8,15 @@
     "core:window:allow-start-dragging",
     "core:window:allow-request-user-attention",
     "core:window:allow-set-badge-count",
+    "deep-link:default",
     "dialog:default",
     "notification:default",
-    "opener:default"
+    "opener:default",
+    {
+      "identifier": "opener:allow-open-url",
+      "allow": [{ "url": "macappstore://*" }, { "url": "ms-windows-store://*" }, { "url": "itms-apps://*" }]
+    },
+    "process:allow-restart",
+    "updater:default"
   ]
 }

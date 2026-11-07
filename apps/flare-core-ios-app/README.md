@@ -44,9 +44,32 @@ Unit/widget fixtures are test inputs, not a supported product demo mode.
 
 ## Real SDK Mode
 
-Enter a test user ID and the WebSocket and HTTP gateway endpoints on the login
-screen. Credentials are issued by the configured gateway; do not put signing
-keys in UI code. Use isolated test accounts for destructive or send workflows.
+Enter a test user ID on the login screen. Where the app connects is not a login
+setting: the build hands the SDK an `access` configuration (`AppAccess`), and the
+SDK chooses the access point and protocol, reconnects, and reports network and
+foreground changes itself. Values are read from the process environment first
+(`SIMCTL_CHILD_` + the name on a simulator), then from Info.plist (the build
+settings in `project.yml`):
+
+- Debug builds run in development mode. With nothing set they use the local
+  stack: IM `ws://127.0.0.1:60051`, Core HTTP and media `http://127.0.0.1:50050`.
+  Override single entries with `FLARE_DEV_WS_URL`, `FLARE_DEV_QUIC_URL` (QUIC
+  only when given; a self-signed server also needs `FLARE_TLS_CA_CERT`),
+  `FLARE_DEV_CORE_API_URL` and `FLARE_DEV_MEDIA_URL`, for example
+  `xcodebuild ... FLARE_DEV_WS_URL=ws://192.168.1.20:60051`.
+- `FLARE_ACCESS_JSON` replaces all of them with a whole `access` object, for
+  example a second access point for failover drills:
+  `{"trustMode":"development","developmentEndpoints":{"wsUrl":"ws://127.0.0.1:60051","coreApiUrl":"http://127.0.0.1:50050","mediaUrl":"http://127.0.0.1:50050","accessPoints":[{"id":"dev-b","wsUrl":"ws://127.0.0.1:61051","coreApiUrl":"http://127.0.0.1:51050","mediaUrl":"http://127.0.0.1:51050"}]}}`
+  (use the second entry's real ports).
+- Release builds read only `FLARE_ACCESS_JSON` (the production `bootstrapId`,
+  `trustRoots`, `seed` and `trustMode: production`) and stop at launch without
+  it; they never fall back to development mode.
+
+Connect tokens are SDK-managed (`"auth": {}` in every build): the SDK issues and
+renews them on the Core API of the access point it uses, which in development is
+the Core HTTP entry above. A token pasted in Settings is passed to login as
+given. Do not put signing keys in UI code. Use isolated test accounts for destructive or send
+workflows.
 
 ## Supported Features
 

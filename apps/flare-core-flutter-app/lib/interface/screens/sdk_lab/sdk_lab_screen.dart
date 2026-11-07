@@ -773,23 +773,18 @@ class _ResetSection extends HookWidget {
             ),
             _LabAction(
               icon: Icons.network_check_outlined,
-              label: 'Network Change',
-              onPressed: notifier.notifyNetworkChangeProbe,
+              label: 'Connection Status',
+              onPressed: notifier.connectionStatusProbe,
+            ),
+            _LabAction(
+              icon: Icons.sync_outlined,
+              label: 'Reconnect Now',
+              onPressed: notifier.reconnectNow,
             ),
             _LabAction(
               icon: Icons.monitor_heart_outlined,
               label: 'Heartbeat',
               onPressed: notifier.heartbeatEffectiveInterval,
-            ),
-            _LabAction(
-              icon: Icons.visibility_outlined,
-              label: 'Foreground',
-              onPressed: notifier.setHeartbeatForeground,
-            ),
-            _LabAction(
-              icon: Icons.visibility_off_outlined,
-              label: 'Background',
-              onPressed: notifier.setHeartbeatBackground,
             ),
             _LabAction(
               icon: Icons.timer_outlined,

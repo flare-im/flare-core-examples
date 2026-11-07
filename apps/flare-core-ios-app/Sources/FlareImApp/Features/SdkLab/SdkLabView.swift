@@ -97,10 +97,11 @@ private struct LifecycleLab: View {
                 LabButton(title: "Hard reset", operation: "session.hard_reset")
                 LabButton(title: "Runtime health", operation: "diagnostics.runtime_health")
                 LabButton(title: "Heartbeat interval", operation: "session.heartbeat_interval")
-                LabButton(title: "Heartbeat foreground", operation: "session.heartbeat_app_state")
                 LabButton(title: "Heartbeat NAT 120s", operation: "session.heartbeat_nat_timeout")
                 LabButton(title: "Prepare session", operation: "session.prepare")
-                LabButton(title: "Notify network", operation: "connection.notify_network_change")
+                LabButton(title: "Reconnect now", operation: "connection.reconnect_now")
+                LabButton(title: "Access status", operation: "access.get_status")
+                LabButton(title: "Access points", operation: "access.list_access_points")
                 Button("Logout") { Task { await sdkLab.logout() } }
                 Button("Dispose") { Task { await sdkLab.dispose() } }
             }
@@ -248,8 +249,6 @@ private struct CapabilityLab: View {
                     .textFieldStyle(.roundedBorder)
             }
             HStack {
-                TextField("Call signal type", text: $sdkLab.capabilityLabDraft.callSignalType)
-                    .textFieldStyle(.roundedBorder)
                 TextField("Payload JSON", text: $sdkLab.capabilityLabDraft.payload)
                     .textFieldStyle(.roundedBorder)
             }
@@ -259,7 +258,6 @@ private struct CapabilityLab: View {
                 CapabilityButton(title: "Dispatch", operation: "capability.dispatch")
                 CapabilityButton(title: "Grant", operation: "capability.grant")
                 CapabilityButton(title: "Revoke", operation: "capability.revoke")
-                CapabilityButton(title: "Send call signal", operation: "capability.call_signal")
             }
             .buttonStyle(.bordered)
             KeyValueRows(values: [

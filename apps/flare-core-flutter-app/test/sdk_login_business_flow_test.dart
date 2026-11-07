@@ -5,6 +5,8 @@ import 'package:flare_im/infrastructure/paths/sdk_data_url.dart';
 import 'package:flare_im/infrastructure/sdk/flare_core_sdk_wrapper.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'support/dev_access.dart';
+
 void main() {
   test(
     'logs in with a core generated token when the local gateway is running',
@@ -30,9 +32,8 @@ void main() {
       await sdk
           .init(
             SdkConfig(
-              wsUrl: 'ws://127.0.0.1:60051/ws',
+              access: devAccess('ws://127.0.0.1:60051/ws'),
               tenantId: '0',
-              httpUrl: 'http://127.0.0.1:50050',
               dataUrl: toFileDataUrl(root.path),
             ),
           )
@@ -42,11 +43,17 @@ void main() {
       await sdk.login('hugo').timeout(const Duration(seconds: 15));
       expect(await sdk.currentUserId(), 'hugo');
 
-      final state = await sdk.getConnectionState();
-      expect(
-        state,
-        isIn([core.ConnectionState.connected, core.ConnectionState.ready]),
-      );
+      // Login succeeds before the link is up; online is connection://status.
+      var status = await sdk.connectionStatus();
+      for (
+        var i = 0;
+        i < 100 && status.phase != core.ConnectionPhase.online;
+        i++
+      ) {
+        await Future<void>.delayed(const Duration(milliseconds: 150));
+        status = await sdk.connectionStatus();
+      }
+      expect(status.phase, core.ConnectionPhase.online);
       final diagnostics = await sdk.diagnosticsSnapshot();
       expect(diagnostics['currentUserId'], 'hugo');
       expect(diagnostics['sessionActive'], isTrue);

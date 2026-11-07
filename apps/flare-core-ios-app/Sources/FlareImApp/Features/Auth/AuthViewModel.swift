@@ -41,26 +41,6 @@ final class AuthViewModel: ObservableObject {
         )
     }
 
-    var visibleServerAddress: Binding<String> {
-        Binding {
-            self.environment.loginDraft.visibleServerAddress
-        } set: { value in
-            var draft = self.environment.loginDraft
-            draft.setVisibleServerAddress(value)
-            self.environment.loginDraft = draft
-        }
-    }
-
-    var secondaryServerAddress: Binding<String> {
-        Binding {
-            self.environment.loginDraft.secondaryServerAddress ?? ""
-        } set: { value in
-            var draft = self.environment.loginDraft
-            draft.setSecondaryServerAddress(value)
-            self.environment.loginDraft = draft
-        }
-    }
-
     func clearValidation() { validationMessage = nil }
 
     func submit() async {

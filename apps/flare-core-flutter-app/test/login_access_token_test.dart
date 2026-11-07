@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 /// 客户端不再本地签发或持有接入 token（那等于把签名密钥打进安装包）。
-/// SDK 托管：init 把网关地址交给核心（auth.tokenEndpoint），login 不传 token。
+/// SDK 托管：init 只给 `auth: {}`，核心经接入点的 Core API 签发与刷新，login 不传 token。
 void main() {
   final loginSource = File(
     'lib/interface/screens/login/login_screen.dart',
@@ -26,11 +26,9 @@ void main() {
     );
   });
 
-  test('init 把网关地址交给核心', () {
-    expect(
-      wrapperSource.contains("'auth': {'tokenEndpoint': _httpUrl}"),
-      isTrue,
-    );
+  test('init 交给核心托管令牌，不配令牌地址', () {
+    expect(wrapperSource.contains("'auth': <String, Object?>{},"), isTrue);
+    expect(wrapperSource.contains('tokenEndpoint'), isFalse);
     expect(wrapperSource.contains('generateCoreToken'), isFalse);
     expect(wrapperSource.contains('tokenSecret'), isFalse);
   });

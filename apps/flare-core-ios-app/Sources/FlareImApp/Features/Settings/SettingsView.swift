@@ -1,9 +1,12 @@
 import FlareIMUI
+import FlareUpdateUI
 import SwiftUI
 
 struct SettingsView: View {
     @EnvironmentObject private var settings: SettingsViewModel
+    @EnvironmentObject private var store: FlareAppStore
     @Environment(\.flareFeedback) private var feedback
+    @Environment(\.flareStrings) private var strings
 
     var body: some View {
         ScrollView {
@@ -22,20 +25,21 @@ struct SettingsView: View {
                 }
                 .padding(FlareDesign.Spacing.lg)
 
+                ButtonView(label: strings.accessDiagnosticsTitle, variant: .secondary, icon: "link") {
+                    store.accessDiagnostics.presented = true
+                }
+                .padding(.horizontal, FlareDesign.Spacing.lg)
+
+                FlareUpdateVersionPanel(controller: store.updateCenter)
+                    .padding(.horizontal, FlareDesign.Spacing.lg)
+
                 VStack(alignment: .leading, spacing: FlareDesign.Spacing.md) {
                     Text("Login Defaults")
                         .font(.headline)
                     TextField("User id", text: settings.draftBinding(\.userId))
                         .textFieldStyle(.roundedBorder)
                         .identifierInput()
-                    TextField("WebSocket URL", text: settings.draftBinding(\.wsUrl))
-                        .textFieldStyle(.roundedBorder)
-                        .identifierInput()
                     TextField("Tenant", text: settings.draftBinding(\.tenantId))
-                        .textFieldStyle(.roundedBorder)
-                        .identifierInput()
-                    // 网关 HTTP 基址：SDK 向它签发接入 token 并自动刷新；客户端从不持有签名密钥。
-                    TextField("Gateway HTTP URL", text: settings.draftBinding(\.httpUrl))
                         .textFieldStyle(.roundedBorder)
                         .identifierInput()
                     // 应用托管：直接填业务后端签好的 token，SDK 原样使用；留空则 SDK 托管，向网关签发并自动刷新。
@@ -53,7 +57,7 @@ struct SettingsView: View {
                         .font(.headline)
                     KeyValueRows(values: [
                         ("User", settings.currentUserId ?? ""),
-                        ("Connection", settings.connectionState.rawValue),
+                        ("Connection", settings.connectionPhase),
                         ("Runtime", settings.runtimeStatus.title)
                     ])
                     HStack {

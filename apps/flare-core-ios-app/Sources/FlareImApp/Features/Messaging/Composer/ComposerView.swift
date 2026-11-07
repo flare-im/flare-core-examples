@@ -1,5 +1,6 @@
 import FlareCoreAppleSDK
 import FlareIMUI
+import FlarePlatformUpdate
 import AVFoundation
 import AVKit
 import SwiftUI
@@ -17,6 +18,8 @@ private enum ComposerMoreKind {
 struct ComposerView: View {
     @EnvironmentObject private var messaging: MessagingViewModel
     @EnvironmentObject private var environment: AppEnvironment
+    @EnvironmentObject private var updateCenter: FlareUpdateController
+    @Environment(\.flareStrings) private var strings
     @Binding var text: String
     let conversation: AppConversation
     var expandedInputHeight: CGFloat = 360
@@ -25,6 +28,9 @@ struct ComposerView: View {
     // Layer 5：相册 / 文件选择由宿主适配器执行（Core/Platform/IosPlatformAdapter），
     // 这里只读能力决定入口存在与否、走原生还是走 fallback 表单。
     @Environment(\.flarePlatform) private var platform
+
+    /// An outdated build reads what is here and sends nothing until it updates.
+    private var readOnly: Bool { updateCenter.status?.readOnly == true }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -39,8 +45,8 @@ struct ComposerView: View {
             }
             FlareIMUI.ComposerView(
                 text: $text,
-                placeholder: String(localized: "Send to \(conversation.appTitle)"),
-                disabled: messaging.runtimeStatus.isBlocking,
+                placeholder: readOnly ? strings.composerReadOnlyUpdate : String(localized: "Send to \(conversation.appTitle)"),
+                disabled: messaging.runtimeStatus.isBlocking || readOnly,
                 replyTo: messaging.replyTarget.map { FlareReplyTarget(senderName: $0.senderTitle, summary: $0.previewText) },
                 onSend: { value in text = value; sendCurrentText() },
                 onImage: platform.capabilities.imagePicker == .unsupported ? nil : {

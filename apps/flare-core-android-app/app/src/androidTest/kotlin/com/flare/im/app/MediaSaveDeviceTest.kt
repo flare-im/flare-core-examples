@@ -2,6 +2,7 @@ package com.flare.im.app
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import com.flare.im.FlareCoreSdk
 import com.flare.im.app.core.domain.LoginDraft
 import com.flare.im.app.core.domain.downloadLocationFrom
 import com.flare.im.app.core.domain.isUnwritableFolderError
@@ -29,7 +30,7 @@ import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class MediaSaveDeviceTest {
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
-    private val session = AppSession()
+    private val session = AppSession({ FlareCoreSdk.createClient(context) })
     private val saved = mutableListOf<File>()
 
     @After fun tearDown(): Unit = runBlocking {

@@ -14,7 +14,6 @@ import 'package:flare_im/domain/repositories/i_message_repository.dart';
 import 'package:flare_im/domain/value_objects/conversation_filter.dart';
 import 'package:flare_im/domain/value_objects/conversation_type.dart';
 import 'package:flare_im/domain/value_objects/message_content.dart';
-import 'package:flare_im/domain/value_objects/transport_mode.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -39,10 +38,9 @@ void main() {
 
       expect(conversationRepo.bootstrapCalls, 1);
       expect(conversationRepo.listCalls, 0);
-      expect(
-        container.read(connectionStateProvider),
-        ConnectionState.connected,
-      );
+      // The banner's status comes from connection://status (and the core's
+      // snapshot), never from the login result; without an SDK there is none.
+      expect(container.read(connectionStatusProvider), isNull);
       expect(container.read(conversationProvider), [conversation]);
     },
   );
@@ -210,11 +208,7 @@ final class _FakeAuthRepository implements IAuthRepository {
 
   @override
   Future<void> initSdk({
-    required String wsUrl,
-    required SdkTransportMode transportMode,
-    required String quicUrl,
     required String tenantId,
-    required String httpUrl,
     String? tlsCaCertPath,
     String? tlsCaCert,
     String? dataUrl,
@@ -238,10 +232,6 @@ final class _FakeAuthRepository implements IAuthRepository {
 
   @override
   Future<User?> getCurrentUser() async => null;
-
-  @override
-  Future<ConnectionState> getConnectionState() async =>
-      ConnectionState.connected;
 
   @override
   Future<String> sdkVersion() async => 'test';
@@ -350,6 +340,7 @@ final class _FakeMessageRepository implements IMessageRepository {
   ) async {
     createdTextConversationId = conversationId;
     return core.Message(
+      sender: const core.DisplayName(kind: core.DisplayNameKind.unnamed),
       clientMsgId: 'cm1',
       conversationId: conversationId,
       conversationType: ConversationType.single.value,

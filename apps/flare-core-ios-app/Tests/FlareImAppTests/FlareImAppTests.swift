@@ -63,60 +63,22 @@ final class FlareImAppTests: XCTestCase {
     func testLoginDefaultsAreUsable() {
         let draft = LoginDraft()
         XCTAssertTrue(draft.userId.isEmpty)
-        XCTAssertEqual(draft.wsUrl, "ws://127.0.0.1:60051/ws")
-        XCTAssertEqual(draft.transportMode, .websocket)
-        XCTAssertEqual(draft.quicUrl, "quic://127.0.0.1:60052")
         XCTAssertEqual(draft.tenantId, "0")
-        XCTAssertEqual(draft.httpUrl, "http://127.0.0.1:50050")
+        XCTAssertTrue(draft.trustConfig().isEmpty, "no private CA unless one is given")
     }
 
-    func testLoginTransportConfigDefaultsToWebSocket() throws {
-        let config = try LoginDraft().sdkTransportConfig()
-
-        XCTAssertEqual(config["transportPolicy"]?.value as? String, "websocket_only")
-        XCTAssertEqual(config["defaultTransport"]?.value as? String, "websocket")
-        XCTAssertEqual(config["wsUrl"]?.value as? String, "ws://127.0.0.1:60051/ws")
-    }
-
-    func testLoginProtocolSelectionDrivesVisibleServerAddress() {
+    func testTheSignInFormCarriesTheTrustedCAAndNoAddress() {
         var draft = LoginDraft()
-        XCTAssertEqual(draft.transportMode, .websocket)
-        XCTAssertEqual(draft.visibleServerAddressLabel, "WebSocket server URL")
-        XCTAssertEqual(draft.visibleServerAddress, "ws://127.0.0.1:60051/ws")
-
-        draft.transportMode = .quic
-        draft.quicUrl = "quic://flare.test:60052"
-        XCTAssertEqual(draft.visibleServerAddressLabel, "QUIC server URL")
-        XCTAssertEqual(draft.visibleServerAddress, "quic://flare.test:60052")
-
-        draft.transportMode = .race
-        draft.wsUrl = "ws://flare.test/ws"
-        XCTAssertEqual(draft.visibleServerAddressLabel, "Primary server URL")
-        XCTAssertEqual(draft.visibleServerAddress, "quic://flare.test:60052")
-        XCTAssertEqual(draft.secondaryServerAddressLabel, "Fallback WebSocket URL")
-        XCTAssertEqual(draft.secondaryServerAddress, "ws://flare.test/ws")
-    }
-
-    func testLoginTransportConfigSupportsQuicAndRace() throws {
-        var quicDraft = LoginDraft()
-        quicDraft.transportMode = .quic
-        quicDraft.wsUrl = ""
-        quicDraft.tlsCaCertPath = " /tmp/flare-server.crt "
-        let quicConfig = try quicDraft.sdkTransportConfig()
-
-        XCTAssertEqual(quicConfig["transportPolicy"]?.value as? String, "auto")
-        XCTAssertEqual(quicConfig["defaultTransport"]?.value as? String, "quic")
-        XCTAssertNil(quicConfig["wsUrl"])
-        XCTAssertEqual(quicConfig["quicUrl"]?.value as? String, "quic://127.0.0.1:60052")
-        XCTAssertEqual(quicConfig["tlsCaCertPath"]?.value as? String, "/tmp/flare-server.crt")
-        XCTAssertEqual(quicConfig["protocolRaceOrder"]?.value as? [String], ["quic"])
-
-        var raceDraft = LoginDraft()
-        raceDraft.transportMode = .race
-        let raceConfig = try raceDraft.sdkTransportConfig()
-
-        XCTAssertEqual(raceConfig["transportPolicy"]?.value as? String, "protocol_race")
-        XCTAssertEqual(raceConfig["protocolRaceOrder"]?.value as? [String], ["quic", "websocket"])
+        draft.tlsCaCertPath = " /tmp/flare-server.crt "
+        let config = AppSession.sessionInitConfig(draft: draft, dataURL: URL(fileURLWithPath: "/tmp/x"),
+                                                  access: try! AppAccess.resolve(lookup: { _ in nil }, allowDevelopment: true))
+        XCTAssertEqual(config["tlsCaCertPath"]?.value as? String, "/tmp/flare-server.crt")
+        let access = config["access"]?.value as? [String: Any]
+        XCTAssertEqual(access?["trustMode"] as? String, "development")
+        XCTAssertEqual(Set(config.keys), ["tlsCaCertPath", "dataUrl", "tenantId", "access", "auth", "platform", "runtime", "app"],
+                       "where to connect is the access object's; there is no address of its own")
+        XCTAssertEqual((config["app"]?.value as? [String: Any])?["channel"] as? String, "stable",
+                       "the release manifest is picked by the app's channel")
     }
 
     func testConversationFromCoreUsesAppDisplaySemantics() {
@@ -127,6 +89,7 @@ final class FlareImAppTests: XCTestCase {
             isPinned: true,
             lastMessagePreview: "hello",
             remark: "  Alice  ",
+            title: DisplayName(kind: .unnamed, entity: .person, idTail: ""),
             unreadCount: 3,
             updatedAt: 100,
             updatedAtTs: 200
@@ -220,10 +183,8 @@ final class FlareImAppTests: XCTestCase {
 
         var draft = LoginDraft()
         draft.userId = environment["FLARE_IOS_LIVE_USER_ID"] ?? "1"
-        draft.wsUrl = environment["FLARE_IOS_LIVE_WS_URL"] ?? LoginDefaults.webSocketURL
         draft.libraryPath = dylib
-        draft.httpUrl = environment["FLARE_IOS_LIVE_HTTP_URL"] ?? LoginDefaults.httpURL
-        let session = AppSession()
+        let session = AppSession(access: try liveAccess(environment))
         let dataURL = FileManager.default.temporaryDirectory
             .appendingPathComponent("flare-ios-live-login-\(UUID().uuidString)", isDirectory: true)
         try FileManager.default.createDirectory(at: dataURL, withIntermediateDirectories: true)
@@ -250,11 +211,9 @@ final class FlareImAppTests: XCTestCase {
 
         var draft = LoginDraft()
         draft.userId = environment["FLARE_IOS_LIVE_USER_ID"] ?? "11"
-        draft.wsUrl = environment["FLARE_IOS_LIVE_WS_URL"] ?? LoginDefaults.webSocketURL
         draft.libraryPath = dylib
-        draft.httpUrl = environment["FLARE_IOS_LIVE_HTTP_URL"] ?? LoginDefaults.httpURL
 
-        let session = AppSession()
+        let session = AppSession(access: try liveAccess(environment))
         let repository = ViewDataRepository()
         let dataURL = FileManager.default.temporaryDirectory
             .appendingPathComponent("flare-ios-live-conversations-\(UUID().uuidString)", isDirectory: true)
@@ -288,11 +247,9 @@ final class FlareImAppTests: XCTestCase {
 
         var draft = LoginDraft()
         draft.userId = environment["FLARE_IOS_LIVE_USER_ID"] ?? "11"
-        draft.wsUrl = environment["FLARE_IOS_LIVE_WS_URL"] ?? LoginDefaults.webSocketURL
         draft.libraryPath = dylib
-        draft.httpUrl = environment["FLARE_IOS_LIVE_HTTP_URL"] ?? LoginDefaults.httpURL
 
-        let session = AppSession()
+        let session = AppSession(access: try liveAccess(environment))
         let repository = ViewDataRepository()
         let dataURL = FileManager.default.temporaryDirectory
             .appendingPathComponent("flare-ios-live-audio-\(UUID().uuidString)", isDirectory: true)
@@ -339,6 +296,7 @@ final class FlareImAppTests: XCTestCase {
             conversationId: "c1",
             conversationSeq: 7,
             createdAt: 1000,
+            sender: DisplayName(kind: .named, text: "Alice"),
             senderDisplayName: "Alice",
             senderId: "alice",
             serverId: "server-1"
@@ -359,7 +317,7 @@ final class FlareImAppTests: XCTestCase {
             ReactionEntry(count: 2, emoji: "👍", userIds: ["alice", "bob"]),
             ReactionEntry(count: 1, emoji: "❤️", userIds: ["carol"]),
         ]
-        let live = SdkModelMapper.messageFromCore(Message(clientMsgId: "client-1", reactions: reactions, senderId: "carol", serverId: "server-1"))
+        let live = SdkModelMapper.messageFromCore(Message(clientMsgId: "client-1", reactions: reactions, sender: DisplayName(kind: .unnamed, entity: .person, idTail: ""), senderId: "carol", serverId: "server-1"))
 
         let groups = MessageRow.reactionGroups(for: live, currentUserId: "alice")
         XCTAssertEqual(groups.map(\.emoji), ["👍", "❤️"])
@@ -367,7 +325,7 @@ final class FlareImAppTests: XCTestCase {
         XCTAssertEqual(groups.map(\.reactedBySelf), [true, false])
         XCTAssertEqual(MessageRow.reactionGroups(for: live, currentUserId: nil).map(\.reactedBySelf), [false, false])
 
-        let recalled = SdkModelMapper.messageFromCore(Message(clientMsgId: "client-2", isRecalled: true, reactions: reactions, serverId: "server-2"))
+        let recalled = SdkModelMapper.messageFromCore(Message(clientMsgId: "client-2", isRecalled: true, reactions: reactions, sender: DisplayName(kind: .unnamed, entity: .person, idTail: ""), serverId: "server-2"))
         XCTAssertTrue(MessageRow.reactionGroups(for: recalled, currentUserId: "alice").isEmpty)
     }
 
@@ -758,6 +716,7 @@ final class FlareImAppTests: XCTestCase {
             clientMsgId: "client-1",
             content: MessageContent(contentType: .text, data: ["text": AnySendable("hello")]),
             conversationId: "c1",
+            sender: DisplayName(kind: .unnamed, entity: .person, idTail: ""),
             senderId: "11"
         )
 
@@ -785,7 +744,7 @@ final class FlareImAppTests: XCTestCase {
         XCTAssertEqual(call.descriptor.dispatchOp, "create_audio")
 
         let request = try XCTUnwrap(call.request?.value as? [String: Any])
-        XCTAssertEqual(request["op"] as? String, "create_audio")
+        XCTAssertNil(request["op"], "The typed request has no routing field; dispatchOp belongs to the bridge descriptor")
         XCTAssertEqual(request["conversationId"] as? String, "c1")
         XCTAssertEqual(request["audioId"] as? String, "audio-1")
     }
@@ -801,7 +760,7 @@ final class FlareImAppTests: XCTestCase {
         XCTAssertEqual(call.descriptor.dispatchOp, "create_emoji")
 
         let request = try XCTUnwrap(call.request?.value as? [String: Any])
-        XCTAssertEqual(request["op"] as? String, "create_emoji")
+        XCTAssertNil(request["op"], "The typed request has no routing field; dispatchOp belongs to the bridge descriptor")
         XCTAssertEqual(request["conversationId"] as? String, "c1")
         XCTAssertEqual(request["emoji"] as? String, "smirking_face")
     }
@@ -827,7 +786,7 @@ final class FlareImAppTests: XCTestCase {
         XCTAssertEqual(call.descriptor.dispatchOp, "create_rich_doc")
 
         let request = try XCTUnwrap(call.request?.value as? [String: Any])
-        XCTAssertEqual(request["op"] as? String, "create_rich_doc")
+        XCTAssertNil(request["op"], "The typed request has no routing field; dispatchOp belongs to the bridge descriptor")
         XCTAssertEqual(request["conversationId"] as? String, "c1")
         XCTAssertEqual(request["plainText"] as? String, "Title\nBold")
         XCTAssertEqual(request["title"] as? String, "Title")
@@ -843,6 +802,7 @@ final class FlareImAppTests: XCTestCase {
             clientMsgId: "fallback-client",
             content: MessageContent(contentType: .text, data: ["text": AnySendable("fallback")]),
             conversationId: "c1",
+            sender: DisplayName(kind: .unnamed, entity: .person, idTail: ""),
             senderId: "fallback-sender",
             serverId: "fallback-server"
         )
@@ -961,6 +921,13 @@ final class FlareImAppTests: XCTestCase {
         XCTAssertEqual(audio.payload?.source?.size, 18_000)
         XCTAssertEqual(audio.payload?.source?.durationMs, 18_000)
     }
+}
+
+/// The development access the live tests run on: `FLARE_IOS_LIVE_WS_URL` / `FLARE_IOS_LIVE_HTTP_URL` when given, else
+/// the local stack.
+private func liveAccess(_ environment: [String: String]) throws -> AppAccess {
+    let names = ["FLARE_DEV_WS_URL": "FLARE_IOS_LIVE_WS_URL", "FLARE_DEV_CORE_API_URL": "FLARE_IOS_LIVE_HTTP_URL"]
+    return try AppAccess.resolve(lookup: { name in names[name].flatMap { environment[$0] } }, allowDevelopment: true)
 }
 
 private func appendRichRun(

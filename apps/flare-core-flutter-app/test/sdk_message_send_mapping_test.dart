@@ -11,6 +11,7 @@ void main() {
   test('maps core text content into visible app text', () {
     final message = SdkModelMapper.messageFromCore(
       const core.Message(
+        sender: core.DisplayName(kind: core.DisplayNameKind.unnamed),
         clientMsgId: 'cm1',
         conversationId: 'c1',
         messageType: 1,
@@ -29,6 +30,7 @@ void main() {
   test('maps core emoji content into visible app emoji', () {
     final message = SdkModelMapper.messageFromCore(
       const core.Message(
+        sender: core.DisplayName(kind: core.DisplayNameKind.unnamed),
         clientMsgId: 'cm1',
         conversationId: 'c1',
         messageType: 9,
@@ -236,6 +238,7 @@ final class _RecordingConversationsApi implements core.ConversationsApi {
     return const core.ListConversationsResponse(
       conversations: [
         core.Conversation(
+          title: core.DisplayName(kind: core.DisplayNameKind.unnamed),
           conversationId: 'c1',
           conversationType: core.ConversationType.single,
         ),
@@ -259,6 +262,7 @@ final class _RecordingConversationsApi implements core.ConversationsApi {
 
 core.Conversation _coreConversation(String id) {
   return core.Conversation(
+    title: const core.DisplayName(kind: core.DisplayNameKind.unnamed),
     conversationId: id,
     conversationType: core.ConversationType.single,
   );

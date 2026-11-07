@@ -1,4 +1,5 @@
 import FlareIMUI
+import FlarePlatformUpdate
 import SwiftUI
 
 public struct FlareImRootView: View {
@@ -13,6 +14,7 @@ public struct FlareImRootView: View {
     public var body: some View {
         RootWorkbenchView()
             .environmentObject(store)
+            .environmentObject(store.updateCenter)
             .environmentObject(store.environment)
             .environmentObject(store.messagingViewModel)
             .environmentObject(store.sdkLabViewModel)

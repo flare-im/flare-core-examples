@@ -8,18 +8,13 @@ test("dev app keeps the real login and SDK workbench entry flow", async ({ page 
   await expect(page.locator(".auth-screen")).toBeVisible();
   await expect(page.getByRole("heading", { name: /欢迎回来|Welcome back/i })).toBeVisible();
   await expect(page.locator(".auth-user-input input")).toBeVisible();
-  const connectionSettings = page.getByRole("button", { name: /连接设置|Connection settings/i });
-  await expect(connectionSettings).toBeVisible();
-  await expect(connectionSettings).toHaveAttribute("aria-expanded", "false");
   await expect(page.getByRole("button", { name: /立即登录|Sign in/i })).toBeVisible();
   await expect(page.getByText("Demo mode", { exact: false })).toHaveCount(0);
 
-  await connectionSettings.click();
-  await expect(connectionSettings).toHaveAttribute("aria-expanded", "true");
-  await expect(page.locator(".auth-server-fields")).toBeVisible();
-  await expect(page.locator(".auth-server-fields input")).toHaveCount(2);
-  await expect(page.getByLabel(/WebSocket 网关地址|WebSocket gateway URL/i)).toBeVisible();
-  await expect(page.getByLabel(/HTTP 网关地址|HTTP gateway URL/i)).toBeVisible();
+  // Where to connect is the build's access configuration: the login page asks for the identity only.
+  await expect(page.getByRole("button", { name: /连接设置|Connection settings/i })).toHaveCount(0);
+  await expect(page.locator(".auth-screen form input")).toHaveCount(1);
+  await expect(page.getByLabel(/WebSocket|HTTP 网关地址|HTTP gateway URL/i)).toHaveCount(0);
   await expect(page.locator("html")).toHaveAttribute("data-flare-brand", "violet");
   await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
 });
@@ -48,8 +43,6 @@ for (const viewport of [
     await expect(page.locator(".auth-screen")).toBeVisible();
     await expect(page.locator(".auth-user-input input")).toBeVisible();
     await expect(page.getByRole("button", { name: /立即登录|Sign in/i })).toBeVisible();
-    await page.getByRole("button", { name: /连接设置|Connection settings/i }).click();
-    await expect(page.locator(".auth-server-fields input")).toHaveCount(2);
     await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
     await testInfo.attach("login-viewport", { body: await page.screenshot({ fullPage: true }), contentType: "image/png" });
   });

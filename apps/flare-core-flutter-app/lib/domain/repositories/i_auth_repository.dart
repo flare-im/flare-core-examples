@@ -1,15 +1,9 @@
 import 'package:flare_im/domain/entities/user.dart';
-import 'package:flare_im/domain/value_objects/conversation_type.dart';
-import 'package:flare_im/domain/value_objects/transport_mode.dart';
 
 abstract class IAuthRepository {
-  /// 幂等初始化原生 SDK（示例登录前调用；具体 URL 由 UI 传入，不依赖 FFI 类型泄漏到 interface）。
+  /// 幂等初始化原生 SDK（示例登录前调用）。连哪套服务是构建期的接入配置，不由 UI 传入。
   Future<void> initSdk({
-    required String wsUrl,
-    required SdkTransportMode transportMode,
-    required String quicUrl,
     required String tenantId,
-    required String httpUrl,
     String? tlsCaCertPath,
     String? tlsCaCert,
     String? dataUrl,
@@ -29,8 +23,6 @@ abstract class IAuthRepository {
   Future<void> logout();
 
   Future<User?> getCurrentUser();
-
-  Future<ConnectionState> getConnectionState();
 
   Future<String> sdkVersion();
 }

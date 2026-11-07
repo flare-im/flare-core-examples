@@ -16,8 +16,35 @@
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
 	<string>1.0</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Viewer</string>
+			<key>CFBundleURLName</key>
+			<string>com.flare.im.recovery</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>flare-recover</string>
+			</array>
+		</dict>
+	</array>
 	<key>CFBundleVersion</key>
 	<string>1</string>
+	<key>FLARE_ACCESS_JSON</key>
+	<string>$(FLARE_ACCESS_JSON)</string>
+	<key>FLARE_DEV_CORE_API_URL</key>
+	<string>$(FLARE_DEV_CORE_API_URL)</string>
+	<key>FLARE_DEV_MEDIA_URL</key>
+	<string>$(FLARE_DEV_MEDIA_URL)</string>
+	<key>FLARE_DEV_QUIC_URL</key>
+	<string>$(FLARE_DEV_QUIC_URL)</string>
+	<key>FLARE_DEV_WS_URL</key>
+	<string>$(FLARE_DEV_WS_URL)</string>
+	<key>FLARE_UPDATE_CHANNEL</key>
+	<string>$(FLARE_UPDATE_CHANNEL)</string>
+	<key>FLARE_UPDATE_DISTRIBUTION</key>
+	<string>$(FLARE_UPDATE_DISTRIBUTION)</string>
 	<key>LSSupportsOpeningDocumentsInPlace</key>
 	<true/>
 	<key>UIFileSharingEnabled</key>

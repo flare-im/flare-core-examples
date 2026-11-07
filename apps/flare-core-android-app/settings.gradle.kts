@@ -31,8 +31,18 @@ dependencyResolutionManagement {
 rootProject.name = "flare-core-android-app"
 include(":app")
 include(":flare-core-android-sdk")
+include(":flare-core-android-lifecycle")
+include(":flare-core-android-update")
+include(":flare-core-android-update-ui")
+include(":flare-core-android-update-play")
 
 project(":flare-core-android-sdk").projectDir = file("../../../flare-core-sdk/packages/flare-core-android-sdk")
+// The core package's PlatformLifecycle module (no native library); the core package depends on it.
+project(":flare-core-android-lifecycle").projectDir = file("../../../flare-core-sdk/packages/flare-core-android-lifecycle")
+// The update center: the installer and controller, their binding to the kit, and Play In-App Updates for the play flavor.
+project(":flare-core-android-update").projectDir = file("../../../flare-core-sdk/packages/flare-core-android-update")
+project(":flare-core-android-update-ui").projectDir = file("../../../flare-core-sdk/packages/flare-core-android-update-ui")
+project(":flare-core-android-update-play").projectDir = file("../../../flare-core-sdk/packages/flare-core-android-update-play")
 
 // A sibling design checkout is authoritative during workspace development.
 val localDesignKit = file("../../../flare-im-design/packages/android-im-ui")

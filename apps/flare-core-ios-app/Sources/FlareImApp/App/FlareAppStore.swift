@@ -1,6 +1,7 @@
 import Combine
 import Foundation
 import FlareCoreAppleSDK
+import FlarePlatformUpdate
 import SwiftUI
 
 
@@ -16,9 +17,25 @@ final class FlareAppStore: ObservableObject, AppLifecycle {
     let searchViewModel: SearchViewModel
     let authViewModel: AuthViewModel
     let settingsViewModel: SettingsViewModel
+    /// The network and line page. `access.*` needs no session, so it reads before sign-in as well.
+    private(set) lazy var accessDiagnostics = AccessDiagnostics(
+        access: { [unowned self] in
+            try await self.session.accessClient(draft: self.environment.loginDraft, dataURL: self.dataURL()).access
+        },
+        subscribeLinkEvents: { [unowned self] onLinkEvent in self.session.subscribeLinkEvents(onLinkEvent) }
+    )
+    private lazy var updateEngine = ClientUpdateEngine { @MainActor [unowned self] in
+        try await self.session.accessClient(draft: self.environment.loginDraft, dataURL: self.dataURL())
+    }
+    /// The update center. `update.*` needs no session: a build too old to sign in has to hear about it first.
+    private(set) lazy var updateCenter: FlareUpdateController = {
+        let engine = updateEngine
+        session.onUpdateState = { engine.receive($0) }
+        return FlareUpdateController(engine: engine)
+    }()
     var currentUserId: String? { session.currentUserId }
     var isLoggedIn: Bool { session.isLoggedIn }
-    var connectionState: ConnectionState { session.connectionState }
+    var connectionStatus: ConnectionStatus? { session.connectionStatus }
     var eventLog: [EventLogEntry] { session.eventLog }
     var conversations: [AppConversation] { repository.conversations }
     var selectedConversationId: String? {
@@ -83,6 +100,7 @@ final class FlareAppStore: ObservableObject, AppLifecycle {
             await messagingViewModel.bootstrapHome()
             appendLab("login", status: "ok", detail: "Logged in as \(environment.loginDraft.userId)")
         }
+        if isLoggedIn { updateCenter.onLoginSucceeded() } else { updateCenter.onLoginFailed() }
     }
 
     /// 热启动：本地会话档案存在时 prepare 本地出图（不等网络），后台建连+同步。
@@ -102,6 +120,7 @@ final class FlareAppStore: ObservableObject, AppLifecycle {
             Task { [weak self] in
                 guard let self else { return }
                 await self.session.connectInBackground()
+                self.updateCenter.onLoginSucceeded()
                 await self.sdkLabViewModel.refreshDiagnostics()
                 await self.sdkLabViewModel.refreshBuilderCatalog()
                 await self.messagingViewModel.bootstrapHome()
@@ -117,9 +136,10 @@ final class FlareAppStore: ObservableObject, AppLifecycle {
 
     func logout() async {
         await perform("logout") {
+            // A session the server already ended (kicked, expired) may fail its logout: this device signs out anyway.
             SavedSessionStore.clear()
+            defer { clearLocalData() }
             try await session.logout()
-            clearLocalData()
         }
     }
 

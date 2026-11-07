@@ -4,6 +4,8 @@ import com.flare.im.model.common.enums.ConversationType
 import com.flare.im.model.common.enums.MessageContentType
 import com.flare.im.model.entity.Conversation
 import com.flare.im.model.entity.ConversationTimelineSnapshot
+import com.flare.im.model.entity.DisplayName
+import com.flare.im.model.entity.DisplayNameKind
 import com.flare.im.model.entity.Message
 import com.flare.im.model.entity.MessageContent
 import com.flare.im.model.entity.MessageLocalState
@@ -19,6 +21,7 @@ class SdkModelMapperTest {
         val conversation = Conversation(
             conversationId = "c-1",
             conversationType = ConversationType.SINGLE,
+            title = DisplayName(DisplayNameKind.NAMED, text = "Alice"),
             displayName = "",
             channelId = "alice",
             remark = " Alice ",
@@ -44,6 +47,7 @@ class SdkModelMapperTest {
         val conversation = Conversation(
             conversationId = "c-2",
             conversationType = ConversationType.GROUP,
+            title = DisplayName(DisplayNameKind.NAMED, text = "Alice"),
             displayName = "General",
             lastMessage = MessagePreview(text = " from structured preview "),
             updatedAt = 10,
@@ -61,6 +65,7 @@ class SdkModelMapperTest {
             serverId = "server-1",
             clientMsgId = "client-1",
             conversationId = "c-1",
+            sender = DisplayName(DisplayNameKind.NAMED, text = "Alice"),
             senderId = "alice",
             senderDisplayName = " Alice ",
             conversationSeq = 7,
@@ -88,6 +93,7 @@ class SdkModelMapperTest {
     fun messageFallsBackToLocalStateAndContentTypeLabel() {
         val message = Message(
             conversationId = "c-1",
+            sender = DisplayName(DisplayNameKind.NAMED, text = "Alice"),
             clientMsgId = "client-local",
             senderId = "bob",
             content = MessageContent(
@@ -111,10 +117,12 @@ class SdkModelMapperTest {
         val conversation = Conversation(
             conversationId = "c-1",
             conversationType = ConversationType.GROUP,
+            title = DisplayName(DisplayNameKind.NAMED, text = "Alice"),
             displayName = "General",
         )
         val message = Message(
             conversationId = "c-1",
+            sender = DisplayName(DisplayNameKind.NAMED, text = "Alice"),
             serverId = "m-1",
             content = MessageContent(
                 contentType = MessageContentType.TEXT,

@@ -7,7 +7,7 @@ import com.flare.im.app.core.data.ViewDataRepository
 import com.flare.im.app.core.domain.ConversationFilter
 import com.flare.im.app.core.domain.MessageBuildOp
 import com.flare.im.app.core.domain.MessageBuilder
-import com.flare.im.api.ConnectionState
+import com.flare.im.model.entity.ConnectionPhase
 import com.flare.im.app.core.session.AppLifecycle
 import com.flare.im.app.core.session.AppSession
 import com.flare.im.app.core.domain.AppConversation
@@ -384,8 +384,7 @@ class MessagingViewModel(
                     "isPending" to (key in _pendingMessageKeys.value),
                     "isFailed" to (key in _failedMessageKeys.value),
                     "isPinned" to (key in _pinnedMessageKeys.value),
-                    "isConnected" to (session.connectionState.value in
-                        setOf(ConnectionState.CONNECTED, ConnectionState.READY)),
+                    "isConnected" to (session.connectionStatus.value?.phase == ConnectionPhase.ONLINE),
                 ),
             )
         }.onFailure { error ->

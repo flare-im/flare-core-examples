@@ -34,15 +34,44 @@ targets:
       properties:
         UIFileSharingEnabled: true
         LSSupportsOpeningDocumentsInPlace: true
+        # Recovery link `flare-recover://v1?…`: imported in either sign-in state (RootWorkbenchView).
+        CFBundleURLTypes:
+          - CFBundleTypeRole: Viewer
+            CFBundleURLName: com.flare.im.recovery
+            CFBundleURLSchemes: [flare-recover]
+        # Access configuration (AppAccess): the whole `access` object, or the development endpoints of a debug build.
+        # Empty keys take the local stack's ports in AppAccess.LocalDevelopment.
+        FLARE_ACCESS_JSON: $(FLARE_ACCESS_JSON)
+        FLARE_DEV_WS_URL: $(FLARE_DEV_WS_URL)
+        FLARE_DEV_QUIC_URL: $(FLARE_DEV_QUIC_URL)
+        FLARE_DEV_CORE_API_URL: $(FLARE_DEV_CORE_API_URL)
+        FLARE_DEV_MEDIA_URL: $(FLARE_DEV_MEDIA_URL)
+        # What the release manifest is picked by (AppAccess.updateApp). An empty distribution is left to the App Store receipt.
+        FLARE_UPDATE_CHANNEL: $(FLARE_UPDATE_CHANNEL)
+        FLARE_UPDATE_DISTRIBUTION: $(FLARE_UPDATE_DISTRIBUTION)
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.flare.im.example.app
+        # Info.plist takes these; the update center compares CFBundleVersion as the build number and checks
+        # for nothing without one.
+        MARKETING_VERSION: "0.1.0"
+        CURRENT_PROJECT_VERSION: "1"
         GENERATE_INFOPLIST_FILE: "YES"
         INFOPLIST_KEY_UILaunchScreen_Generation: "YES"
         INFOPLIST_KEY_CFBundleDisplayName: FlareIM
         INFOPLIST_KEY_NSMicrophoneUsageDescription: FlareIM needs microphone access to record and send voice messages.
         ONLY_ACTIVE_ARCH: "YES"
         SWIFT_VERSION: "6.0"
+        # Debug builds run on development endpoints: set any of these to override the local default, for example
+        # `xcodebuild ... FLARE_DEV_WS_URL=ws://192.168.1.20:60051`. A release build reads only FLARE_ACCESS_JSON (its
+        # production access configuration) and stops at launch without one.
+        FLARE_ACCESS_JSON: ""
+        FLARE_DEV_WS_URL: ""
+        FLARE_DEV_QUIC_URL: ""
+        FLARE_DEV_CORE_API_URL: ""
+        FLARE_DEV_MEDIA_URL: ""
+        FLARE_UPDATE_CHANNEL: stable
+        FLARE_UPDATE_DISTRIBUTION: ""
         # Select the Rust target for the SDK and current architecture being linked.
         "FLARE_FFI_TARGET[sdk=iphoneos*][arch=arm64]": aarch64-apple-ios
         "FLARE_FFI_TARGET[sdk=iphonesimulator*][arch=arm64]": aarch64-apple-ios-sim

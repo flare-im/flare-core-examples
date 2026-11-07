@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:flare_core_flutter_sdk/flare_core_flutter_sdk.dart' as core
+    show ConnectionPhase;
 import 'package:flare_im/application/outbound/im_outbound_facade.dart';
 import 'package:flare_im/application/providers/auth_state_provider.dart';
 import 'package:flare_im/application/providers/conversation_state_provider.dart';
@@ -31,7 +33,21 @@ class ConversationDetailsPanel extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final i18n = ref.watch(flareMessagesProvider).details;
-    final conn = ref.watch(connectionStateProvider);
+    final connection = ref.watch(connectionStatusProvider)?.phase;
+    final chatCopy = ref.watch(flareMessagesProvider).chat;
+    // 详情页的一行连接说明（不是横幅）：在线、连接中，或已断开等待核心恢复。
+    final connectionLabel = switch (connection) {
+      core.ConnectionPhase.online => chatCopy.connectionStable,
+      null ||
+      core.ConnectionPhase.idle ||
+      core.ConnectionPhase.connecting ||
+      core.ConnectionPhase.syncing ||
+      core.ConnectionPhase.switching ||
+      core.ConnectionPhase.reconnecting => chatCopy.connectionConnecting,
+      core.ConnectionPhase.waitingForNetwork ||
+      core.ConnectionPhase.serviceUnavailable ||
+      core.ConnectionPhase.actionRequired => chatCopy.connectionDisconnected,
+    };
     final list = ref.watch(conversationProvider);
     final conversation = conversationById(list, conversationId);
     final messages = ref.watch(messageProvider(conversationId.trim()));
@@ -69,7 +85,7 @@ class ConversationDetailsPanel extends ConsumerWidget {
               title: title,
               subtitle: subtitle,
               avatarKey: c.conversationId,
-              connectionLabel: conn.label,
+              connectionLabel: connectionLabel,
               tags: [
                 if (c.isPinned) i18n.pinTag,
                 if (c.isMuted) i18n.muteTag,

@@ -54,7 +54,8 @@ final class SettingsViewModel: ObservableObject {
     }
 
     var currentUserId: String? { session.currentUserId }
-    var connectionState: ConnectionState { session.connectionState }
+    /// Where the SDK says the connection stands (`connection://status` phase); idle before the first status.
+    var connectionPhase: String { session.connectionStatus?.phase.rawValue ?? ConnectionPhase.idle.rawValue }
     var runtimeStatus: RuntimeStatus { environment.runtimeStatus }
 
     func refreshDiagnostics() async { await sdkLab.refreshDiagnostics() }

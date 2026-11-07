@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flare_core_flutter_sdk/flare_core_flutter_sdk.dart' as core;
 import 'package:flare_im/application/bus/event_bus.dart';
 import 'package:flare_im/application/providers/active_chat_stack_provider.dart';
@@ -28,8 +27,7 @@ class ImEventToStoreBridge extends ConsumerStatefulWidget {
       _ImEventToStoreBridgeState();
 }
 
-class _ImEventToStoreBridgeState extends ConsumerState<ImEventToStoreBridge>
-    with WidgetsBindingObserver {
+class _ImEventToStoreBridgeState extends ConsumerState<ImEventToStoreBridge> {
   static const _foregroundTimelineRefreshMinInterval = Duration(
     milliseconds: 1500,
   );
@@ -46,7 +44,6 @@ class _ImEventToStoreBridgeState extends ConsumerState<ImEventToStoreBridge>
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
     _subs.add(
       imEventBus.on<ConversationListViewSnapshotEvent>().listen(
         _onConversationListViewSnapshot,
@@ -94,80 +91,31 @@ class _ImEventToStoreBridgeState extends ConsumerState<ImEventToStoreBridge>
     _subs.add(imEventBus.on<TypingAggregateEvent>().listen(_onTypingAggregate));
     _subs.add(imEventBus.on<UserInfoUpdateEvent>().listen(_onUserInfo));
     _subs.add(imEventBus.on<PresenceUpdateEvent>().listen(_onPresence));
-    _subs.add(imEventBus.on<ConnectionChangedEvent>().listen(_onConnection));
     _subs.add(
-      imEventBus.on<SdkLifecycleUpdatedEvent>().listen(_onSdkLifecycleUpdated),
+      imEventBus.on<ConnectionStatusChangedEvent>().listen(_onConnectionStatus),
     );
     _subs.add(
-      imEventBus.on<SdkConnectionUpdatedEvent>().listen(
-        _onSdkConnectionUpdated,
-      ),
+      imEventBus.on<SdkLifecycleUpdatedEvent>().listen(_onSdkLifecycleUpdated),
     );
     _subs.add(imEventBus.on<SdkSyncUpdatedEvent>().listen(_onSdkSyncUpdated));
     _subs.add(
       imEventBus.on<SdkProgressUpdatedEvent>().listen(_onSdkProgressUpdated),
     );
-    // 平台网络原始信号 → core 主动重连（策略全在 core：去抖/合并/退避）。
-    _subs.add(
-      Connectivity().onConnectivityChanged.listen(_onConnectivityChanged),
-    );
+    // 网络与前后台由 SDK 初始化时装上的平台生命周期上报，这里不接线。
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       final userId = ref.read(currentUserProvider)?.userId.trim() ?? '';
-      if (userId.isNotEmpty) {
-        _lastLoadedUserId = userId;
-        unawaited(_setHeartbeatAppState(core.HeartbeatAppState.foreground));
-      }
+      if (userId.isNotEmpty) _lastLoadedUserId = userId;
     });
-  }
-
-  Future<void> _onConnectivityChanged(List<ConnectivityResult> results) async {
-    final available = results.any((r) => r != ConnectivityResult.none);
-    final interface = results.contains(ConnectivityResult.wifi)
-        ? 'wifi'
-        : results.contains(ConnectivityResult.mobile)
-        ? 'cellular'
-        : results.contains(ConnectivityResult.ethernet)
-        ? 'ethernet'
-        : available
-        ? 'other'
-        : 'unknown';
-    try {
-      final sdk = ref.read(sdkWrapperProvider);
-      if (!sdk.isInitialized) return;
-      await sdk.notifyNetworkChange(
-        available: available,
-        interface: interface,
-        expensive: false,
-        metered: results.contains(ConnectivityResult.mobile),
-        reason: 'connectivity_plus',
-      );
-    } catch (e) {
-      debugPrint('notifyNetworkChange failed ($interface): $e');
-    }
   }
 
   @override
   void dispose() {
-    WidgetsBinding.instance.removeObserver(this);
     for (final s in _subs) {
       unawaited(s.cancel());
     }
     _subs.clear();
     super.dispose();
-  }
-
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    switch (state) {
-      case AppLifecycleState.resumed:
-        unawaited(_setHeartbeatAppState(core.HeartbeatAppState.foreground));
-      case AppLifecycleState.inactive:
-      case AppLifecycleState.hidden:
-      case AppLifecycleState.paused:
-      case AppLifecycleState.detached:
-        unawaited(_setHeartbeatAppState(core.HeartbeatAppState.background));
-    }
   }
 
   void _onConversationListViewSnapshot(ConversationListViewSnapshotEvent e) {
@@ -450,16 +398,12 @@ class _ImEventToStoreBridgeState extends ConsumerState<ImEventToStoreBridge>
     ref.read(presenceMapProvider.notifier).setOnline(e.userId, e.isOnline);
   }
 
-  void _onConnection(ConnectionChangedEvent _) {
-    unawaited(ref.read(connectionStateProvider.notifier).refresh());
+  void _onConnectionStatus(ConnectionStatusChangedEvent e) {
+    ref.read(connectionStatusProvider.notifier).apply(e.status);
   }
 
   void _onSdkLifecycleUpdated(SdkLifecycleUpdatedEvent e) {
     ref.read(sdkRuntimeStatusProvider.notifier).applyLifecycle(e.payload);
-  }
-
-  void _onSdkConnectionUpdated(SdkConnectionUpdatedEvent e) {
-    ref.read(sdkRuntimeStatusProvider.notifier).applyConnection(e.payload);
   }
 
   void _onSdkSyncUpdated(SdkSyncUpdatedEvent e) {
@@ -551,16 +495,6 @@ class _ImEventToStoreBridgeState extends ConsumerState<ImEventToStoreBridge>
     return ref.read(selectedConversationProvider)?.conversationId.trim() ?? '';
   }
 
-  Future<void> _setHeartbeatAppState(core.HeartbeatAppState appState) async {
-    try {
-      final sdk = ref.read(sdkWrapperProvider);
-      if (!sdk.isInitialized) return;
-      await sdk.setHeartbeatAppState(appState);
-    } catch (e, st) {
-      debugPrint('setHeartbeatAppState failed (${appState.name}): $e\n$st');
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     ref.listen(currentUserProvider, (prev, next) {
@@ -571,7 +505,6 @@ class _ImEventToStoreBridgeState extends ConsumerState<ImEventToStoreBridge>
           WidgetsBinding.instance.addPostFrameCallback((_) {
             if (!mounted) return;
             unawaited(_openConversationListView(reason: 'current_user'));
-            unawaited(_setHeartbeatAppState(core.HeartbeatAppState.foreground));
           });
         }
         return;

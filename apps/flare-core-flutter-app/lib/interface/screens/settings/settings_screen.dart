@@ -1,3 +1,5 @@
+import 'package:flare_core_flutter_update_ui/flare_core_flutter_update_ui.dart'
+    show FlareUpdateScope;
 import 'package:flare_im/application/providers/app_theme_mode_provider.dart';
 import 'package:flare_im/application/providers/locale_provider.dart';
 import 'package:flare_im/application/providers/media_storage_provider.dart';
@@ -18,13 +20,15 @@ import 'package:flare_im_ui/flare_im_ui.dart'
         FlareSettingsList,
         FlareSettingsSection,
         FlareSizes,
+        FlareStrings,
         FlareToast,
         FlareToastVariant,
         formatBytes;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
-/// 设置屏：语言 + 外观 + 存储（下载位置、图片与文件缓存），飞书式 kit 列表
+/// 设置屏：语言 + 外观 + 网络与线路 + 版本信息 + 存储（下载位置、图片与文件缓存），飞书式 kit 列表
 /// (单选行由 kit FlareSettingsList 承载)。
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -80,6 +84,21 @@ class SettingsScreen extends ConsumerWidget {
         ],
       ),
       FlareSettingsSection(
+        items: [
+          FlareSettingsItem(
+            key: 'network',
+            label: FlareStrings.of(context).accessDiagnosticsTitle,
+            icon: 'link',
+          ),
+          FlareSettingsItem(
+            key: 'about',
+            label: FlareStrings.of(context).versionPanelTitle,
+            icon: 'info',
+            badge: FlareUpdateScope.badgeOf(context),
+          ),
+        ],
+      ),
+      FlareSettingsSection(
         title: settings.storage,
         items: [
           FlareSettingsItem(
@@ -129,6 +148,10 @@ class SettingsScreen extends ConsumerWidget {
               ref.read(appThemeModeProvider.notifier).setMode(ThemeMode.light);
             case 'theme_dark':
               ref.read(appThemeModeProvider.notifier).setMode(ThemeMode.dark);
+            case 'network':
+              context.push('/network');
+            case 'about':
+              context.push('/about');
             case 'download_location':
               _showDownloadLocation(context, ref);
             case 'media_cache':

@@ -489,6 +489,7 @@ final class _SendingMessageRepository implements IMessageRepository {
     String text,
   ) async {
     return core.Message(
+      sender: const core.DisplayName(kind: core.DisplayNameKind.unnamed),
       serverId: '',
       clientMsgId: 'client-sent',
       conversationId: conversationId,
@@ -549,6 +550,7 @@ final class _DelayedTextMessageRepository implements IMessageRepository {
     final text = _text ?? 'instant';
     _createCompleter.complete(
       core.Message(
+        sender: const core.DisplayName(kind: core.DisplayNameKind.unnamed),
         serverId: '',
         clientMsgId: 'client-delayed',
         conversationId: conversationId,
@@ -598,6 +600,7 @@ final class _FailingSendMessageRepository implements IMessageRepository {
     String text,
   ) async {
     return core.Message(
+      sender: const core.DisplayName(kind: core.DisplayNameKind.unnamed),
       serverId: '',
       clientMsgId: 'client-failed',
       conversationId: conversationId,

@@ -74,16 +74,11 @@ final class MessagingViewModel: ObservableObject {
     }
     private func unavailable(_ message: String) -> AppStoreError { AppStoreError(message: message) }
 
-    private func requireConnectedClient(
-        _ message: String,
-        showProgress: Bool = true
-    ) async throws -> any FlareImClientProtocol {
-        guard session.client != nil || session.isLoggedIn else { throw unavailable(message) }
-        return try await session.ensureConnected { stage in
-            if showProgress {
-                environment.setRuntimeStatus(.loading(stage))
-            }
-        }
+    /// The signed-in client. A dropped connection is the SDK's to restore; calls made meanwhile are the SDK's to queue
+    /// or refuse.
+    private func requireConnectedClient(_ message: String) async throws -> any FlareImClientProtocol {
+        guard session.isLoggedIn, let client = session.client else { throw unavailable(message) }
+        return client
     }
 
     private func retryingDatabaseLock<T>(
@@ -167,10 +162,7 @@ final class MessagingViewModel: ObservableObject {
 
     func openConversation(_ conversationId: String, showBusy: Bool = true) async {
         await perform("view.timeline.open", showBusy: showBusy) {
-            let client = try await requireConnectedClient(
-                "Login before opening a conversation",
-                showProgress: showBusy
-            )
+            let client = try await requireConnectedClient("Login before opening a conversation")
             selectedConversationId = conversationId
             environment.section = .conversations
             do {
@@ -663,7 +655,7 @@ final class MessagingViewModel: ObservableObject {
     func syncSelectedConversation(showBusy: Bool = true) async {
         guard let selectedConversationId else { return }
         await perform("sync.conversation", showBusy: showBusy) {
-            let client = try await requireConnectedClient("Login before sync", showProgress: showBusy)
+            let client = try await requireConnectedClient("Login before sync")
             do {
                 try await client.sync.syncConversation(["conversationId": AnySendable(selectedConversationId)])
                 try await client.sync.syncMessages([

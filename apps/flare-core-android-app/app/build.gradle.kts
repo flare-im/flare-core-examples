@@ -4,6 +4,22 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
+/** The build settings that name where the SDK connects (see AppAccess.kt). */
+val accessBuildSettings = listOf(
+    "FLARE_ACCESS_JSON",
+    "FLARE_DEV_WS_URL",
+    "FLARE_DEV_QUIC_URL",
+    "FLARE_DEV_CORE_API_URL",
+    "FLARE_DEV_MEDIA_URL",
+)
+
+/** A Gradle property first, then the environment variable of the same name; blank is unset. */
+fun accessBuildSetting(name: String): String =
+    providers.gradleProperty(name).orElse(providers.environmentVariable(name)).orNull?.trim().orEmpty()
+
+/** The release pre-build of every distribution flavor: the check below stops a release build there. */
+val releasePreBuild = Regex("pre(Direct|Play)ReleaseBuild")
+
 android {
     namespace = "com.flare.im.app"
     compileSdk = 35
@@ -21,38 +37,61 @@ android {
             abiFilters += "arm64-v8a"
         }
 
-        // 默认服务地址：可在构建时用 `-PwsUrl=...` 覆盖（见 Makefile 的 WS= 变量），
-        // 免改代码切换联调后端。运行时仍可在登录页「服务器地址」输入框临时改。
         fun buildConfigString(value: String): String =
             "\"" + value.replace("\\", "\\\\").replace("\"", "\\\"") + "\""
 
-        val defaultWsUrl = (project.findProperty("wsUrl") as String?) ?: "ws://10.0.2.2:60051/ws"
-        // 网关 HTTP 基址：SDK 向 {httpUrl}/api/v1/auth/tokens 签发接入 token 并自动刷新。
-        // 客户端不再持有签名密钥。可用 `-PhttpUrl=...` 覆盖。
-        val defaultHttpUrl = (project.findProperty("httpUrl") as String?) ?: "http://10.0.2.2:50050"
+        // 接入配置（core SDK 的 `sdkConfig.access`），见 AppAccess.kt。每项先读 Gradle 属性
+        // （`-PFLARE_DEV_WS_URL=...`），再读同名环境变量；空串算没给：
+        // - FLARE_ACCESS_JSON：整段 access（正式配置，或带 accessPoints 的完整开发配置）；release 构建必须给。
+        // - FLARE_DEV_WS_URL / FLARE_DEV_QUIC_URL / FLARE_DEV_CORE_API_URL / FLARE_DEV_MEDIA_URL：只在 debug
+        //   构建、没给 FLARE_ACCESS_JSON 时组装开发模式；缺的取模拟器访问宿主机的本地默认值（10.0.2.2）。
+        for (name in accessBuildSettings) {
+            buildConfigField("String", name, buildConfigString(accessBuildSetting(name)))
+        }
         // 可用 `-PaccessToken=...` 预填「接入 token」，免去在设备上手输 —— 256 字符的
         // JWT 用 adb input text 打不进去（实测只落 12~26 个字符就被 IME 丢掉）。
         // 传 token 而不是 tokenSecret：签名密钥不该进客户端产物。
         val defaultAccessToken = (project.findProperty("accessToken") as String?) ?: ""
-        // QUIC 地址与信任 CA（base64 DER 或 PEM）：连自建 CA 签发证书的服务端时用 `-PquicUrl=... -PtlsCaCert=...`。
-        val defaultQuicUrl = (project.findProperty("quicUrl") as String?) ?: "quic://10.0.2.2:60052"
+        // 信任 CA（base64 DER 或 PEM）：连自建 CA 签发证书的服务端时用 `-PtlsCaCert=...`。
         val defaultTlsCaCert = (project.findProperty("tlsCaCert") as String?) ?: ""
-        // 预选传输模式（WebSocket / Quic / Race），联调自动化用：`-PtransportMode=Quic`
-        val defaultTransportMode = (project.findProperty("transportMode") as String?) ?: "WebSocket"
-        // 预填用户 ID（模拟器自动化用，adb 往 Compose 输入框打字不可靠）：`-PuserId=hugo`
-        val defaultUserId = (project.findProperty("userId") as String?) ?: "android-demo"
-        buildConfigField("String", "DEFAULT_WS_URL", buildConfigString(defaultWsUrl))
-        buildConfigField("String", "DEFAULT_HTTP_URL", buildConfigString(defaultHttpUrl))
+        // 首次使用保持账号为空；测试构建仍可显式用 `-PuserId=hugo` 预填。
+        val defaultUserId = (project.findProperty("userId") as String?) ?: ""
         buildConfigField("String", "DEFAULT_ACCESS_TOKEN", buildConfigString(defaultAccessToken))
-        buildConfigField("String", "DEFAULT_QUIC_URL", buildConfigString(defaultQuicUrl))
         buildConfigField("String", "DEFAULT_TLS_CA_CERT", buildConfigString(defaultTlsCaCert))
-        buildConfigField("String", "DEFAULT_TRANSPORT_MODE", buildConfigString(defaultTransportMode))
         buildConfigField("String", "DEFAULT_USER_ID", buildConfigString(defaultUserId))
+        // 更新渠道：发布清单按它选（`stable`、`beta`、`internal`）。
+        buildConfigField("String", "FLARE_UPDATE_CHANNEL", buildConfigString(accessBuildSetting("FLARE_UPDATE_CHANNEL").ifEmpty { "stable" }))
     }
 
     sourceSets {
         getByName("main") {
             jniLibs.srcDirs("src/main/jniLibs")
+        }
+    }
+
+    buildTypes {
+        release {
+            // Development endpoints never reach a release build's BuildConfig.
+            for (name in accessBuildSettings.filter { it.startsWith("FLARE_DEV_") }) {
+                buildConfigField("String", name, "\"\"")
+            }
+        }
+    }
+
+    // How the app reaches a device. The release manifest picks a package by `app.distribution`, which the install source
+    // cannot tell for every store, so each flavor states it. Only `direct` may install packages (its manifest declares
+    // REQUEST_INSTALL_PACKAGES), and only `play` carries Play code. A store channel is written like `play`, without that
+    // module, and is added to `releasePreBuild`.
+    flavorDimensions += "distribution"
+    productFlavors {
+        create("direct") {
+            dimension = "distribution"
+            isDefault = true
+            buildConfigField("String", "FLARE_DISTRIBUTION", "\"direct\"")
+        }
+        create("play") {
+            dimension = "distribution"
+            buildConfigField("String", "FLARE_DISTRIBUTION", "\"play\"")
         }
     }
 
@@ -73,8 +112,24 @@ kotlin {
     }
 }
 
+// A release build connects through its production access configuration only: without FLARE_ACCESS_JSON, or with a
+// development one, it stops here instead of shipping development endpoints.
+tasks.matching { releasePreBuild.matches(it.name) }.configureEach {
+    doFirst {
+        val access = accessBuildSetting("FLARE_ACCESS_JSON")
+        if (access.isEmpty()) {
+            throw GradleException("Release builds need the production access configuration in FLARE_ACCESS_JSON; see README.md")
+        }
+        if (access.contains("\"development\"") || access.contains("developmentEndpoints")) {
+            throw GradleException("FLARE_ACCESS_JSON is a development configuration; a release build needs the production one")
+        }
+    }
+}
+
 dependencies {
     implementation(project(":flare-core-android-sdk"))
+    implementation(project(":flare-core-android-update-ui"))
+    "playImplementation"(project(":flare-core-android-update-play"))
     implementation("com.flare.im:im-ui-compose:2.0.0-rc.1")
 
     val composeBom = platform("androidx.compose:compose-bom:2024.12.01")
@@ -93,6 +148,8 @@ dependencies {
 
     testImplementation(kotlin("test"))
     testImplementation("junit:junit:4.13.2")
+    // android.jar's org.json is a stub (every call throws "not mocked"); AppAccess parses FLARE_ACCESS_JSON with it.
+    testImplementation("org.json:json:20240303")
 
     // 真机/模拟器用例：经真实核心（本地库，不连网）验证保存到下载位置、缓存统计。
     androidTestImplementation("androidx.test:runner:1.6.2")

@@ -3,11 +3,13 @@ import 'package:flutter/material.dart';
 
 /// Adapts the public kit palette to Material-owned platform surfaces.
 abstract final class AppTheme {
-  static ThemeData light() => _material(Brightness.light);
-  static ThemeData dark() => _material(Brightness.dark);
+  static ThemeData light() => material(Brightness.light);
+  static ThemeData dark() => material(Brightness.dark);
 
-  static ThemeData _material(Brightness brightness) {
-    final colors = FlareColors.resolve(brightness);
+  /// The theme for [brightness]: on the built-in palette, or on [palette] once
+  /// a resource pack changed it.
+  static ThemeData material(Brightness brightness, [FlareColors? palette]) {
+    final colors = palette ?? FlareColors.resolve(brightness);
     return ThemeData(
       useMaterial3: true,
       brightness: brightness,

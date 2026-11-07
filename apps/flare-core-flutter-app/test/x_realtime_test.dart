@@ -9,6 +9,8 @@ import 'package:flare_im/infrastructure/sdk/flare_core_sdk_wrapper.dart';
 import 'package:flare_im/shared/config/app_defaults_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'support/dev_access.dart';
+
 /// 跨端实时投递联调：A 端订阅事件、B 端发送，断言 A 收到推送。
 ///
 /// 只认 `onMessageReceivedBatch`：批量是规范路径，逐条回调对聊天消息不触发。
@@ -38,7 +40,7 @@ Future<SdkWrapper> _session(String user, String token, String ws) async {
   final sdk = SdkWrapper();
   const d = AppDefaults.fallback;
   await sdk.init(SdkConfig(
-    wsUrl: ws, tenantId: d.tenantId, httpUrl: 'http://127.0.0.1:50050',
+    access: devAccess(ws), tenantId: d.tenantId,
     dataUrl: toFileDataUrl(root.path),
   )).timeout(const Duration(seconds: 25));
   await sdk.login(user, token).timeout(const Duration(seconds: 30));

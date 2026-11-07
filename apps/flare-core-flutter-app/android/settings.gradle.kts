@@ -24,3 +24,8 @@ plugins {
 }
 
 include(":app")
+
+// flare_core_flutter_update's installer. The host registers it: flare-core-sdk has no root project.
+include(":flare-core-android-update")
+project(":flare-core-android-update").projectDir =
+    file("../../../../flare-core-sdk/packages/flare-core-android-update")

@@ -1,6 +1,6 @@
 package com.flare.im.app.features.settings
 
-import com.flare.im.api.ConnectionState
+import com.flare.im.model.entity.ConnectionStatus
 import com.flare.im.app.core.data.AppEnvironment
 import com.flare.im.app.core.domain.DownloadLocation
 import com.flare.im.app.core.domain.MediaCacheStats
@@ -33,7 +33,7 @@ class SettingsViewModel(
     val theme: StateFlow<ThemeChoice> = environment.theme
     val loginDraft: StateFlow<LoginDraft> = environment.loginDraft
     val currentUserId: StateFlow<String?> = session.currentUserId
-    val connectionState: StateFlow<ConnectionState> = session.connectionState
+    val connectionStatus: StateFlow<ConnectionStatus?> = session.connectionStatus
 
     fun setTheme(value: ThemeChoice) = environment.setTheme(value)
     fun updateDraft(transform: (LoginDraft) -> LoginDraft) = environment.updateLoginDraft(transform)

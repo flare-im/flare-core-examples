@@ -1,28 +1,32 @@
 package com.flare.im.app.core.session
 
-import com.flare.im.FlareCoreSdk
-import com.flare.im.api.ConnectionState
 import com.flare.im.api.FlareImClient
 import com.flare.im.app.core.domain.EventLogEntry
 import com.flare.im.app.core.domain.LoginDraft
-import com.flare.im.bridge.FlareAppInfo
-import com.flare.im.bridge.JniNativeBridge
 import com.flare.im.listener.EventSubscription
+import com.flare.im.model.entity.ConnectionStatus
+import com.flare.im.model.entity.UpdateStatus
 import com.flare.im.model.entity.ViewUpdate
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import java.util.concurrent.atomic.AtomicLong
 import org.json.JSONObject
 
 /**
  * 跨切面会话核心：唯一持有 `FlareImClient` 的地方（其余层经它拿门面）。
  * 拥有客户端生命周期 + 认证态 + 连接态 + 原始事件流，
  * 事件经 `onViewUpdate` / `onMessageSendFailed` 钩子路由给数据层/聊天层。
+ *
+ * [newClient] builds the SDK client (`FlareCoreSdk.createClient(context)`: it reports the app version on connect and
+ * installs the platform lifecycle — network and foreground — after `init`). [access] says where the SDK connects.
  */
 class AppSession(
-    /** 本应用的版本信息：随 init 交给引擎，CONNECT 时上报真实 app_version / app_build。 */
-    private val appInfo: FlareAppInfo? = null,
+    private val newClient: () -> FlareImClient,
+    private val access: () -> AppAccess = { AppAccess.current },
 ) {
     private val _currentUserId = MutableStateFlow<String?>(null)
     val currentUserId: StateFlow<String?> = _currentUserId.asStateFlow()
@@ -30,8 +34,10 @@ class AppSession(
     private val _isLoggedIn = MutableStateFlow(false)
     val isLoggedIn: StateFlow<Boolean> = _isLoggedIn.asStateFlow()
 
-    private val _connectionState = MutableStateFlow(ConnectionState.DISCONNECTED)
-    val connectionState: StateFlow<ConnectionState> = _connectionState.asStateFlow()
+    /** The SDK's `connection://status`, replaced whole on every event; null before the SDK has said anything. */
+    private val _connectionStatus = MutableStateFlow<ConnectionStatus?>(null)
+    val connectionStatus: StateFlow<ConnectionStatus?> = _connectionStatus.asStateFlow()
+    private val connectionStatusEvents = AtomicLong()
 
     private val _eventLog = MutableStateFlow<List<EventLogEntry>>(emptyList())
     val eventLog: StateFlow<List<EventLogEntry>> = _eventLog.asStateFlow()
@@ -44,14 +50,19 @@ class AppSession(
     var onViewUpdate: ((ViewUpdate) -> Unit)? = null
     var onMessageReceived: ((String) -> Unit)? = null
     var onMessageSendFailed: ((String) -> Unit)? = null
+    var onUpdateState: ((UpdateStatus) -> Unit)? = null
 
     private val subscriptions = mutableListOf<EventSubscription>()
     private var lastDraft: LoginDraft? = null
     private var nativeEventSubscription: Any? = null
 
-    private fun newClient(): FlareImClient =
-        appInfo?.let { FlareCoreSdk.createClientWithBridge(JniNativeBridge(appInfo = it)) }
-            ?: FlareCoreSdk.createClient()
+    /** A client [accessClient] brought up without a session; the sign-in that follows continues on it. */
+    private var sessionless: Sessionless? = null
+
+    private class Sessionless(val sdk: FlareImClient, val dataDir: String, val tenantId: String)
+
+    /** Bringing a client up is one at a time: a sign-in during the update center's first read continues on its client. */
+    private val clientBringUp = Mutex()
 
     /** 创建 → 订阅 → init → 取 token → 登录。`progress` 回报阶段。 */
     suspend fun start(
@@ -59,17 +70,10 @@ class AppSession(
         dataDir: String,
         progress: (String) -> Unit,
     ): FlareImClient {
-        progress("Creating Android SDK client")
-        val sdk = newClient()
-
-        subscribeEvents(sdk)
-        subscribeNativeEvents(sdk)
-
-        progress("Initializing SDK")
         // `dataUrl` is a URL; filesDir is absolute, so this yields file:///data/...
         val sdkConfig = buildSdkConfig(draft, dataDir)
         val storeConfigJson = JSONObject(sdkConfig).toString()
-        sdk.init(sdkConfig)
+        val sdk = initializedClient(draft, dataDir, sdkConfig, progress)
 
         val userId = draft.userId.trim()
         val tenantId = normalizedTenantId(draft)
@@ -94,26 +98,88 @@ class AppSession(
             sdk.media.setMediaCacheMaxBytes(mapOf("maxBytes" to MEDIA_CACHE_MAX_BYTES))
         }
 
-        client = sdk
+        adopt(sdk)
         _currentUserId.value = userId
         _isLoggedIn.value = true
         lastDraft = draft.copy(userId = userId, tenantId = tenantId)
-        refreshConnectionState()
+        readConnectionStatus(sdk)
         return sdk
     }
 
-    private fun buildSdkConfig(draft: LoginDraft, dataDir: String): Map<String, Any> =
-        draft.transportConfig() + mapOf(
-            "dataUrl" to "file://$dataDir",
-            "tenantId" to normalizedTenantId(draft),
-            "deviceId" to ANDROID_EXAMPLE_DEVICE_ID,
-            "httpUrl" to draft.httpUrl.trim(),
-            // SDK 托管 token：核心向 {httpUrl}/api/v1/auth/tokens 签发、到期前刷新。
-            // 填了 accessToken 时核心会直接用它，不走签发。
-            "auth" to mapOf("tokenEndpoint" to draft.httpUrl.trim()),
-            "platform" to "android",
-            "runtime" to "compose-example",
+    /**
+     * A client created, subscribed and initialized for this sign-in, unless [accessClient] already did so for the same
+     * data directory and tenant. It stays [sessionless] until [adopt]: a read during the sign-in reaches this client
+     * instead of bringing up a second core, and a build the server refused is known to this client's update center
+     * only, so after a refusal it stays up and the next try continues on it.
+     */
+    private suspend fun initializedClient(
+        draft: LoginDraft,
+        dataDir: String,
+        sdkConfig: Map<String, Any>,
+        progress: (String) -> Unit,
+    ): FlareImClient = clientBringUp.withLock {
+        val tenantId = normalizedTenantId(draft)
+        val ready = sessionless
+        if (ready != null && ready.dataDir == dataDir && ready.tenantId == tenantId) return@withLock ready.sdk
+        sessionless = null
+        progress("Creating Android SDK client")
+        val sdk = newClient()
+        subscribeEvents(sdk)
+        subscribeNativeEvents(sdk)
+
+        progress("Initializing SDK")
+        sdk.init(sdkConfig)
+        sessionless = Sessionless(sdk, dataDir, tenantId)
+        sdk
+    }
+
+    /** The sign-in went through: [sdk] is the client from here on. */
+    private suspend fun adopt(sdk: FlareImClient) = clientBringUp.withLock {
+        client = sdk
+        sessionless = null
+    }
+
+    /**
+     * The client `access.*` runs on. It needs no session, and a recovery link can arrive before anyone signed in: the
+     * SDK then comes up without one.
+     */
+    suspend fun accessClient(draft: LoginDraft, dataDir: String): FlareImClient = clientBringUp.withLock {
+        client?.let { return@withLock it }
+        sessionless?.let { return@withLock it.sdk }
+        val sdk = newClient()
+        subscribeEvents(sdk)
+        subscribeNativeEvents(sdk)
+        sdk.init(buildSdkConfig(draft, dataDir))
+        sessionless = Sessionless(sdk, dataDir, normalizedTenantId(draft))
+        sdk
+    }
+
+    /** The events the network and line page reads again on; the returned function stops listening. */
+    fun subscribeLinkEvents(onLinkEvent: () -> Unit): () -> Unit {
+        val sdk = client ?: sessionless?.sdk ?: return {}
+        val links = listOf(
+            sdk.events.onConnectionStatusChanged { onLinkEvent() },
+            sdk.events.onAccessChanged { onLinkEvent() },
+            sdk.events.onAccessSwitched { onLinkEvent() },
         )
+        return { links.forEach { runCatching { it.unsubscribe() } } }
+    }
+
+    internal fun buildSdkConfig(draft: LoginDraft, dataDir: String): Map<String, Any> {
+        val access = access()
+        return draft.trustConfig() + buildMap {
+            put("dataUrl", "file://$dataDir")
+            put("tenantId", normalizedTenantId(draft))
+            put("deviceId", ANDROID_EXAMPLE_DEVICE_ID)
+            put("access", access.access)
+            // SDK 托管 token：核心在当前接入点的 Core API 上签发、到期前刷新（`auth` 给空对象即可，路径用默认值）。
+            // 填了 accessToken 时核心会直接用它，不走签发。
+            put("auth", emptyMap<String, Any>())
+            put("platform", "android")
+            put("runtime", "compose-example")
+            put("app", appConfig())
+        }
+    }
 
     private fun normalizedTenantId(draft: LoginDraft): String = draft.tenantId.trim().ifEmpty { "0" }
 
@@ -126,14 +192,8 @@ class AppSession(
         dataDir: String,
         progress: (String) -> Unit,
     ): FlareImClient {
-        progress("Creating Android SDK client")
-        val sdk = newClient()
-        subscribeEvents(sdk)
-        subscribeNativeEvents(sdk)
-
-        progress("Initializing SDK")
         val sdkConfig = buildSdkConfig(draft, dataDir)
-        sdk.init(sdkConfig)
+        val sdk = initializedClient(draft, dataDir, sdkConfig, progress)
 
         progress("Opening local store")
         val userId = draft.userId.trim()
@@ -150,14 +210,17 @@ class AppSession(
             sdk.media.setMediaCacheMaxBytes(mapOf("maxBytes" to MEDIA_CACHE_MAX_BYTES))
         }
 
-        client = sdk
+        adopt(sdk)
         _currentUserId.value = userId
         _isLoggedIn.value = true
         lastDraft = draft.copy(userId = userId, tenantId = tenantId)
         return sdk
     }
 
-    /** 热启动网络半段：后台重签 token 并建连；失败保持本地视图可用。 */
+    /**
+     * 热启动网络半段：后台建连并完成首次同步。链路自己能恢复的失败（断网、连不上、过载……）SDK 照样返回成功并保留
+     * 会话，在不在线只看 `connection://status`；这里只会收到鉴权、升级、配置这类终态错误，记进事件日志，本地视图照常可用。
+     */
     suspend fun connectInBackground() {
         val sdk = client ?: return
         val draft = lastDraft ?: return
@@ -172,17 +235,26 @@ class AppSession(
                     put("tenantId", tenantId)
                 },
             )
-        }
-        refreshConnectionState()
+        }.onFailure { appendEvent("connection", "connect_failed", it.message ?: it.toString()) }
+        readConnectionStatus(sdk)
+    }
+
+    /** The connection notice's 立即重试: the SDK starts its next round now. */
+    suspend fun reconnectNow() {
+        val sdk = client ?: error("SDK client is not initialized")
+        sdk.connection.reconnectNow()
     }
 
     suspend fun logout() {
         val sdk = client ?: error("SDK client is not initialized")
         unsubscribeNativeEvents(sdk)
-        sdk.logout()
-        _isLoggedIn.value = false
-        _currentUserId.value = null
-        refreshConnectionState()
+        try {
+            sdk.logout()
+        } finally {
+            _isLoggedIn.value = false
+            _currentUserId.value = null
+            _connectionStatus.value = null
+        }
     }
 
     suspend fun dispose() {
@@ -192,10 +264,11 @@ class AppSession(
         teardown()
     }
 
-    suspend fun refreshConnectionState() {
-        runCatching { client?.connection?.getConnectionState() }
-            .getOrNull()
-            ?.let { _connectionState.value = it }
+    /** Reads where the connection stands now, unless a status event already said so. */
+    private suspend fun readConnectionStatus(sdk: FlareImClient) {
+        val seen = connectionStatusEvents.get()
+        val status = runCatching { sdk.connection.getStatus() }.getOrNull() ?: return
+        if (seen == connectionStatusEvents.get() && sdk === client) _connectionStatus.value = status
     }
 
     private fun subscribeEvents(sdk: FlareImClient) {
@@ -215,21 +288,15 @@ class AppSession(
                 conversationIds.forEach { onMessageReceived?.invoke(it) }
             }
         }
-        subscriptions += sdk.events.onConnectSuccess { event ->
-            _connectionState.value = ConnectionState.CONNECTED
-            appendEvent("connection", event.name.name, event.reason ?: "")
-        }
-        subscriptions += sdk.events.onConnectReady { event ->
-            _connectionState.value = ConnectionState.READY
-            appendEvent("connection", event.name.name, event.reason ?: "")
-        }
-        subscriptions += sdk.events.onDisconnected { event ->
-            _connectionState.value = ConnectionState.DISCONNECTED
-            appendEvent("connection", event.name.name, event.reason ?: "")
+        subscriptions += sdk.events.onConnectionStatusChanged { status ->
+            connectionStatusEvents.incrementAndGet()
+            _connectionStatus.value = status
+            appendEvent("connection", status.phase.name.lowercase(), status.reason ?: "")
         }
         subscriptions += sdk.events.onLoginSucceeded { event ->
             appendEvent("lifecycle", event.name.name, event.operation)
         }
+        subscriptions += sdk.events.onUpdateState { status -> onUpdateState?.invoke(status) }
     }
 
     private suspend fun subscribeNativeEvents(sdk: FlareImClient) {
@@ -251,7 +318,7 @@ class AppSession(
         client = null
         _isLoggedIn.value = false
         _currentUserId.value = null
-        _connectionState.value = ConnectionState.DISCONNECTED
+        _connectionStatus.value = null
     }
 
     private fun appendEvent(domain: String, name: String, detail: String) {

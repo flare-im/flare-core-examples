@@ -16,39 +16,38 @@ import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material.icons.outlined.Science
 import androidx.compose.material.icons.outlined.Settings
 import com.flare.im.app.R
-import android.content.Context
-import android.net.ConnectivityManager
-import android.net.Network
-import android.net.NetworkCapabilities
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalLifecycleOwner
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleEventObserver
-import com.flare.im.model.entity.NetworkInterfaceKind
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import com.flare.im.app.core.FlareAppStore
+import com.flare.im.app.core.designsystem.FlareAppPalette
 import com.flare.im.app.core.designsystem.FlareAppTheme
 import com.flare.im.app.core.designsystem.FlareTheme
 import com.flare.im.app.core.domain.AppSection
 import com.flare.im.app.core.domain.ThemeChoice
+import com.flare.im.app.core.domain.toKitStatus
 import com.flare.im.app.features.auth.LoginScreen
 import com.flare.im.app.features.messaging.chat.ChatScreen
 import com.flare.im.app.features.messaging.conversationlist.ConversationListScreen
 import com.flare.im.app.features.sdklab.SdkLabScreen
 import com.flare.im.app.features.search.SearchScreen
+import com.flare.im.app.features.settings.AccessDiagnosticsScreen
 import com.flare.im.app.features.settings.SettingsScreen
+import com.flare.im.ui.ConnectionNotice
 import com.flare.im.ui.EmptyState as KitEmptyState
+import com.flare.im.ui.FlareSizes
+import com.flare.im.ui.screenHeaderHeight
 import com.flare.im.ui.FlareApplicationFeatures
 import com.flare.im.ui.FlareApplicationNavigationBadge
 import com.flare.im.ui.FlareApplicationNavigationGroup
@@ -57,19 +56,30 @@ import com.flare.im.ui.FlareApplicationResponsiveMode
 import com.flare.im.ui.FlareApplicationWorkspacePane
 import com.flare.im.ui.FlareCapabilitySet
 import com.flare.im.ui.FlareIMAppConfiguration
+import com.flare.im.ui.FlareThemeMode
 import com.flare.im.ui.FlareToastHost
 import com.flare.im.ui.IMAppKit
+import com.flare.im.ui.flareStrings
 import com.flare.im.ui.resolveApplicationResponsiveMode
+import com.flare.im.update.FlareUpdatePromptForm
+import com.flare.im.update.ui.FlareUpdatePromptHost
+import com.flare.im.update.ui.FlareUpdateResourceScope
+import kotlinx.coroutines.launch
 
 /** App 根：主题 + 登录路由 + 自适应 workbench 导航。 */
 @Composable
-fun FlareApp(store: FlareAppStore) {
+fun FlareApp(store: FlareAppStore, recoveryLink: String?, onRecoveryLinkTaken: () -> Unit) {
     val theme by store.environment.theme.collectAsState()
     val loggedIn by store.session.isLoggedIn.collectAsState()
     val dark = when (theme) {
         ThemeChoice.System -> null
         ThemeChoice.Light -> false
         ThemeChoice.Dark -> true
+    }
+    val resourceMode = when (theme) {
+        ThemeChoice.System -> FlareThemeMode.System
+        ThemeChoice.Light -> FlareThemeMode.Light
+        ThemeChoice.Dark -> FlareThemeMode.Dark
     }
     // 热启动：有会话档案则本地出图直进工作台；登录页只在无档案/恢复失败时出现（不闪屏）。
     var resumeAttempted by remember { mutableStateOf(false) }
@@ -79,72 +89,84 @@ fun FlareApp(store: FlareAppStore) {
             resumeAttempted = true
         }
     }
-    // 平台原始信号 → core：网络变化（主动重连）+ 前后台（心跳降配/前台收敛）。策略全在 core。
-    val appContext = LocalContext.current.applicationContext
-    DisposableEffect(loggedIn) {
-        if (!loggedIn) return@DisposableEffect onDispose {}
-        val connectivity = appContext.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
-        val callback = object : ConnectivityManager.NetworkCallback() {
-            override fun onAvailable(network: Network) {
-                store.notifyNetworkChange(true, currentInterfaceKind(connectivity), "network_available")
-            }
-
-            override fun onLost(network: Network) {
-                store.notifyNetworkChange(false, NetworkInterfaceKind.UNKNOWN, "network_lost")
-            }
-
-            override fun onCapabilitiesChanged(network: Network, capabilities: NetworkCapabilities) {
-                store.notifyNetworkChange(true, interfaceKindOf(capabilities), "capabilities_changed")
-            }
-        }
-        runCatching { connectivity?.registerDefaultNetworkCallback(callback) }
-        onDispose { runCatching { connectivity?.unregisterNetworkCallback(callback) } }
+    // The update center reads through the client, which the resume brings up: it starts right after, signed in or not.
+    LaunchedEffect(resumeAttempted) { if (resumeAttempted) store.updateCenter.install() }
+    // The language the app shows: its resources, which a system change replaces without a restart.
+    val language = stringResource(R.string.flare_kit_language)
+    val locale = if (language == "zh") "zh-CN" else "en-US"
+    LaunchedEffect(resumeAttempted, locale) {
+        if (resumeAttempted) store.updateCenter.launch { setLocale(locale) }
     }
-    val lifecycleOwner = LocalLifecycleOwner.current
-    DisposableEffect(loggedIn, lifecycleOwner) {
-        if (!loggedIn) return@DisposableEffect onDispose {}
-        val observer = LifecycleEventObserver { _, event ->
-            when (event) {
-                Lifecycle.Event.ON_START -> store.setAppForeground(true)
-                Lifecycle.Event.ON_STOP -> store.setAppForeground(false)
-                else -> Unit
-            }
+    // A recovery link waits for the saved session's resume, which is what brings the client up.
+    LaunchedEffect(resumeAttempted, recoveryLink) {
+        if (resumeAttempted && recoveryLink != null) {
+            onRecoveryLinkTaken()
+            store.accessDiagnostics.openRecoveryLink(recoveryLink)
         }
-        lifecycleOwner.lifecycle.addObserver(observer)
-        onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
     FlareAppTheme(dark = dark) {
-        val colors = FlareTheme.colors
-        // The kit's feedback presenter: toasts (保存到本机 answers with one) and the danger confirm dialog.
-        FlareToastHost(modifier = Modifier.fillMaxSize()) {
-            Box(Modifier.fillMaxSize().background(colors.background)) {
-                when {
-                    loggedIn -> WorkbenchScreen(store)
-                    resumeAttempted -> LoginScreen(store)
-                    else -> Unit
-                }
-                val busy by store.environment.isBusy.collectAsState()
-                if (busy) {
-                    Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.08f)), Alignment.Center) {
-                        CircularProgressIndicator(color = colors.brand)
+        AppResources(store, locale, resourceMode) {
+            val colors = FlareTheme.colors
+            // The kit's feedback presenter: toasts (保存到本机 answers with one) and the danger confirm dialog.
+            FlareToastHost(modifier = Modifier.fillMaxSize()) {
+                Box(Modifier.fillMaxSize().background(colors.background)) {
+                    when {
+                        loggedIn -> {
+                            WorkbenchScreen(store)
+                            WorkbenchConnectionNotice(store, Modifier.align(Alignment.TopCenter))
+                        }
+                        resumeAttempted -> LoginScreen(store)
+                        else -> Unit
                     }
+                    val busy by store.environment.isBusy.collectAsState()
+                    if (busy) {
+                        Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.08f)), Alignment.Center) {
+                            CircularProgressIndicator(color = colors.brand)
+                        }
+                    }
+                    // The network and line page sits over sign-in and the workbench: a recovery link can open it in either.
+                    if (store.accessDiagnostics.presented) {
+                        // The empty pointer modifier keeps taps from reaching the page underneath.
+                        Box(Modifier.fillMaxSize().pointerInput(Unit) {}) {
+                            AccessDiagnosticsScreen(store.accessDiagnostics, onBack = { store.accessDiagnostics.presented = false })
+                        }
+                    }
+                    // The update prompt over everything, in either sign-in state.
+                    FlareUpdatePromptHost(store.updateCenter)
                 }
             }
         }
     }
 }
 
-private fun interfaceKindOf(capabilities: NetworkCapabilities?): NetworkInterfaceKind = when {
-    capabilities == null -> NetworkInterfaceKind.UNKNOWN
-    capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) -> NetworkInterfaceKind.WIFI
-    capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) -> NetworkInterfaceKind.CELLULAR
-    capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET) -> NetworkInterfaceKind.ETHERNET
-    else -> NetworkInterfaceKind.OTHER
+/** Resource packs over the built-in strings and colours, once they are read; nothing below waits for them. */
+@Composable
+private fun AppResources(store: FlareAppStore, locale: String, mode: FlareThemeMode, content: @Composable () -> Unit) {
+    FlareUpdateResourceScope(store.updateCenter, locale, mode) { FlareAppPalette(content) }
 }
 
-private fun currentInterfaceKind(connectivity: ConnectivityManager?): NetworkInterfaceKind {
-    val network = connectivity?.activeNetwork ?: return NetworkInterfaceKind.UNKNOWN
-    return interfaceKindOf(connectivity.getNetworkCapabilities(network))
+/**
+ * The connection notice over the signed-in workbench: the kit's ConnectionNotice reads the core SDK's
+ * `connection://status` as it arrives and decides what shows when. 立即重试 asks the SDK for its next round now;
+ * 重新登录 (kicked or expired) signs out to the login page; 诊断 opens the network and line page.
+ */
+@Composable
+private fun WorkbenchConnectionNotice(store: FlareAppStore, modifier: Modifier = Modifier) {
+    val status by store.session.connectionStatus.collectAsState()
+    val scope = rememberCoroutineScope()
+    Box(
+        modifier.windowInsetsPadding(WindowInsets.safeDrawing)
+            .padding(top = FlareSizes.screenHeaderHeight + FlareSizes.spacingXs, start = FlareSizes.spacingLg, end = FlareSizes.spacingLg),
+    ) {
+        ConnectionNotice(
+            status = status?.toKitStatus(),
+            floating = true,
+            onRetry = { scope.launch { runCatching { store.session.reconnectNow() } } },
+            onSignIn = { scope.launch { store.logout() } },
+            onUpdate = { store.updateCenter.launch { update() } },
+            onDiagnose = { store.accessDiagnostics.presented = true },
+        )
+    }
 }
 
 @Composable
@@ -152,6 +174,7 @@ private fun WorkbenchScreen(store: FlareAppStore) {
     val section by store.environment.section.collectAsState()
     val selectedId by store.environment.selectedConversationId.collectAsState()
     val conversations by store.messagingViewModel.conversations.collectAsState()
+    val updateStatus by store.updateCenter.state.collectAsState()
     val showChat = section == AppSection.Conversations && selectedId != null
 
     // 导航是状态驱动的（section + 选中会话），没有返回栈；不接系统返回，返回键就直接结束 Activity。
@@ -184,7 +207,17 @@ private fun WorkbenchScreen(store: FlareAppStore) {
                     ),
                     FlareApplicationNavigationItem("search", stringResource(R.string.nav_search), "search"),
                     FlareApplicationNavigationItem("media", "Media", "image", enabled = false),
-                    FlareApplicationNavigationItem("settings", stringResource(R.string.nav_settings), "settings"),
+                    FlareApplicationNavigationItem(
+                        id = "settings",
+                        label = stringResource(R.string.nav_settings),
+                        icon = "settings",
+                        badge = if (updateStatus?.prompt == FlareUpdatePromptForm.BADGE) {
+                            FlareApplicationNavigationBadge(
+                                kind = FlareApplicationNavigationBadge.Kind.Dot,
+                                label = flareStrings().settingsRowBadge,
+                            )
+                        } else null,
+                    ),
                     FlareApplicationNavigationItem("sdk-lab", stringResource(R.string.nav_sdk_status), "diagnostics"),
                 ),
             ),

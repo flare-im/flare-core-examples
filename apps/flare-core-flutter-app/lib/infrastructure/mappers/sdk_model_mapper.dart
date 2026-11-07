@@ -230,16 +230,22 @@ class SdkModelMapper {
     };
   }
 
-  static Map<String, dynamic> connectionJsonFromCore(
-    core.ConnectionEvent event,
+  /// The `connection://status` payload as the SDK lab logs it.
+  static Map<String, dynamic> connectionStatusJsonFromCore(
+    core.ConnectionStatus status,
   ) {
     return {
-      'type': 'connection',
-      'event': event.name.name,
-      'state': event.state.name,
-      'reason': event.reason,
-      'attempt': event.attempt,
-      'error': errorJsonFromCore(event.error),
+      'phase': status.phase.name,
+      'quality': status.quality?.name,
+      'accessPointId': status.accessPointId,
+      'cellId': status.cellId,
+      'regionId': status.regionId,
+      'protocol': status.protocol,
+      'rttMs': status.rttMs,
+      'attempt': status.attempt,
+      'nextRetryAt': status.nextRetryAt,
+      'reason': status.reason,
+      'developmentMode': status.developmentMode,
     };
   }
 

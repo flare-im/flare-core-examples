@@ -32,29 +32,6 @@ enum ConversationType {
   }
 }
 
-/// 连接状态枚举
-enum ConnectionState {
-  disconnected(0, '未连接'),
-  connecting(1, '连接中'),
-  connected(2, '已连接'),
-
-  /// 与 SDK `SdkState::Reconnecting` / Tauri `Reconnecting` 对齐（自动重连尝试中）
-  reconnecting(3, '重连中'),
-  disconnecting(4, '断开中');
-
-  final int value;
-  final String label;
-
-  const ConnectionState(this.value, this.label);
-
-  static ConnectionState fromValue(int value) {
-    return ConnectionState.values.firstWhere(
-      (state) => state.value == value,
-      orElse: () => throw ArgumentError('Invalid connection state: $value'),
-    );
-  }
-}
-
 /// 消息状态枚举
 enum MessageStatus {
   sending(0, '发送中'),

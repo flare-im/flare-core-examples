@@ -10,6 +10,7 @@ import 'package:flare_im/domain/entities/conversation.dart';
 import 'package:flare_im/domain/entities/user.dart';
 import 'package:flare_im/domain/value_objects/conversation_type.dart';
 import 'package:flare_im/interface/theme/flare_im_design.dart';
+import 'package:flare_im/interface/widgets/connection_notice_host.dart';
 import 'package:flare_im/interface/widgets/conversation_filter_bar.dart';
 import 'package:flare_im/interface/widgets/conversation_item/conversation_item.dart';
 import 'package:flare_im/interface/widgets/unread_badge.dart';
@@ -28,7 +29,7 @@ import 'package:flare_im_ui/flare_im_ui.dart'
         FlarePresenceDot,
         FlareSegmentedControl;
 import 'package:flare_im_ui/flare_im_ui.dart' as kit_sizes show FlareSizes;
-import 'package:flutter/material.dart' hide ConnectionState;
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -87,7 +88,6 @@ class _ConversationListScreenState
     final layout = ref.watch(conversationListSliverIdsProvider);
     final conversations = ref.watch(conversationProvider);
     final currentUser = ref.watch(currentUserProvider);
-    final connectionState = ref.watch(connectionStateProvider);
     final runtimeStatus = ref.watch(sdkRuntimeStatusProvider);
     final i18n = ref.watch(flareMessagesProvider);
     final query = _searchQuery.trim();
@@ -225,7 +225,9 @@ class _ConversationListScreenState
                   unawaited(_imOutbound.conversationListReload()),
             ),
             const SizedBox(height: 8),
-            _ConnectionStateBanner(state: connectionState, i18n: i18n),
+            const ConnectionNoticeHost(
+              padding: EdgeInsets.symmetric(horizontal: 20),
+            ),
             _RuntimeStatusBanner(status: runtimeStatus),
             const Divider(
               height: 1,
@@ -661,74 +663,6 @@ class _StartChatDialogState extends ConsumerState<_StartChatDialog> {
           child: Text(i18n.t('conversation.open')),
         ),
       ],
-    );
-  }
-}
-
-class _ConnectionStateBanner extends StatelessWidget {
-  const _ConnectionStateBanner({required this.state, required this.i18n});
-
-  final ConnectionState state;
-  final FlareMessages i18n;
-
-  @override
-  Widget build(BuildContext context) {
-    if (state == ConnectionState.connected) return const SizedBox.shrink();
-    final connecting = state == ConnectionState.connecting;
-    final reconnecting = state == ConnectionState.reconnecting;
-    final color = reconnecting || connecting
-        ? FlareImDesign.brandPurple
-        : FlareImDesign.danger;
-    final title = reconnecting
-        ? i18n.connection.reconnecting
-        : connecting
-        ? i18n.chat.connectionConnecting
-        : i18n.chat.connectionDisconnected;
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 180),
-      child: Padding(
-        key: ValueKey('connection-${state.name}'),
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.07),
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: color.withValues(alpha: 0.16)),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            child: Row(
-              children: [
-                if (connecting || reconnecting)
-                  SizedBox(
-                    width: 18,
-                    height: 18,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: color,
-                    ),
-                  )
-                else
-                  Icon(Icons.cloud_off_rounded, size: 19, color: color),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Text(
-                    '$title · ${i18n.chat.connectionSendingHint}',
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: color,
-                      fontSize: kit_sizes.FlareSizes.fontSizeSm,
-                      height: 1.25,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
     );
   }
 }

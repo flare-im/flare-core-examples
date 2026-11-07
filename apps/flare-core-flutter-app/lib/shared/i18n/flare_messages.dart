@@ -51,24 +51,16 @@ final class FlareLoginCopy {
   final FlareMessages _m;
   String get brandTitle => _m.t('login.brandTitle');
   String get brandSubtitle => _m.t('login.brandSubtitle');
+  String get brandHeadline => _m.t('login.brandHeadline');
+  String get brandDescription => _m.t('login.brandDescription');
   String get welcomeTitle => _m.t('login.welcomeTitle');
   String get welcomeSubtitle => _m.t('login.welcomeHint');
   String get welcomeHint => _m.t('login.welcomeHint');
   String get userIdLabel => _m.t('login.userIdLabel');
   String get userIdPlaceholder => _m.t('login.userIdPlaceholder');
-  String get serverToggle => _m.t('login.serverToggle');
-  String get protocol => _m.t('login.protocol');
-  String get wsAddress => _m.t('login.wsAddress');
-  String get gatewayAddress => _m.t('login.gatewayAddress');
-  String get gatewayHint => _m.t('login.gatewayHint');
-  String get quicAddress => _m.t('login.quicAddress');
-  String get transportRace => _m.t('login.transportRace');
-  String get wsUrlLabel => _m.t('login.wsUrlLabel');
-  String get wsUrlInvalid => _m.t('login.wsUrlInvalid');
   String get loginButton => _m.t('login.loginButton');
   String get userIdHint => _m.t('login.userIdHint');
   String get userIdRequired => _m.t('login.userIdRequired');
-  String get advancedWsHint => _m.t('login.advancedWsHint');
   String get footerPrimary => _m.t('login.footerPrimary');
   String get footerSecondary => _m.t('login.footerSecondary');
   String get cancel => _m.t('login.cancel');
@@ -127,7 +119,6 @@ final class FlareChatCopy {
   String get connectionStable => _m.t('chat.connectionStable');
   String get connectionConnecting => _m.t('chat.connectionConnecting');
   String get connectionDisconnected => _m.t('chat.connectionDisconnected');
-  String get connectionSendingHint => _m.t('chat.connectionSendingHint');
   String get searchMessages => _m.t('chat.searchMessages');
   String get syncConversation => _m.t('chat.syncConversation');
   String get pullFromServer => _m.t('chat.pullFromServer');
@@ -367,8 +358,10 @@ final class FlareChatCopy {
   String yesterdayAt(String hm) => _fmt('chat.yesterdayAt', {'hm': hm});
   String dateMonthDayAt(Object month, Object day, String hm) =>
       _fmt('chat.dateMonthDayAt', {'month': month, 'day': day, 'hm': hm});
-  String dateFullAt(Object year, Object month, Object day, String hm) =>
-      _fmt('chat.dateFullAt', {'year': year, 'month': month, 'day': day, 'hm': hm});
+  String dateFullAt(Object year, Object month, Object day, String hm) => _fmt(
+    'chat.dateFullAt',
+    {'year': year, 'month': month, 'day': day, 'hm': hm},
+  );
 }
 
 final class FlareComposerCopy {
@@ -509,7 +502,6 @@ final class FlareConnectionCopy {
   final FlareMessages _m;
   String get syncConversations => _m.t('connection.syncConversations');
   String get syncDetail => _m.t('connection.syncDetail');
-  String get reconnecting => _m.t('connection.reconnecting');
   String get disconnected => _m.t('connection.disconnected');
   String get retryHint => _m.t('connection.retryHint');
 }
@@ -524,6 +516,7 @@ final class FlareSettingsCopy {
   String get themeLight => _m.t('settings.themeLight');
   String get themeDark => _m.t('settings.themeDark');
   String get storage => _m.t('settings.storage');
+  String get accessPinFailed => _m.t('settings.accessPinFailed');
   String get downloadLocation => _m.t('settings.downloadLocation');
   String get downloadLocationChange => _m.t('settings.downloadLocationChange');
   String get downloadLocationReset => _m.t('settings.downloadLocationReset');
@@ -632,27 +625,18 @@ const _catalog = <FlareLocale, Map<String, dynamic>>{
       'settings': '设置',
     },
     'login': {
-      'brandTitle': 'flare IM',
-      'brandSubtitle': '安全、快速的即时通讯',
+      'brandTitle': 'Flare IM',
+      'brandSubtitle': '即时沟通 · 多端连接',
+      'brandHeadline': '让沟通，\n自然发生。',
+      'brandDescription': '与重要的人保持连接。消息、文件与群组，在你的设备间轻松衔接。',
       'welcomeTitle': '欢迎回来',
       'welcomeHint': '请输入您的用户 ID 完成登录',
       'userIdLabel': '用户 ID',
       'userIdPlaceholder': '请输入用户 ID',
       'userIdHint': '用户 ID 由系统分配，可在账号设置中查看',
       'userIdRequired': '请输入用户 ID',
-      'serverToggle': '服务器地址',
-      'protocol': '连接协议',
-      'wsAddress': 'WebSocket 地址',
-      'gatewayAddress': 'Gateway 地址',
-      'gatewayHint': 'SDK 通过该网关签发并自动刷新接入 token',
-      'quicAddress': 'QUIC 地址',
-      'transportRace': '竞速',
-      'wsUrlLabel': 'WebSocket',
-      'wsUrlInvalid':
-          '请输入 access-gateway 的 WebSocket 地址，例如 ws://127.0.0.1:60051/ws',
-      'advancedWsHint': '留空则使用配置文件中的默认地址',
       'loginButton': '立即登录',
-      'footerPrimary': 'ID 由管理员分配，可在邀请邮件中查看',
+      'footerPrimary': '请使用管理员提供的用户 ID 登录。',
       'footerSecondary': '仅支持 ID 登录 · 安全连接已启用',
       'cancel': '取消',
       'connected': '已连接',
@@ -744,7 +728,6 @@ const _catalog = <FlareLocale, Map<String, dynamic>>{
       'connectionStable': '连接稳定 · 已同步',
       'connectionConnecting': '连接中…',
       'connectionDisconnected': '连接已断开 · 将自动重试',
-      'connectionSendingHint': '发送中的消息会在连接就绪后继续',
       'searchMessages': '搜索消息',
       'syncConversation': '同步会话',
       'pullFromServer': '从服务端拉取',
@@ -1060,7 +1043,6 @@ const _catalog = <FlareLocale, Map<String, dynamic>>{
     'connection': {
       'syncConversations': '正在同步会话',
       'syncDetail': '连接建立后会继续同步离线数据',
-      'reconnecting': '正在重连服务器',
       'disconnected': '连接已断开',
       'retryHint': '请检查服务地址和网络状态',
     },
@@ -1072,6 +1054,7 @@ const _catalog = <FlareLocale, Map<String, dynamic>>{
       'themeLight': '浅色',
       'themeDark': '深色',
       'storage': '存储',
+      'accessPinFailed': '这条线路已不可用，列表已刷新',
       'downloadLocation': '下载位置',
       'downloadLocationChange': '更改位置',
       'downloadLocationReset': '恢复默认位置',
@@ -1169,27 +1152,20 @@ const _catalog = <FlareLocale, Map<String, dynamic>>{
       'settings': 'Settings',
     },
     'login': {
-      'brandTitle': 'flare IM',
-      'brandSubtitle': 'Secure, fast messaging',
+      'brandTitle': 'Flare IM',
+      'brandSubtitle': 'Messaging · Connected across devices',
+      'brandHeadline': 'Every conversation,\na little closer.',
+      'brandDescription':
+          'Stay connected to the people who matter. Messages, files and groups, together across your devices.',
       'welcomeTitle': 'Welcome back',
       'welcomeHint': 'Enter your user ID to continue',
       'userIdLabel': 'User ID',
       'userIdPlaceholder': 'Enter user ID',
       'userIdHint': 'Your user ID is assigned by the system',
       'userIdRequired': 'User ID is required',
-      'serverToggle': 'Server address',
-      'protocol': 'Protocol',
-      'wsAddress': 'WebSocket URL',
-      'gatewayAddress': 'Gateway URL',
-      'gatewayHint': 'The SDK issues and refreshes access tokens from this gateway',
-      'quicAddress': 'QUIC URL',
-      'transportRace': 'Race',
-      'wsUrlLabel': 'WebSocket',
-      'wsUrlInvalid':
-          'Enter the access-gateway WebSocket URL, for example ws://127.0.0.1:60051/ws',
-      'advancedWsHint': 'Leave empty to use the default from config',
       'loginButton': 'Sign in',
-      'footerPrimary': 'ID is assigned by your administrator',
+      'footerPrimary':
+          'Sign in with the user ID provided by your administrator.',
       'footerSecondary': 'ID sign-in only · secure connection',
       'cancel': 'Cancel',
       'connected': 'Connected',
@@ -1281,7 +1257,6 @@ const _catalog = <FlareLocale, Map<String, dynamic>>{
       'connectionStable': 'Connected · synced',
       'connectionConnecting': 'Connecting…',
       'connectionDisconnected': 'Disconnected · retrying',
-      'connectionSendingHint': 'Sending messages will continue when ready',
       'searchMessages': 'Search messages',
       'syncConversation': 'Sync conversation',
       'pullFromServer': 'Pull from server',
@@ -1597,7 +1572,6 @@ const _catalog = <FlareLocale, Map<String, dynamic>>{
     'connection': {
       'syncConversations': 'Syncing conversations',
       'syncDetail': 'Offline data will sync after connect',
-      'reconnecting': 'Reconnecting',
       'disconnected': 'Disconnected',
       'retryHint': 'Check server URL and network',
     },
@@ -1609,6 +1583,7 @@ const _catalog = <FlareLocale, Map<String, dynamic>>{
       'themeLight': 'Light',
       'themeDark': 'Dark',
       'storage': 'Storage',
+      'accessPinFailed': 'This line is no longer available. The list has been refreshed.',
       'downloadLocation': 'Download location',
       'downloadLocationChange': 'Change location',
       'downloadLocationReset': 'Use the default location',

@@ -11,9 +11,9 @@
     <string name="nav_settings">Settings</string>
 
     <!-- Brand / shell -->
-    <string name="brand_eyebrow">FLARE CORE</string>
-    <string name="brand_name">flare IM</string>
-    <string name="brand_tagline">Secure, fast instant messaging</string>
+    <string name="brand_eyebrow">ACCOUNT SIGN IN</string>
+    <string name="brand_name">Flare IM</string>
+    <string name="brand_tagline">MESSAGING, CONNECTED.</string>
 
     <!-- Connection / runtime status -->
     <string name="status_online">Online</string>
@@ -62,6 +62,8 @@
     <string name="composer_form_send">Send</string>
 
     <!-- Auth -->
+    <string name="auth_headline">Every conversation,\na little closer.</string>
+    <string name="auth_description">Stay connected to the people who matter. Messages, files and groups, together across your devices.</string>
     <string name="auth_welcome">Welcome back</string>
     <string name="auth_enter_id">Enter your user ID to sign in</string>
     <string name="auth_user_id">User ID</string>
@@ -70,15 +72,8 @@
     <string name="auth_server_optional">Server address (optional)</string>
     <string name="auth_id_hint">Your user ID is assigned by the system and shown in account settings</string>
     <string name="auth_error_title">Sign-in failed</string>
-    <string name="auth_footer">ID-only sign-in · secure connection enabled</string>
+    <string name="auth_footer">Your messages, contacts and conversations, together.</string>
     <string name="auth_user_id_placeholder">Enter user ID</string>
-    <string name="auth_protocol">Protocol</string>
-    <string name="auth_server_address">Server address</string>
-    <string name="auth_ws_url">WebSocket URL</string>
-    <string name="auth_gateway_url">Gateway URL</string>
-    <string name="auth_gateway_hint">The SDK issues and refreshes access tokens from this gateway</string>
-    <string name="auth_quic_url">QUIC URL</string>
-    <string name="auth_transport_race">Race</string>
 
     <!-- Settings -->
     <string name="settings_appearance">Appearance</string>
@@ -86,6 +81,7 @@
     <string name="settings_session">Session</string>
     <string name="settings_refresh_diagnostics">Refresh diagnostics</string>
     <string name="settings_dispose">Dispose</string>
+    <string name="settings_access_pin_failed">This line is no longer available. The list has been refreshed.</string>
     <string name="settings_media_cache">Media cache</string>
     <string name="settings_cache_usage">Usage: %1$s</string>
     <string name="settings_cache_refresh">Refresh</string>
@@ -103,8 +99,6 @@
     <string name="msg_edit_hint">New message text</string>
     <string name="action_confirm">OK</string>
     <string name="composer_replying_to">Replying to %1$s: %2$s</string>
-    <string name="auth_http_url">Gateway HTTP URL</string>
-    <string name="auth_http_url_hint">e.g. http://10.0.2.2:50050 — the SDK issues access tokens from it</string>
     <string name="auth_access_token">Access token (optional)</string>
     <string name="auth_access_token_hint">Leave empty and the SDK issues one from the gateway and refreshes it; paste a backend-issued token to use it as-is</string>
     <string name="auth_fallback_ws">Fallback (WebSocket)</string>

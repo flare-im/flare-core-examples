@@ -57,13 +57,14 @@ import com.flare.im.ui.FlarePlatformErrorCode
 import com.flare.im.ui.FlarePlatformResult
 import com.flare.im.ui.callFlarePlatform
 import com.flare.im.ui.flarePlatform
+import com.flare.im.ui.flareStrings
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 /** 输入区：文本 + 表情/贴纸面板 + 扩展构建菜单 +
  *  录音 + 图片选择 + 发送。自持状态，仅依赖 [MessagingViewModel]。 */
 @Composable
-fun ComposerBar(vm: MessagingViewModel, conversationTitle: String) {
+fun ComposerBar(vm: MessagingViewModel, conversationTitle: String, readOnly: Boolean) {
     val conversation by vm.selectedConversation.collectAsState()
     val reply by vm.replyTarget.collectAsState()
     val runtimeStatus by vm.runtimeStatus.collectAsState()
@@ -83,8 +84,8 @@ fun ComposerBar(vm: MessagingViewModel, conversationTitle: String) {
         if (emojiPanel) EmojiStickerPanel(vm) { emojiPanel = false }
         com.flare.im.ui.Composer(
             conversationKey = conversation?.conversationId ?: "",
-            placeholder = stringResource(R.string.composer_hint, conversationTitle),
-            disabled = runtimeStatus.isBlocking,
+            placeholder = if (readOnly) flareStrings().composerReadOnlyUpdate else stringResource(R.string.composer_hint, conversationTitle),
+            disabled = runtimeStatus.isBlocking || readOnly,
             replyTo = reply?.let { com.flare.im.ui.FlareReplyTarget(it.core.senderId, it.previewText) },
             onCancelReply = { vm.cancelReply() },
             onSend = { vm.sendText(it) },

@@ -81,40 +81,34 @@ final class _AppSdkEventListener extends core.FlareImEventListener {
   void onDisposed(core.LifecycleEvent event) => _fireLifecycle(event);
 
   @override
-  void onConnecting(core.ConnectionEvent event) =>
-      _fireConnectionChanged(event);
+  void onConnectionStatusChanged(core.ConnectionStatus event) {
+    debugPrint(
+      'flare sdk event connection.status phase=${event.phase.name} '
+      'ap=${event.accessPointId ?? ''} protocol=${event.protocol ?? ''} '
+      'reason=${event.reason ?? ''}',
+    );
+    imEventBus.fire(ConnectionStatusChangedEvent(event));
+  }
 
   @override
-  void onConnectSuccess(core.ConnectionEvent event) =>
-      _fireConnectionChanged(event);
+  void onAccessSwitched(core.AccessSwitchedEvent event) {
+    debugPrint(
+      'flare sdk event access.switched ${event.from.ap}/${event.from.protocol} '
+      '-> ${event.to.ap}/${event.to.protocol} reason=${event.reason}',
+    );
+  }
 
   @override
-  void onConnectReady(core.ConnectionEvent event) =>
-      _fireConnectionChanged(event);
+  void onAccessChanged(core.AccessChangedEvent event) {
+    debugPrint(
+      'flare sdk event access.changed serial=${event.serial} '
+      'source=${event.source} stale=${event.stale}',
+    );
+  }
 
+  /// The update center takes `update://state` through its own engine.
   @override
-  void onConnectFailed(core.ConnectionEvent event) =>
-      _fireConnectionChanged(event);
-
-  @override
-  void onDisconnected(core.ConnectionEvent event) =>
-      _fireConnectionChanged(event);
-
-  @override
-  void onReconnecting(core.ConnectionEvent event) =>
-      _fireConnectionChanged(event);
-
-  @override
-  void onReconnectFailed(core.ConnectionEvent event) =>
-      _fireConnectionChanged(event);
-
-  @override
-  void onKickedOffline(core.ConnectionEvent event) =>
-      _fireConnectionChanged(event);
-
-  @override
-  void onUserTokenExpired(core.ConnectionEvent event) =>
-      _fireConnectionChanged(event);
+  void onUpdateState(core.UpdateStatus event) {}
 
   @override
   void onMessageReceived(core.MessageReceivedEvent event) {
@@ -439,17 +433,6 @@ final class _AppSdkEventListener extends core.FlareImEventListener {
     imEventBus.fire(
       SdkLifecycleUpdatedEvent(SdkModelMapper.lifecycleJsonFromCore(event)),
     );
-  }
-
-  void _fireConnectionChanged(core.ConnectionEvent event) {
-    debugPrint(
-      'flare sdk event connection name=${event.name.name} '
-      'state=${event.state.name} reason=${event.reason ?? ''}',
-    );
-    imEventBus.fire(
-      SdkConnectionUpdatedEvent(SdkModelMapper.connectionJsonFromCore(event)),
-    );
-    imEventBus.fire(const ConnectionChangedEvent());
   }
 
   void _fireConversationChanged(core.ConversationEvent event) {

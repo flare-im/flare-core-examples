@@ -1,88 +1,66 @@
-import 'package:flare_im/domain/value_objects/transport_mode.dart';
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:flare_im/infrastructure/sdk/flare_core_sdk_wrapper.dart';
 import 'package:flare_im/shared/config/app_defaults_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('defaults use the access-gateway websocket route', () {
-    expect(AppDefaults.fallback.defaultWsUrl, 'ws://127.0.0.1:60051/ws');
-    expect(AppDefaults.fallback.defaultQuicUrl, 'quic://127.0.0.1:60052');
+  test('defaults carry no server address', () {
+    expect(AppDefaults.fallback.tenantId, '0');
     expect(AppDefaults.fallback.defaultTlsCaCertPath, isEmpty);
-    // 断言 fallback 是**不可用的占位**：原先只查长度 ≥32，一个真实密钥硬编码
-    // 在这里照样能过 —— 事实上正是这么混进来的。
-    expect(AppDefaults.fallback.httpUrl, 'http://127.0.0.1:50050');
     expect(AppDefaults.fallback.defaultUserId, isEmpty);
   });
 
-  test('loads gateway and token settings from app defaults json shape', () {
+  test('the shipped account entrance has no implicit demo identity', () {
+    final bundled =
+        jsonDecode(File('assets/config/app_defaults.json').readAsStringSync())
+            as Map<String, dynamic>;
+    expect(AppDefaults.fromJson(bundled).defaultUserId, isEmpty);
+    for (final value in [null, '', '   ']) {
+      expect(AppDefaults.fromJson({'userId': value}).defaultUserId, isEmpty);
+    }
+    expect(
+      AppDefaults.fromJson({
+        'userId': '  administrator-provided-id  ',
+      }).defaultUserId,
+      'administrator-provided-id',
+    );
+  });
+
+  test('loads tenant, trust and user from app defaults json shape', () {
     final defaults = AppDefaults.fromJson(const {
-      'defaultWsUrl': 'ws://127.0.0.1:60051/ws',
-      'defaultQuicUrl': 'quic://127.0.0.1:60052',
       'defaultTlsCaCertPath': '/tmp/flare-server.crt',
       'tenantId': '0',
-      'defaultHttpUrl': 'http://h:50050',
       'userId': 'bob',
     });
 
-    expect(defaults.defaultWsUrl, 'ws://127.0.0.1:60051/ws');
-    expect(defaults.defaultQuicUrl, 'quic://127.0.0.1:60052');
     expect(defaults.defaultTlsCaCertPath, '/tmp/flare-server.crt');
     expect(defaults.tenantId, '0');
-    expect(defaults.httpUrl, 'http://h:50050');
     expect(defaults.defaultUserId, 'bob');
   });
 
-  test('maps Flutter login transport choices to SDK init config', () {
+  test('the init overlay is the access config plus run settings', () {
+    const access = {
+      'trustMode': 'development',
+      'developmentEndpoints': {'wsUrl': 'ws://127.0.0.1:60051/ws'},
+    };
     expect(
-      buildSdkTransportConfig(
-        SdkConfig(
-          wsUrl: ' ws://127.0.0.1:60051/ws ',
-          httpUrl: AppDefaults.fallback.httpUrl,
-        ),
-      ),
+      const SdkConfig(
+        access: access,
+        tlsCaCertPath: ' /tmp/flare-server.crt ',
+        tenantId: ' ',
+        dataUrl: 'file:///data/',
+      ).toInitConfig(),
       {
-        'wsUrl': 'ws://127.0.0.1:60051/ws',
-        'transportPolicy': 'websocket_only',
-        'defaultTransport': 'websocket',
-      },
-    );
-
-    expect(
-      buildSdkTransportConfig(
-        SdkConfig(
-          wsUrl: 'ws://127.0.0.1:60051/ws',
-          transportMode: SdkTransportMode.quic,
-          quicUrl: ' quic://127.0.0.1:60052 ',
-          tlsCaCertPath: ' /tmp/flare-server.crt ',
-          httpUrl: AppDefaults.fallback.httpUrl,
-        ),
-      ),
-      {
-        'wsUrl': 'ws://127.0.0.1:60051/ws',
-        'quicUrl': 'quic://127.0.0.1:60052',
+        'access': access,
+        'tenantId': '0',
         'tlsCaCertPath': '/tmp/flare-server.crt',
-        'transportPolicy': 'auto',
-        'defaultTransport': 'quic',
-        'protocolRaceOrder': ['quic'],
+        'auth': <String, Object?>{},
+        'dataUrl': 'file:///data/',
       },
     );
-
-    expect(
-      buildSdkTransportConfig(
-        SdkConfig(
-          wsUrl: 'ws://127.0.0.1:60051/ws',
-          transportMode: SdkTransportMode.race,
-          quicUrl: 'quic://127.0.0.1:60052',
-          httpUrl: AppDefaults.fallback.httpUrl,
-        ),
-      ),
-      {
-        'wsUrl': 'ws://127.0.0.1:60051/ws',
-        'quicUrl': 'quic://127.0.0.1:60052',
-        'transportPolicy': 'protocol_race',
-        'defaultTransport': 'quic',
-        'protocolRaceOrder': ['quic', 'websocket'],
-      },
-    );
+    // Tokens are SDK-managed through the Core API: no token address at all.
+    expect(const SdkConfig(access: access).toInitConfig()['auth'], isEmpty);
   });
 }

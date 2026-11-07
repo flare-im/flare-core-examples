@@ -9,6 +9,8 @@ import 'package:flare_im/infrastructure/sdk/flare_core_sdk_wrapper.dart';
 import 'package:flare_im/shared/config/app_defaults_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'support/dev_access.dart';
+
 /// 发送端的 ack/失败回调，用来分辨"调用返回了"和"服务端真的收下了"。
 class _AckWatch extends core.FlareImEventListener {
   _AckWatch(this.acked, this.failed);
@@ -44,7 +46,7 @@ void main() {
     final sdk = SdkWrapper();
     addTearDown(() async { await sdk.dispose(); await root.delete(recursive: true); });
     const d = AppDefaults.fallback;
-    await sdk.init(SdkConfig(wsUrl: ws, tenantId: d.tenantId, httpUrl: 'http://127.0.0.1:50050', dataUrl: toFileDataUrl(root.path)))
+    await sdk.init(SdkConfig(access: devAccess(ws), tenantId: d.tenantId, dataUrl: toFileDataUrl(root.path)))
       .timeout(const Duration(seconds: 20));
     await sdk.login(user, token).timeout(const Duration(seconds: 30));
     await sdk.syncConversationSummaries().timeout(const Duration(seconds: 30));

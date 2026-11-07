@@ -1,5 +1,3 @@
-import 'package:flare_im/domain/value_objects/transport_mode.dart';
-
 /// 与 [assets/config/app_defaults.json] 结构一致；解析失败时使用 [AppDefaults.fallback]。
 class LoginCopy {
   const LoginCopy({
@@ -13,8 +11,6 @@ class LoginCopy {
     required this.primaryButton,
     required this.footerPrimary,
     required this.footerSecondary,
-    required this.advancedWsLabel,
-    required this.advancedWsHint,
   });
 
   /// 顶部品牌区大标题（如 flare IM）
@@ -32,8 +28,6 @@ class LoginCopy {
   final String primaryButton;
   final String footerPrimary;
   final String footerSecondary;
-  final String advancedWsLabel;
-  final String advancedWsHint;
 
   static LoginCopy fromJson(Map<String, dynamic>? json) {
     if (json == null) return LoginCopy.fallback;
@@ -53,8 +47,6 @@ class LoginCopy {
       primaryButton: s('primaryButton', LoginCopy.fallback.primaryButton),
       footerPrimary: s('footerPrimary', LoginCopy.fallback.footerPrimary),
       footerSecondary: s('footerSecondary', LoginCopy.fallback.footerSecondary),
-      advancedWsLabel: s('advancedWsLabel', LoginCopy.fallback.advancedWsLabel),
-      advancedWsHint: s('advancedWsHint', LoginCopy.fallback.advancedWsHint),
     );
   }
 
@@ -69,37 +61,26 @@ class LoginCopy {
     primaryButton: '立即登录',
     footerPrimary: 'ID 由管理员分配，可在邀请邮件中查看',
     footerSecondary: '仅支持 ID 登录 · 安全连接已启用',
-    advancedWsLabel: '服务器地址（可选）',
-    advancedWsHint: '留空则使用配置文件中的默认地址',
   );
 }
 
+/// 应用的非地址默认值。连哪套服务（接入配置与令牌端点）是构建期配置，见
+/// `access_config.dart`。
 class AppDefaults {
   const AppDefaults({
-    required this.defaultWsUrl,
-    required this.defaultQuicUrl,
     required this.defaultTlsCaCertPath,
     required this.defaultTlsCaCert,
-    required this.defaultTransportMode,
     required this.tenantId,
-    required this.httpUrl,
     required this.defaultUserId,
     required this.login,
   });
 
-  final String defaultWsUrl;
-  final String defaultQuicUrl;
+  /// 私有部署的信任 CA 文件路径，FLARE_TLS_CA_CERT_PATH / defaultTlsCaCertPath。
   final String defaultTlsCaCertPath;
 
   /// 内联信任 CA（PEM 或 base64 DER），FLARE_TLS_CA_CERT / defaultTlsCaCert。
   final String defaultTlsCaCert;
-
-  /// 预选传输模式（websocket / quic / race），FLARE_TRANSPORT_MODE，联调自动化用。
-  final SdkTransportMode defaultTransportMode;
   final String tenantId;
-
-  /// 网关 HTTP 基址：SDK 向 {httpUrl}/api/v1/auth/tokens 签发接入 token 并自动刷新。
-  final String httpUrl;
   final String defaultUserId;
   final LoginCopy login;
 
@@ -108,13 +89,9 @@ class AppDefaults {
   /// 当前密钥是否仍是占位值 —— 调用方应据此拒绝签发 token 并提示配置。
 
   static const AppDefaults fallback = AppDefaults(
-    defaultWsUrl: 'ws://127.0.0.1:60051/ws',
-    defaultQuicUrl: 'quic://127.0.0.1:60052',
     defaultTlsCaCertPath: '',
     defaultTlsCaCert: '',
-    defaultTransportMode: SdkTransportMode.websocket,
     tenantId: '0',
-    httpUrl: 'http://127.0.0.1:50050',
     // 这里刻意放**占位串**而不是一个能用的密钥。
     //
     // 之前这里写的是某台开发机 logs/.dev-token-secret 里的真实值：它长得像正规
@@ -129,45 +106,22 @@ class AppDefaults {
   );
 
   static AppDefaults fromJson(Map<String, dynamic> json) {
-    const envHttpUrl = String.fromEnvironment('FLARE_HTTP_URL');
-    const envQuicUrl = String.fromEnvironment('FLARE_QUIC_URL');
     const envTlsCaCertPath = String.fromEnvironment('FLARE_TLS_CA_CERT_PATH');
     const envTlsCaCert = String.fromEnvironment('FLARE_TLS_CA_CERT');
-    const envWsUrl = String.fromEnvironment('FLARE_WS_URL');
-    const envTransportMode = String.fromEnvironment('FLARE_TRANSPORT_MODE');
-    final ws = _firstNonEmpty([envWsUrl, json['defaultWsUrl']]);
-    final quic = _firstNonEmpty([
-      envQuicUrl,
-      json['defaultQuicUrl'],
-      json['quicUrl'],
-    ]);
     final tlsCaCertPath = _firstNonEmpty([
       envTlsCaCertPath,
       json['defaultTlsCaCertPath'],
       json['tlsCaCertPath'],
     ]);
     final tenant = (json['tenantId'] as String?)?.trim();
-    final httpUrl = _firstNonEmpty([
-      envHttpUrl,
-      json['defaultHttpUrl'],
-      json['httpUrl'],
-    ]);
     final userId = (json['userId'] as String?)?.trim();
     final loginJson = json['login'] as Map<String, dynamic>?;
     return AppDefaults(
-      defaultWsUrl: (ws != null && ws.isNotEmpty) ? ws : fallback.defaultWsUrl,
-      defaultQuicUrl: quic ?? fallback.defaultQuicUrl,
       defaultTlsCaCertPath: tlsCaCertPath ?? fallback.defaultTlsCaCertPath,
       defaultTlsCaCert: _firstNonEmpty([envTlsCaCert, json['defaultTlsCaCert'], json['tlsCaCert']]) ?? fallback.defaultTlsCaCert,
-      defaultTransportMode: SdkTransportMode.values.cast<SdkTransportMode?>().firstWhere(
-            (m) => m!.name == (_firstNonEmpty([envTransportMode, json['defaultTransportMode']]) ?? ''),
-            orElse: () => null,
-          ) ??
-          fallback.defaultTransportMode,
       tenantId: (tenant != null && tenant.isNotEmpty)
           ? tenant
           : fallback.tenantId,
-      httpUrl: httpUrl ?? fallback.httpUrl,
       defaultUserId: (userId != null && userId.isNotEmpty)
           ? userId
           : fallback.defaultUserId,

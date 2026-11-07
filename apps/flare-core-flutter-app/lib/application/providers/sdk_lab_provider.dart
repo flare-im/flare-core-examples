@@ -387,17 +387,26 @@ const sdkLabOperationTemplates = <SdkLabOperationTemplate>[
     },
   ),
   SdkLabOperationTemplate(
-    id: 'connection.notify_network_change',
+    id: 'connection.get_status',
     family: 'Connection',
-    title: 'Notify Network Change',
-    description: 'Trigger SDK reconnect handling from a platform network hint.',
-    defaultPayload: {
-      'available': true,
-      'interface': 'wifi',
-      'expensive': false,
-      'metered': false,
-      'reason': 'flutter-sdk-lab',
-    },
+    title: 'Connection Status',
+    description:
+        'Read connection://status: phase, access point, protocol, retry.',
+    defaultPayload: <String, Object?>{},
+  ),
+  SdkLabOperationTemplate(
+    id: 'connection.reconnect_now',
+    family: 'Connection',
+    title: 'Reconnect Now',
+    description: 'Reset the backoff and start a connection round at once.',
+    defaultPayload: <String, Object?>{},
+  ),
+  SdkLabOperationTemplate(
+    id: 'access.list_access_points',
+    family: 'Connection',
+    title: 'Access Points',
+    description: 'Access points with status, latency, breaker and protocol.',
+    defaultPayload: <String, Object?>{},
   ),
   SdkLabOperationTemplate(
     id: 'diagnostics.runtime_health',
@@ -413,14 +422,6 @@ const sdkLabOperationTemplates = <SdkLabOperationTemplate>[
     title: 'Heartbeat Effective Interval',
     description: 'Read the currently effective adaptive heartbeat interval.',
     defaultPayload: <String, Object?>{},
-  ),
-  SdkLabOperationTemplate(
-    id: 'sdk.set_heartbeat_app_state',
-    family: 'Session',
-    title: 'Set Heartbeat App State',
-    description:
-        'Update foreground/background state used by heartbeat scheduling.',
-    defaultPayload: {'appState': 'foreground'},
   ),
   SdkLabOperationTemplate(
     id: 'sdk.set_heartbeat_nat_timeout',
@@ -975,24 +976,34 @@ class SdkLabNotifier extends StateNotifier<SdkLabSnapshot> {
           );
         case 'capability.dispatch':
           return sdk.dispatchCapability(payload);
-        case 'connection.notify_network_change':
-          return sdk.notifyNetworkChange(
-            available: _payloadBool(payload, 'available'),
-            interface: _payloadOptionalString(payload, 'interface'),
-            expensive: _payloadBool(payload, 'expensive'),
-            metered: _payloadBool(payload, 'metered'),
-            reason: _payloadOptionalString(payload, 'reason'),
+        case 'connection.get_status':
+          return SdkModelMapper.connectionStatusJsonFromCore(
+            await sdk.connectionStatus(),
           );
+        case 'connection.reconnect_now':
+          await sdk.reconnectNow();
+          return {'requested': true};
+        case 'access.list_access_points':
+          return {
+            'accessPoints': [
+              for (final point in await sdk.accessPoints())
+                {
+                  'accessPointId': point.accessPointId,
+                  'regionId': point.regionId,
+                  'host': point.host,
+                  'status': point.status,
+                  'rttMs': point.rttMs,
+                  'breaker': point.breaker,
+                  'protocolWinner': point.protocolWinner,
+                  'pinned': point.pinned,
+                  'current': point.current,
+                },
+            ],
+          };
         case 'diagnostics.runtime_health':
           return sdk.runtimeHealth();
         case 'sdk.heartbeat_effective_interval':
           return sdk.heartbeatEffectiveInterval();
-        case 'sdk.set_heartbeat_app_state':
-          return sdk.setHeartbeatAppState(
-            _payloadString(payload, 'appState') == 'background'
-                ? core.HeartbeatAppState.background
-                : core.HeartbeatAppState.foreground,
-          );
         case 'sdk.set_heartbeat_nat_timeout':
           return sdk.setHeartbeatNatTimeout(
             _payloadOptionalInt(payload, 'natTimeoutSecs'),
@@ -1004,7 +1015,7 @@ class SdkLabNotifier extends StateNotifier<SdkLabSnapshot> {
           return {
             'sessionActive': diagnostics['sessionActive'],
             'connected': diagnostics['connected'],
-            'connectionState': diagnostics['connectionState'],
+            'connectionPhase': diagnostics['connectionPhase'],
           };
         default:
           throw ArgumentError.value(
@@ -1034,15 +1045,18 @@ class SdkLabNotifier extends StateNotifier<SdkLabSnapshot> {
     });
   }
 
-  Future<void> notifyNetworkChangeProbe() {
-    return runOperation('connection.notify_network_change', (sdk) {
-      return sdk.notifyNetworkChange(
-        available: true,
-        interface: 'wifi',
-        expensive: false,
-        metered: false,
-        reason: 'flutter-sdk-lab',
+  Future<void> connectionStatusProbe() {
+    return runOperation('connection.get_status', (sdk) async {
+      return SdkModelMapper.connectionStatusJsonFromCore(
+        await sdk.connectionStatus(),
       );
+    });
+  }
+
+  Future<void> reconnectNow() {
+    return runOperation('connection.reconnect_now', (sdk) async {
+      await sdk.reconnectNow();
+      return {'requested': true};
     });
   }
 
@@ -1055,18 +1069,6 @@ class SdkLabNotifier extends StateNotifier<SdkLabSnapshot> {
   Future<void> heartbeatEffectiveInterval() {
     return runOperation('sdk.heartbeat_effective_interval', (sdk) {
       return sdk.heartbeatEffectiveInterval();
-    });
-  }
-
-  Future<void> setHeartbeatForeground() {
-    return runOperation('sdk.set_heartbeat_app_state.foreground', (sdk) {
-      return sdk.setHeartbeatAppState(core.HeartbeatAppState.foreground);
-    });
-  }
-
-  Future<void> setHeartbeatBackground() {
-    return runOperation('sdk.set_heartbeat_app_state.background', (sdk) {
-      return sdk.setHeartbeatAppState(core.HeartbeatAppState.background);
     });
   }
 
@@ -1296,20 +1298,6 @@ int? _payloadOptionalInt(Map<String, dynamic> payload, String key) {
   return _payloadInt(payload, key, 0);
 }
 
-bool? _payloadBool(Map<String, dynamic> payload, String key) {
-  final value = payload[key];
-  if (value == null) return null;
-  if (value is bool) return value;
-  final normalized = '$value'.trim().toLowerCase();
-  if (normalized == 'true' || normalized == '1' || normalized == 'yes') {
-    return true;
-  }
-  if (normalized == 'false' || normalized == '0' || normalized == 'no') {
-    return false;
-  }
-  return null;
-}
-
 List<String> _payloadStringList(Map<String, dynamic> payload, String key) {
   final value = payload[key];
   if (value is Iterable) {
@@ -1385,40 +1373,36 @@ final class _SdkLabEventListener extends core.FlareImEventListener {
   void onDisposed(core.LifecycleEvent event) => _lifecycle('disposed', event);
 
   @override
-  void onConnecting(core.ConnectionEvent event) =>
-      _connection('connecting', event);
+  void onConnectionStatusChanged(core.ConnectionStatus event) => record(
+    'connection',
+    'status',
+    SdkModelMapper.connectionStatusJsonFromCore(event),
+  );
 
   @override
-  void onConnectSuccess(core.ConnectionEvent event) =>
-      _connection('connected', event);
+  void onAccessSwitched(core.AccessSwitchedEvent event) =>
+      record('access', 'switched', {
+        'from': {'ap': event.from.ap, 'protocol': event.from.protocol},
+        'to': {'ap': event.to.ap, 'protocol': event.to.protocol},
+        'reason': event.reason,
+      });
 
   @override
-  void onConnectReady(core.ConnectionEvent event) =>
-      _connection('ready', event);
+  void onAccessChanged(core.AccessChangedEvent event) =>
+      record('access', 'changed', {
+        'serial': event.serial,
+        'source': event.source,
+        'stale': event.stale,
+        'developmentMode': event.developmentMode,
+      });
 
   @override
-  void onConnectFailed(core.ConnectionEvent event) =>
-      _connection('server_error', event);
-
-  @override
-  void onDisconnected(core.ConnectionEvent event) =>
-      _connection('disconnected', event);
-
-  @override
-  void onReconnecting(core.ConnectionEvent event) =>
-      _connection('reconnecting', event);
-
-  @override
-  void onReconnectFailed(core.ConnectionEvent event) =>
-      _connection('reconnect_failed', event);
-
-  @override
-  void onKickedOffline(core.ConnectionEvent event) =>
-      _connection('kicked_off', event);
-
-  @override
-  void onUserTokenExpired(core.ConnectionEvent event) =>
-      _connection('token_expired', event);
+  void onUpdateState(core.UpdateStatus event) => record('update', 'state', {
+    'state': event.state,
+    'prompt': event.prompt,
+    'blockUi': event.blockUi,
+    'readOnly': event.readOnly,
+  });
 
   @override
   void onMessageReceived(core.MessageReceivedEvent event) {
@@ -1577,10 +1561,6 @@ final class _SdkLabEventListener extends core.FlareImEventListener {
 
   void _lifecycle(String name, core.LifecycleEvent event) {
     record('lifecycle', name, SdkModelMapper.lifecycleJsonFromCore(event));
-  }
-
-  void _connection(String name, core.ConnectionEvent event) {
-    record('connection', name, SdkModelMapper.connectionJsonFromCore(event));
   }
 
   void _conversation(String name, core.ConversationEvent event) {

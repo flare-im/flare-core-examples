@@ -121,7 +121,7 @@ final class MediaSavingTests: XCTestCase {
         let messaging = MessagingViewModel(session: session, repository: ViewDataRepository(), environment: environment)
         let text = SdkModelMapper.messageFromCore(Message(
             clientMsgId: "c1", content: MessageContent(contentType: .text, data: ["text": AnySendable("hi")]),
-            conversationId: "c", senderId: "a"))
+            conversationId: "c", sender: DisplayName(kind: .unnamed, entity: .person, idTail: ""), senderId: "a"))
         let outcome = await messaging.saveToDevice(text)
         XCTAssertEqual(outcome, .failed(MediaSaveCopy.nothingToSave))
         XCTAssertEqual(environment.labResults.first?.operation, "media.download_to_user_directory")

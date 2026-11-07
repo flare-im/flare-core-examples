@@ -5,6 +5,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.res.stringResource
 import com.flare.im.app.R
 import com.flare.im.ui.FlareStrings
+import com.flare.im.ui.flareStringsEnglish
 
 /**
  * The strings the kit renders itself — accessibility labels, delivery states, composer tools,
@@ -13,7 +14,8 @@ import com.flare.im.ui.FlareStrings
  *
  * The language follows the app's own resources (`flare_kit_language`), so the kit and the app
  * can never disagree: `values-zh-rCN` keeps the kit defaults, every other locale gets English.
- * The table covers every kit string reachable from the screens this app composes.
+ * English is the kit's own table with this app's wording over it, so a string the app says nothing about, like those
+ * of the update prompt, is English too.
  */
 @Composable
 fun rememberKitStrings(): FlareStrings {
@@ -21,7 +23,7 @@ fun rememberKitStrings(): FlareStrings {
     return remember(language) { if (language == "zh") FlareStrings() else englishKitStrings() }
 }
 
-private fun englishKitStrings() = FlareStrings {
+private fun englishKitStrings() = FlareStrings(flareStringsEnglish()) {
     back = "Back"
     cancel = "Cancel"
     clear = "Clear"

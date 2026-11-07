@@ -4,7 +4,6 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   group('value object protocol mapping', () {
     test('rejects unknown local enum values instead of defaulting', () {
-      expect(() => ConnectionState.fromValue(99), throwsArgumentError);
       expect(() => MessageStatus.fromValue(99), throwsArgumentError);
       expect(() => MessageSource.fromValue(99), throwsArgumentError);
     });

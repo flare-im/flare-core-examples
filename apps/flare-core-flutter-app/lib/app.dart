@@ -4,14 +4,20 @@ import 'package:flare_im/infrastructure/platform/app_platform_adapter.dart';
 import 'package:flare_im/interface/router/app_router.dart';
 import 'package:flare_im/interface/sdk_event_scope.dart';
 import 'package:flare_im/interface/theme/flare_im_design.dart';
-import 'package:flare_im_ui/flare_im_ui.dart' show FlarePlatformScope;
+import 'package:flare_im/interface/widgets/recovery_link_host.dart';
+import 'package:flare_im/interface/widgets/update_host.dart';
+import 'package:flare_im_ui/flare_im_ui.dart'
+    show FlarePlatformScope, FlareStringsScope;
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Flare IM 应用主组件
 class FlareImApp extends ConsumerWidget {
-  const FlareImApp({super.key});
+  const FlareImApp({super.key, this.launchArguments = const []});
+
+  /// `main`'s arguments: Windows and Linux open a recovery link with them.
+  final List<String> launchArguments;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -37,6 +43,14 @@ class FlareImApp extends ConsumerWidget {
           theme: FlareImDesign.lightTheme(),
           darkTheme: FlareImDesign.darkTheme(),
           routerConfig: router,
+          // The Kit reads its copy here, on the same choice as the app's own.
+          builder: (context, child) => FlareStringsScope(
+            strings: kitStringsFor(flareLocale),
+            child: RecoveryLinkHost(
+              launchArguments: launchArguments,
+              child: UpdateHost(child: child!),
+            ),
+          ),
         ),
       ),
     );

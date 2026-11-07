@@ -102,7 +102,7 @@ test.describe("Flare Core web 前台恢复自愈", () => {
     await setVisibility(a.page, "hidden");
     await a.page.waitForTimeout(3_000);
 
-    // —— 用户回到前台：visibility→visible → setHeartbeatAppState(Foreground)
+    // —— 用户回到前台：visibility→visible → SDK 平台生命周期上报 lifecycle.setAppState(foreground)
     //    → flare-core 心跳即时 probe：8s 窗口无 PONG → 主动 close → 重连 ——
     await setVisibility(a.page, "visible");
 

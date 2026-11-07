@@ -10,12 +10,22 @@ import Foundation
 /// wording matches the Android example's table for every key both kits have.
 enum KitStrings {
     static var current: FlareStrings {
-        let language = Bundle.main.preferredLocalizations.first ?? "en"
-        return language.hasPrefix("zh") ? FlareStrings() : english
+        isChinese ? FlareStrings() : english
     }
 
+    /// The language the app shows, for what the update center words in it: the system's can be one this app has no
+    /// localization for.
+    static var localeTag: String {
+        isChinese ? "zh-CN" : "en-US"
+    }
+
+    private static var isChinese: Bool {
+        (Bundle.main.preferredLocalizations.first ?? "en").hasPrefix("zh")
+    }
+
+    /// The kit's own English, with this app's wording over it.
     private static var english: FlareStrings {
-        var strings = FlareStrings()
+        var strings = FlareStrings.english
         strings.back = "Back"
         strings.cancel = "Cancel"
         strings.clear = "Clear"

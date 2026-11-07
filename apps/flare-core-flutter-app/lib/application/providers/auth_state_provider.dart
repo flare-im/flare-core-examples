@@ -1,10 +1,13 @@
 import 'dart:async';
 
+import 'package:flare_core_flutter_sdk/flare_core_flutter_sdk.dart'
+    show ConnectionStatus;
+import 'package:flare_im/application/providers/sdk_provider.dart';
 import 'package:flare_im/application/providers/service_providers.dart';
 import 'package:flare_im/application/services/auth_service.dart';
 import 'package:flare_im/domain/entities/user.dart';
-import 'package:flare_im/domain/value_objects/conversation_type.dart';
 import 'package:flare_im/infrastructure/paths/sdk_data_url.dart';
+import 'package:flare_im/infrastructure/sdk/flare_core_sdk_wrapper.dart';
 import 'package:flare_im/shared/config/app_config_loader.dart';
 import 'package:flare_im/shared/session/saved_session_store.dart';
 import 'package:flutter/foundation.dart';
@@ -29,11 +32,15 @@ class CurrentUserNotifier extends StateNotifier<User?> {
     state = user;
   }
 
-  /// 登出（同时清除热启动会话档案）
+  /// 登出（同时清除热启动会话档案）。被踢或登录过期时服务端通常已经拒绝了这个会话，
+  /// 登出请求可能失败，本地会话也照样清掉。
   Future<void> logout() async {
     await _clearSavedSessionQuietly();
-    await _authService.logout();
-    state = null;
+    try {
+      await _authService.logout();
+    } finally {
+      state = null;
+    }
   }
 
   Future<void> _clearSavedSessionQuietly() async {
@@ -70,16 +77,8 @@ class CurrentUserNotifier extends StateNotifier<User?> {
       final defaults = await AppConfigLoader.load();
       final dataUrl = await resolveSdkDataUrl();
       await _authService.initSdk(
-        wsUrl: profile.wsUrl.isNotEmpty ? profile.wsUrl : defaults.defaultWsUrl,
-        transportMode: profile.transportMode,
-        quicUrl: profile.quicUrl.isNotEmpty
-            ? profile.quicUrl
-            : defaults.defaultQuicUrl,
         tenantId: defaults.tenantId,
-        httpUrl: profile.httpUrl.isNotEmpty ? profile.httpUrl : defaults.httpUrl,
-        tlsCaCertPath: profile.tlsCaCertPath.isNotEmpty
-            ? profile.tlsCaCertPath
-            : defaults.defaultTlsCaCertPath,
+        tlsCaCertPath: defaults.defaultTlsCaCertPath,
         tlsCaCert: defaults.defaultTlsCaCert,
         dataUrl: dataUrl,
       );
@@ -105,7 +104,8 @@ class CurrentUserNotifier extends StateNotifier<User?> {
       await _authService.connectSession(userId);
       debugPrint('session resume connected');
     } catch (e) {
-      // 离线也保持本地视图可用；连接状态由 connection watcher 呈现。
+      // 没网等链路能自己恢复的失败核心按成功返回，走不到这里；这里只有终态错误。本地视图照常可用，
+      // 连接状态由 Kit 横幅（connection://status）呈现。
       debugPrint('session resume connect failed (local view remains): $e');
     }
   }
@@ -117,23 +117,30 @@ class CurrentUserNotifier extends StateNotifier<User?> {
   }
 }
 
-/// 连接状态
-final connectionStateProvider =
-    StateNotifierProvider<ConnectionStateNotifier, ConnectionState>((ref) {
-      final authService = ref.watch(authServiceProvider);
-      return ConnectionStateNotifier(authService);
+/// 核心的连接状态（`connection://status`），每来一个就整体替换；SDK 还没上报时为 null。
+/// 横幅交给 Kit 的 ConnectionNotice。
+final connectionStatusProvider =
+    StateNotifierProvider<ConnectionStatusNotifier, ConnectionStatus?>((ref) {
+      return ConnectionStatusNotifier(ref.watch(sdkWrapperProvider));
     });
 
-class ConnectionStateNotifier extends StateNotifier<ConnectionState> {
-  final AuthService _authService;
+class ConnectionStatusNotifier extends StateNotifier<ConnectionStatus?> {
+  ConnectionStatusNotifier(this._sdk) : super(null);
 
-  ConnectionStateNotifier(this._authService)
-    : super(ConnectionState.disconnected);
+  final SdkWrapper _sdk;
 
-  /// 刷新连接状态
+  /// A `connection://status` event.
+  void apply(ConnectionStatus status) => state = status;
+
+  /// Reads the core's current status (events do not replay: a screen or a
+  /// login that starts late begins from the truth).
   Future<void> refresh() async {
-    final state = await _authService.getConnectionState();
-    this.state = state;
+    if (!_sdk.isInitialized) return;
+    try {
+      state = await _sdk.connectionStatus();
+    } catch (e) {
+      debugPrint('connection status unavailable: $e');
+    }
   }
 }
 

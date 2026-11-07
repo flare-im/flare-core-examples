@@ -2,17 +2,18 @@ import XCTest
 @testable import FlareImApp
 
 /// 客户端不再本地签发接入 token（那等于把签名密钥打进 App）。
-/// SDK 托管：init 把网关地址交给核心（auth.tokenEndpoint），login 不传 token；
-/// 应用托管：高级区粘贴 token 原样传。
+/// SDK 托管：init 只交 `"auth": {}`，核心在当前接入点的 Core API 上签发与换新，login 不传 token；
+/// 粘贴的 token 原样交给 login。
 final class SdkManagedTokenTests: XCTestCase {
-    func testInitConfigHandsGatewayToCoreAndLoginOmitsTokenByDefault() {
+    func testInitConfigAsksForSdkManagedTokensAndLoginOmitsTokenByDefault() throws {
         var draft = LoginDraft()
         draft.userId = "hugo"
-        draft.httpUrl = " http://h/api "
-        let config = AppSession.sessionInitConfig(draft: draft, dataURL: URL(fileURLWithPath: "/tmp/x"))
-        XCTAssertEqual(config["httpUrl"]?.value as? String, "http://h/api")
-        let auth = config["auth"]?.value as? [String: Any]
-        XCTAssertEqual(auth?["tokenEndpoint"] as? String, "http://h/api")
+        for access in [try AppAccess.resolve(lookup: { _ in nil }, allowDevelopment: true),
+                       AppAccess(access: ["trustMode": "production"])] {
+            let config = AppSession.sessionInitConfig(draft: draft, dataURL: URL(fileURLWithPath: "/tmp/x"), access: access)
+            let auth = try XCTUnwrap(config["auth"]?.value as? [String: Any], "every build asks for SDK-managed tokens")
+            XCTAssertTrue(auth.isEmpty, "no endpoint of its own: the SDK issues on the access point's Core API")
+        }
 
         let login = AppSession.loginRequest(draft: draft)
         XCTAssertEqual(login["userId"]?.value as? String, "hugo")

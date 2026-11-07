@@ -12,7 +12,6 @@ import 'package:flare_im/application/services/message_service.dart';
 import 'package:flare_im/domain/entities/conversation.dart';
 import 'package:flare_im/domain/entities/message.dart';
 import 'package:flare_im/domain/value_objects/conversation_type.dart';
-import 'package:flare_im/domain/value_objects/transport_mode.dart';
 import 'package:flare_im/infrastructure/mappers/sdk_model_mapper.dart';
 import 'package:flare_im/infrastructure/sdk/flare_core_sdk_wrapper.dart';
 import 'package:flutter/foundation.dart';
@@ -43,12 +42,10 @@ class ImOutboundFacade {
 
   // --- 认证 / SDK 生命周期 ---
 
+  /// Initializes the SDK with the build's access config (no address comes
+  /// from the UI).
   Future<void> authEnsureSdkInitialized({
-    required String wsUrl,
-    required SdkTransportMode transportMode,
-    required String quicUrl,
     required String tenantId,
-    required String httpUrl,
     String? tlsCaCertPath,
     String? tlsCaCert,
     String? dataUrl,
@@ -60,11 +57,7 @@ class ImOutboundFacade {
     try {
       final auth = _ref.read(authServiceProvider);
       await auth.initSdk(
-        wsUrl: wsUrl,
-        transportMode: transportMode,
-        quicUrl: quicUrl,
         tenantId: tenantId,
-        httpUrl: httpUrl,
         tlsCaCertPath: tlsCaCertPath,
         tlsCaCert: tlsCaCert,
         dataUrl: dataUrl,
@@ -91,7 +84,7 @@ class ImOutboundFacade {
       _ref.read(sdkRuntimeStatusProvider.notifier).markFailure('$e');
       rethrow;
     }
-    await _ref.read(connectionStateProvider.notifier).refresh();
+    await _ref.read(connectionStatusProvider.notifier).refresh();
     try {
       _ref.read(sdkRuntimeStatusProvider.notifier).markConversationBootstrap();
       final count = await _loadConversationsFromCore(reason: 'login');

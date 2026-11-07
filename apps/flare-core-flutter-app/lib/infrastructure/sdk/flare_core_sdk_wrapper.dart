@@ -1,26 +1,32 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flare_core_flutter_lifecycle/flare_core_flutter_lifecycle.dart'
+    show FlareCoreFlutter, FlutterPlatformLifecycleSource;
 import 'package:flare_core_flutter_sdk/flare_core_flutter_sdk.dart' as core;
-import 'package:flare_im/domain/value_objects/transport_mode.dart';
 import 'package:flare_im/infrastructure/mappers/sdk_model_mapper.dart';
 import 'package:flutter/foundation.dart';
 
+/// What the core is initialized with. Where it connects is the build's access
+/// config (`shared/config/access_config.dart`), never an address the app
+/// keeps.
 final class SdkConfig {
   const SdkConfig({
-    required this.wsUrl,
-    required this.httpUrl,
-    this.transportMode = SdkTransportMode.websocket,
-    this.quicUrl = 'quic://127.0.0.1:60052',
+    required this.access,
+    this.app,
     this.tlsCaCertPath,
     this.tlsCaCert,
     this.dataUrl,
     this.tenantId = '0',
   });
 
-  final String wsUrl;
-  final SdkTransportMode transportMode;
-  final String quicUrl;
+  /// The core access config (`sdkConfig.access`), passed through unchanged.
+  final Map<String, Object?> access;
+
+  /// The `app` keys the build decides (channel, the language it shows); the
+  /// platform fills the rest.
+  final Map<String, Object?>? app;
+
   final String? tlsCaCertPath;
 
   /// 内联信任 CA（PEM 或 base64 DER）：QUIC / wss 连自建 CA 签发证书的服务端时必配。
@@ -28,135 +34,121 @@ final class SdkConfig {
   final String? dataUrl;
   final String tenantId;
 
-  /// 网关 HTTP 基址：SDK 托管 token 时向 {httpUrl}/api/v1/auth/tokens 签发并自动刷新；
-  /// 也是媒体等 HTTP 接口的基址。客户端从不持有签名密钥。
-  final String httpUrl;
-}
-
-Map<String, Object?> buildSdkTransportConfig(SdkConfig config) {
-  final wsUrl = config.wsUrl.trim();
-  if (wsUrl.isEmpty) {
-    throw ArgumentError('WebSocket URL is required');
-  }
-  final tlsCaCertPath = config.tlsCaCertPath?.trim();
-  final tlsConfig = <String, Object?>{
-    if (tlsCaCertPath != null && tlsCaCertPath.isNotEmpty)
-      'tlsCaCertPath': tlsCaCertPath,
-    if (config.tlsCaCert != null && config.tlsCaCert!.trim().isNotEmpty)
-      'tlsCaCert': config.tlsCaCert!.trim(),
-  };
-  if (config.transportMode == SdkTransportMode.websocket) {
+  /// The core init overlay. Connect tokens are SDK-managed (`auth: {}`): the
+  /// core issues and refreshes them through the Core API of the access point
+  /// it uses; an explicit token at login still wins.
+  Map<String, Object?> toInitConfig() {
+    final tlsCaCertPath = this.tlsCaCertPath?.trim() ?? '';
+    final tlsCaCert = this.tlsCaCert?.trim() ?? '';
+    final dataUrl = this.dataUrl?.trim() ?? '';
+    final tenantId = this.tenantId.trim();
+    final app = this.app;
     return {
-      'wsUrl': wsUrl,
-      ...tlsConfig,
-      'transportPolicy': 'websocket_only',
-      'defaultTransport': 'websocket',
+      'access': access,
+      if (app != null && app.isNotEmpty) 'app': app,
+      'tenantId': tenantId.isEmpty ? '0' : tenantId,
+      if (tlsCaCertPath.isNotEmpty) 'tlsCaCertPath': tlsCaCertPath,
+      if (tlsCaCert.isNotEmpty) 'tlsCaCert': tlsCaCert,
+      'auth': <String, Object?>{},
+      if (dataUrl.isNotEmpty) 'dataUrl': dataUrl,
     };
   }
-
-  final quicUrl = config.quicUrl.trim();
-  if (quicUrl.isEmpty) {
-    throw ArgumentError('QUIC URL is required for selected transport');
-  }
-  if (config.transportMode == SdkTransportMode.quic) {
-    return {
-      'wsUrl': wsUrl,
-      'quicUrl': quicUrl,
-      ...tlsConfig,
-      'transportPolicy': 'auto',
-      'defaultTransport': 'quic',
-      'protocolRaceOrder': ['quic'],
-    };
-  }
-
-  return {
-    'wsUrl': wsUrl,
-    'quicUrl': quicUrl,
-    ...tlsConfig,
-    'transportPolicy': 'protocol_race',
-    'defaultTransport': 'quic',
-    'protocolRaceOrder': ['quic', 'websocket'],
-  };
 }
+
+/// Creates the core client initialized with an init overlay.
+typedef SdkClientFactory =
+    Future<core.FlareImClient> Function(Map<String, Object?> initConfig);
+
+/// The Flutter client: the plugin installs the platform lifecycle (device
+/// network, foreground state, app version) with the client's init.
+Future<core.FlareImClient> createFlutterCoreClient(
+  Map<String, Object?> initConfig,
+) => FlareCoreFlutter.createClient(initConfig);
 
 /// Thin app facade over the generated `flare_core_flutter_sdk` client.
 final class SdkWrapper {
-  SdkWrapper({core.FlareImClient? client})
-    : _client = client ?? core.FlareCoreSdk.createClient();
+  /// [client] is an already created client (tests); otherwise the first
+  /// [init] creates one with [createClient].
+  SdkWrapper({core.FlareImClient? client, SdkClientFactory? createClient})
+    : _clientOrNull = client,
+      _createClient = createClient ?? createFlutterCoreClient,
+      _appInfo = client == null && createClient == null
+          ? FlutterPlatformLifecycleSource().appInfo
+          : null;
 
-  final core.FlareImClient _client;
+  core.FlareImClient? _clientOrNull;
+  final SdkClientFactory _createClient;
+
+  /// The installed package's facts for `app`; null for a client handed in,
+  /// which brings its own.
+  final Future<core.PlatformAppInfo?> Function()? _appInfo;
+
+  /// Listeners added before the client exists; attached when [init] creates it.
+  final List<_PendingSubscription> _pendingListeners = [];
+
+  core.FlareImClient get _client =>
+      _clientOrNull ?? (throw StateError('Flare SDK is not initialized'));
+
   bool _initialized = false;
-  String _wsUrl = '';
-  SdkTransportMode _transportMode = SdkTransportMode.websocket;
-  String _quicUrl = '';
-  String? _tlsCaCertPath;
   String _currentUserId = '';
   String _tenantId = '0';
-  String _httpUrl = '';
 
   /// init 时交给核心的完整 overlay。prepare 的 storeConfigJson 会让核心**重新 init**，
-  /// 所以必须原样重发同一份，否则 auth / tlsCaCert 这类字段会被一份只含 ws 的配置冲掉
+  /// 所以必须原样重发同一份，否则 auth / tlsCaCert 这类字段会被冲掉
   /// （实测：QUIC 登录报 connect token required）。
   Map<String, Object?>? _lastInitConfig;
   String? _dataUrl;
-  core.ConnectionState _lastState = core.ConnectionState.disconnected;
   Map<String, Object?>? _nativeEventSubscription;
 
   bool get isInitialized => _initialized;
 
-  Future<void> init(SdkConfig config) async {
-    final nextWsUrl = config.wsUrl.trim();
-    final nextTransportMode = config.transportMode;
-    final nextQuicUrl = config.quicUrl.trim();
-    final rawTlsCaCertPath = config.tlsCaCertPath?.trim();
-    final nextTlsCaCertPath =
-        rawTlsCaCertPath == null || rawTlsCaCertPath.isEmpty
-        ? null
-        : rawTlsCaCertPath;
-    final nextTenantId = config.tenantId.trim().isEmpty
-        ? '0'
-        : config.tenantId.trim();
-    final nextDataUrl = config.dataUrl?.trim();
-    final nextHttpUrl = config.httpUrl.trim();
-    final transportConfig = buildSdkTransportConfig(config);
+  Future<void> _initTail = Future<void>.value();
+
+  /// One at a time: the sign-in, a resumed session and the update center each
+  /// ask for it, and a second caller must not create a second client.
+  Future<void> init(SdkConfig config) {
+    final run = _initTail.then((_) => _init(config));
+    _initTail = run.then<void>((_) {}, onError: (Object _) {});
+    return run;
+  }
+
+  Future<void> _init(SdkConfig config) async {
+    // `app` is filled here, not only in the client: prepare sends this overlay
+    // again, the core replaces `app` as a whole, and without version and build
+    // the update center stops working after sign-in.
+    final initConfig = core.platformInitConfig(
+      config.toInitConfig(),
+      await _appInfo?.call(),
+    );
+    final last = _lastInitConfig;
     if (_initialized &&
-        _wsUrl == nextWsUrl &&
-        _transportMode == nextTransportMode &&
-        _quicUrl == nextQuicUrl &&
-        _tlsCaCertPath == nextTlsCaCertPath &&
-        _tenantId == nextTenantId &&
-        _dataUrl == nextDataUrl &&
-        _httpUrl == nextHttpUrl) {
+        last != null &&
+        jsonEncode(last) == jsonEncode(initConfig)) {
       return;
     }
-    if (_initialized) {
-      await _cancelNativeEventSubscription();
-      await _client.uninit();
-    }
-    await _client.hardReset();
-    _initialized = false;
-    _currentUserId = '';
-
-    _wsUrl = nextWsUrl;
-    _transportMode = nextTransportMode;
-    _quicUrl = nextQuicUrl;
-    _tlsCaCertPath = nextTlsCaCertPath;
-    _tenantId = nextTenantId;
-    _dataUrl = nextDataUrl;
-    _httpUrl = nextHttpUrl;
+    _tenantId = '${initConfig['tenantId']}';
+    _dataUrl = initConfig['dataUrl'] as String?;
     debugPrint(
-      'flare sdk init transport=${_transportMode.name} ws=$_wsUrl http=$_httpUrl tenant=$_tenantId dataUrl=${_dataUrl ?? ''}',
+      'flare sdk init trustMode=${config.access['trustMode'] ?? 'production'} '
+      'tenant=$_tenantId dataUrl=${_dataUrl ?? ''}',
     );
-    _lastInitConfig = <String, Object?>{
-      ...transportConfig,
-      'tenantId': _tenantId,
-      if (_httpUrl.isNotEmpty) 'httpUrl': _httpUrl,
-      // SDK 托管 token：核心向 {httpUrl}/api/v1/auth/tokens 签发、到期前刷新。
-      // login 传了显式 token 时核心直接用它，不走签发。
-      if (_httpUrl.isNotEmpty) 'auth': {'tokenEndpoint': _httpUrl},
-      if (_dataUrl != null && _dataUrl!.isNotEmpty) 'dataUrl': _dataUrl,
-    };
-    await _client.init(Map<String, Object?>.from(_lastInitConfig!));
+    final existing = _clientOrNull;
+    if (existing == null) {
+      _clientOrNull = await _createClient(
+        Map<String, Object?>.from(initConfig),
+      );
+      _attachPendingListeners();
+    } else {
+      if (_initialized) {
+        await _cancelNativeEventSubscription();
+        await existing.uninit();
+      }
+      await existing.hardReset();
+      _initialized = false;
+      _currentUserId = '';
+      await existing.init(Map<String, Object?>.from(initConfig));
+    }
+    _lastInitConfig = initConfig;
     await _ensureNativeEventSubscription();
     _initialized = true;
   }
@@ -165,7 +157,7 @@ final class SdkWrapper {
   Future<void> prepareLocal(String userId) async {
     _currentUserId = userId;
     debugPrint(
-      'flare sdk prepare user=$userId ws=$_wsUrl tenant=$_tenantId dataUrl=${_dataUrl ?? ''}',
+      'flare sdk prepare user=$userId tenant=$_tenantId dataUrl=${_dataUrl ?? ''}',
     );
     await _client.prepare({
       'userId': userId,
@@ -173,16 +165,19 @@ final class SdkWrapper {
     });
   }
 
-  /// 网络半段：建立连接并完成首次同步。热启动在后台调用。
+  /// 网络半段：建立连接。热启动在后台调用。
+  ///
+  /// Failures the link recovers from by itself (no network, unreachable
+  /// access points, overload) still return success: the core keeps the
+  /// session and reconnects. Whether the app is online is read from
+  /// `connection://status` only; an error here is a terminal one.
   Future<void> connectRemote(String userId, String? token) async {
-    _lastState = await getConnectionState();
-    debugPrint('flare sdk connect user=$userId state=${_lastState.name}');
+    debugPrint('flare sdk connect user=$userId');
     final explicit = token?.trim() ?? '';
     await _client.connect({
       'userId': userId,
       if (explicit.isNotEmpty) 'token': explicit,
     });
-    await _waitForConnectionReady();
     final dataRoot = await _client.diagnostics.getDataRoot();
     final currentUser = await _client.currentUserId();
     debugPrint(
@@ -194,25 +189,6 @@ final class SdkWrapper {
   Future<void> login(String userId, [String? token]) async {
     await prepareLocal(userId);
     await connectRemote(userId, token);
-  }
-
-  Future<void> _waitForConnectionReady({
-    Duration timeout = const Duration(seconds: 15),
-    Duration interval = const Duration(milliseconds: 150),
-  }) async {
-    final deadline = DateTime.now().add(timeout);
-    while (true) {
-      final state = await getConnectionState();
-      if (state == core.ConnectionState.ready) return;
-      if (state == core.ConnectionState.disconnected &&
-          DateTime.now().isAfter(deadline)) {
-        throw TimeoutException('SDK connection did not reach Ready: $state');
-      }
-      if (DateTime.now().isAfter(deadline)) {
-        throw TimeoutException('SDK connection did not reach Ready: $state');
-      }
-      await Future<void>.delayed(interval);
-    }
   }
 
   Future<void> updateAccessToken(String accessToken, {String? tenantId}) {
@@ -228,14 +204,35 @@ final class SdkWrapper {
   }
 
   Future<void> dispose() async {
+    _pendingListeners.clear();
+    final client = _clientOrNull;
+    if (client == null) return;
     await _cancelNativeEventSubscription();
-    await _client.dispose();
+    await client.dispose();
     _initialized = false;
     _currentUserId = '';
   }
 
+  /// Adds [listener]; before the client exists it is attached once [init]
+  /// creates it.
   core.EventSubscription addEventListener(core.FlareImEventListener listener) {
-    return _client.events.addEventListener(listener);
+    final client = _clientOrNull;
+    if (client != null) return client.events.addEventListener(listener);
+    final pending = _PendingSubscription(listener, _pendingListeners);
+    _pendingListeners.add(pending);
+    return pending;
+  }
+
+  void _attachPendingListeners() {
+    final client = _clientOrNull;
+    if (client == null) return;
+    final pending = List.of(_pendingListeners);
+    _pendingListeners.clear();
+    for (final subscription in pending) {
+      subscription.attach(
+        client.events.addEventListener(subscription.listener),
+      );
+    }
   }
 
   Future<String> currentUserId() async {
@@ -244,10 +241,25 @@ final class SdkWrapper {
     return '${result['userId'] ?? result['value'] ?? ''}';
   }
 
-  Future<core.ConnectionState> getConnectionState() async {
-    _lastState = await _client.connection.getConnectionState();
-    return _lastState;
-  }
+  /// The core's current `connection://status` (`idle` without a session).
+  Future<core.ConnectionStatus> connectionStatus() =>
+      _client.connection.getStatus();
+
+  /// The connection notice's "retry now": the core starts a round at once.
+  Future<void> reconnectNow() => _client.connection.reconnectNow();
+
+  /// The network and line page's API (status, lines, pin, refresh, recovery
+  /// links, diagnostics export).
+  core.AccessApi get access => _client.access;
+
+  /// The update center's routes; the update controller is what calls them.
+  core.UpdateApi get update => _client.update;
+
+  /// Access lines for diagnostics.
+  Future<core.AccessStatus> accessStatus() => _client.access.getStatus();
+
+  Future<List<core.AccessPointInfo>> accessPoints() =>
+      _client.access.listAccessPoints();
 
   String sdkVersionSync() => 'flare_core_flutter_sdk';
 
@@ -258,7 +270,7 @@ final class SdkWrapper {
     final runtimeHealth = await _client.diagnostics.getRuntimeHealth();
     final connected = await _client.isConnected();
     final sessionActive = await _client.sessionActive();
-    _lastState = await getConnectionState();
+    final status = await connectionStatus();
     var conversationCount = 0;
     String? conversationListError;
     try {
@@ -273,11 +285,13 @@ final class SdkWrapper {
       'runtimeHealth': _runtimeHealthJson(runtimeHealth),
       'connected': connected,
       'sessionActive': sessionActive,
-      'connectionState': _lastState.name,
+      'connectionPhase': status.phase.name,
+      'accessPointId': status.accessPointId,
+      'protocol': status.protocol,
+      'developmentMode': status.developmentMode,
       'currentUserId': _currentUserId,
       'conversationCount': conversationCount,
       'conversationListError': ?conversationListError,
-      'wsUrl': _wsUrl,
       'tenantId': _tenantId,
       'dataUrl': _dataUrl,
     };
@@ -339,44 +353,12 @@ final class SdkWrapper {
 
   Future<void> disconnect() => _client.connection.disconnect();
 
-  Future<Map<String, dynamic>> notifyNetworkChange({
-    bool? available,
-    String? interface,
-    bool? expensive,
-    bool? metered,
-    String? reason,
-  }) async {
-    final response = await _client.connection.notifyNetworkChange(
-      core.NetworkChangeRequest(
-        available: available,
-        interface: _networkInterfaceKind(interface),
-        expensive: expensive,
-        metered: metered,
-        reason: reason?.trim().isEmpty == true ? null : reason,
-      ),
-    );
-    _lastState = await getConnectionState();
-    return {
-      'reconnected': response.reconnected,
-      'connectionState': _lastState.name,
-    };
-  }
-
   Future<Map<String, dynamic>> runtimeHealth() async {
     return _runtimeHealthJson(await _client.diagnostics.getRuntimeHealth());
   }
 
   Future<Map<String, dynamic>> heartbeatEffectiveInterval() async {
     return _heartbeatIntervalJson(await _client.heartbeatEffectiveInterval());
-  }
-
-  Future<Map<String, dynamic>> setHeartbeatAppState(
-    core.HeartbeatAppState appState,
-  ) async {
-    await _client.setHeartbeatAppState(
-      core.SetHeartbeatAppStateRequest(appState: appState),
-    );
-    return heartbeatEffectiveInterval();
   }
 
   Future<Map<String, dynamic>> setHeartbeatNatTimeout(int? timeoutSecs) async {
@@ -1386,7 +1368,6 @@ final class SdkWrapper {
   String _storeConfigJson() {
     final config = _lastInitConfig ??
         <String, Object?>{
-          'wsUrl': _wsUrl,
           'tenantId': _tenantId,
           if (_dataUrl != null && _dataUrl!.isNotEmpty) 'dataUrl': _dataUrl,
         };
@@ -1396,25 +1377,6 @@ final class SdkWrapper {
   /// 测试用：prepare 重发的配置必须与 init 的一致。
   @visibleForTesting
   Map<String, Object?>? get lastInitConfigForTest => _lastInitConfig;
-}
-
-core.NetworkInterfaceKind? _networkInterfaceKind(String? value) {
-  final normalized = value?.trim();
-  if (normalized == null || normalized.isEmpty) return null;
-  switch (normalized) {
-    case 'unknown':
-      return core.NetworkInterfaceKind.unknown;
-    case 'wifi':
-      return core.NetworkInterfaceKind.wifi;
-    case 'cellular':
-      return core.NetworkInterfaceKind.cellular;
-    case 'ethernet':
-      return core.NetworkInterfaceKind.ethernet;
-    case 'other':
-      return core.NetworkInterfaceKind.other;
-    default:
-      throw ArgumentError('Invalid network interface kind: $value');
-  }
 }
 
 Map<String, dynamic> _richDocNormalizedJson(core.RichDocV2Normalized value) {
@@ -1562,6 +1524,31 @@ core.MessageContent _messageContentParam(
   );
 }
 
+/// The sender's name on a message JSON: its projected `sender` when that is a
+/// name, else the snapshot name, else an unnamed person (an id is never a
+/// name).
+core.DisplayName _senderOf(Map<String, Object?> json) {
+  final sender = json['sender'];
+  if (sender is Map && sender['kind'] == 'named' && sender['text'] is String) {
+    return core.DisplayName(
+      kind: core.DisplayNameKind.named,
+      text: sender['text'] as String,
+    );
+  }
+  final name = '${json['senderDisplayName'] ?? ''}'.trim().isNotEmpty
+      ? '${json['senderDisplayName']}'.trim()
+      : '${json['senderName'] ?? ''}'.trim();
+  if (name.isNotEmpty) {
+    return core.DisplayName(kind: core.DisplayNameKind.named, text: name);
+  }
+  final id = '${json['senderId'] ?? ''}'.trim();
+  return core.DisplayName(
+    kind: core.DisplayNameKind.unnamed,
+    entity: core.NameEntity.person,
+    idTail: id.length <= 4 ? id : id.substring(id.length - 4),
+  );
+}
+
 core.Message _coreMessageFromSdkJson(Map<String, Object?> json) {
   final clientMsgId = json['clientMsgId']?.toString().trim() ?? '';
   final conversationId = json['conversationId']?.toString().trim() ?? '';
@@ -1595,6 +1582,7 @@ core.Message _coreMessageFromSdkJson(Map<String, Object?> json) {
     clientCreatedAt: _intValue(json['clientCreatedAt']),
     messageType: _intValue(json['messageType']),
     content: content,
+    sender: _senderOf(json),
     senderName: json['senderName']?.toString() ?? '',
     senderAvatar: json['senderAvatar']?.toString() ?? '',
     senderDisplayName: json['senderDisplayName']?.toString() ?? '',
@@ -1835,4 +1823,34 @@ Object? _dynamicValue(Object? value) {
   if (value is Map) return _dynamicMap(value);
   if (value is List) return value.map(_dynamicValue).toList(growable: false);
   return value;
+}
+
+/// A listener added before the client existed; [attach] binds it to the
+/// client's subscription once there is one.
+final class _PendingSubscription implements core.EventSubscription {
+  _PendingSubscription(this.listener, this._queue);
+
+  final core.FlareImEventListener listener;
+  final List<_PendingSubscription> _queue;
+  core.EventSubscription? _attached;
+  bool _cancelled = false;
+
+  @override
+  Object get id => _attached?.id ?? identityHashCode(this);
+
+  void attach(core.EventSubscription subscription) {
+    if (_cancelled) {
+      subscription.unsubscribe();
+      return;
+    }
+    _attached = subscription;
+  }
+
+  @override
+  void unsubscribe() {
+    _cancelled = true;
+    _queue.remove(this);
+    _attached?.unsubscribe();
+    _attached = null;
+  }
 }

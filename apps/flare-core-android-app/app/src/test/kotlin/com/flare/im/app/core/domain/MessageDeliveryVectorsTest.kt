@@ -49,7 +49,7 @@ class MessageDeliveryVectorsTest {
 
     @Test
     fun `送达状态与核心一致`() {
-        val file = File("../../../sdk-spec/message-action-vectors.json")
+        val file = File("../../../../flare-core-sdk/sdk-spec/message-action-vectors.json")
         assertTrue("向量文件不存在: ${file.absolutePath}", file.exists())
         val cases = parseCases(file.readText())
         assertTrue("向量太少，这条门禁形同虚设（解析到 ${cases.size} 条）", cases.size >= 10)

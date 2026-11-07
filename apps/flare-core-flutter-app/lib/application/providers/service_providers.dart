@@ -1,3 +1,4 @@
+import 'package:flare_im/application/providers/locale_provider.dart';
 import 'package:flare_im/application/providers/sdk_provider.dart';
 import 'package:flare_im/application/services/auth_service.dart';
 import 'package:flare_im/application/services/conversation_service.dart';
@@ -7,16 +8,21 @@ import 'package:flare_im/domain/repositories/i_auth_repository.dart';
 import 'package:flare_im/domain/repositories/i_conversation_repository.dart';
 import 'package:flare_im/domain/repositories/i_media_repository.dart';
 import 'package:flare_im/domain/repositories/i_message_repository.dart';
+import 'package:flare_im/infrastructure/paths/sdk_data_url.dart';
 import 'package:flare_im/infrastructure/repositories/auth_repository_impl.dart';
 import 'package:flare_im/infrastructure/repositories/conversation_repository_impl.dart';
 import 'package:flare_im/infrastructure/repositories/media_repository_impl.dart';
 import 'package:flare_im/infrastructure/repositories/message_repository_impl.dart';
+import 'package:flare_im/shared/config/app_config_loader.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// 认证仓库 Provider
 final authRepositoryProvider = Provider<IAuthRepository>((ref) {
   final sdkWrapper = ref.watch(sdkWrapperProvider);
-  return AuthRepositoryImpl(sdkWrapper);
+  return AuthRepositoryImpl(
+    sdkWrapper,
+    locale: () => ref.read(flareLocaleProvider).code,
+  );
 });
 
 /// 会话仓库 Provider
@@ -35,6 +41,25 @@ final messageRepositoryProvider = Provider<IMessageRepository>((ref) {
 final authServiceProvider = Provider<AuthService>((ref) {
   final authRepository = ref.watch(authRepositoryProvider);
   return AuthService(authRepository);
+});
+
+/// Initializes the SDK with what the sign-in uses, so signing in later is no
+/// second init. `access.*` and `update.*` need the core, not a session: a
+/// recovery link or a refused build comes before anyone signs in.
+final sdkReadyProvider = Provider<Future<void> Function()>((ref) {
+  final sdk = ref.watch(sdkWrapperProvider);
+  return () async {
+    if (sdk.isInitialized) return;
+    final defaults = await AppConfigLoader.load();
+    await ref
+        .read(authServiceProvider)
+        .initSdk(
+          tenantId: defaults.tenantId,
+          tlsCaCertPath: defaults.defaultTlsCaCertPath,
+          tlsCaCert: defaults.defaultTlsCaCert,
+          dataUrl: await resolveSdkDataUrl(),
+        );
+  };
 });
 
 /// 会话服务 Provider

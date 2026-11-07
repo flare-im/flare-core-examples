@@ -158,34 +158,6 @@ enum ThemeChoice: String, CaseIterable, Identifiable {
     var title: String { rawValue.capitalized }
 }
 
-enum LoginTransportMode: String, CaseIterable, Identifiable {
-    case websocket
-    case quic
-    case race
-
-    var id: String { rawValue }
-
-    var title: String {
-        switch self {
-        case .websocket: return "WebSocket"
-        case .quic: return "QUIC"
-        case .race: return "QUIC Race"
-        }
-    }
-}
-
-enum LoginTransportConfigError: LocalizedError {
-    case missingWebSocketUrl
-    case missingQuicUrl
-
-    var errorDescription: String? {
-        switch self {
-        case .missingWebSocketUrl: return "WebSocket URL is required"
-        case .missingQuicUrl: return "QUIC URL is required for selected transport"
-        }
-    }
-}
-
 enum LabTab: String, CaseIterable, Identifiable {
     case diagnostics
     case lifecycle
@@ -200,124 +172,36 @@ enum LabTab: String, CaseIterable, Identifiable {
     var title: String { rawValue.capitalized }
 }
 
+/// The sign-in form. Where to connect is not part of it: the build's access configuration (``AppAccess``) is.
 struct LoginDraft: Equatable {
     var userId = LoginDefaults.userId
-    var wsUrl = LoginDefaults.webSocketURL
-    var transportMode: LoginTransportMode = LoginDefaults.transportMode
-    var quicUrl = LoginDefaults.quicURL
     var tlsCaCertPath = ""
     /// 内联信任 CA（PEM 或 base64 DER）：QUIC / wss 连自建 CA 签发证书的服务端时必配；移动端没有稳定文件路径。
     var tlsCaCert = LoginDefaults.tlsCaCert
     var tenantId = LoginDefaults.tenantId
-    /// 网关 HTTP 基址：SDK 托管 token 时向 {httpUrl}/api/v1/auth/tokens 签发并自动刷新。
-    /// 客户端从不持有签名密钥。
-    var httpUrl = LoginDefaults.httpURL
     var libraryPath = ""
     var dataSubfolder = "flare-core-ios-app"
     var tokenOverride = LoginDefaults.accessToken
 
-    var visibleServerAddressLabel: String {
-        switch transportMode {
-        case .websocket:
-            return String(localized: "WebSocket server URL")
-        case .quic:
-            return String(localized: "QUIC server URL")
-        case .race:
-            return String(localized: "Primary server URL")
-        }
-    }
-
-    var visibleServerAddressPlaceholder: String {
-        switch transportMode {
-        case .websocket:
-            return LoginDefaults.webSocketURL
-        case .quic, .race:
-            return LoginDefaults.quicURL
-        }
-    }
-
-    var visibleServerAddress: String {
-        switch transportMode {
-        case .websocket:
-            return wsUrl
-        case .quic, .race:
-            return quicUrl
-        }
-    }
-
-    var secondaryServerAddressLabel: String? {
-        transportMode == .race ? String(localized: "Fallback WebSocket URL") : nil
-    }
-
-    var secondaryServerAddressPlaceholder: String? {
-        transportMode == .race ? LoginDefaults.webSocketURL : nil
-    }
-
-    var secondaryServerAddress: String? {
-        transportMode == .race ? wsUrl : nil
-    }
-
-    mutating func setVisibleServerAddress(_ value: String) {
-        switch transportMode {
-        case .websocket:
-            wsUrl = value
-        case .quic, .race:
-            quicUrl = value
-        }
-    }
-
-    mutating func setSecondaryServerAddress(_ value: String) {
-        if transportMode == .race {
-            wsUrl = value
-        }
-    }
-
-    func sdkTransportConfig() throws -> [String: AnySendable] {
-        let ws = wsUrl.trimmingCharacters(in: .whitespacesAndNewlines)
-        let quic = quicUrl.trimmingCharacters(in: .whitespacesAndNewlines)
-        let tls = tlsCaCertPath.trimmingCharacters(in: .whitespacesAndNewlines)
+    /// The private CA the SDK trusts besides the system roots, when one is given.
+    func trustConfig() -> [String: AnySendable] {
         var config: [String: AnySendable] = [:]
-        if !tls.isEmpty {
-            config["tlsCaCertPath"] = AnySendable(tls)
-        }
-        let inlineCa = tlsCaCert.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !inlineCa.isEmpty {
-            config["tlsCaCert"] = AnySendable(inlineCa)
-        }
-
-        switch transportMode {
-        case .websocket:
-            guard !ws.isEmpty else { throw LoginTransportConfigError.missingWebSocketUrl }
-            config["wsUrl"] = AnySendable(ws)
-            config["transportPolicy"] = AnySendable("websocket_only")
-            config["defaultTransport"] = AnySendable("websocket")
-        case .quic:
-            guard !quic.isEmpty else { throw LoginTransportConfigError.missingQuicUrl }
-            config["quicUrl"] = AnySendable(quic)
-            config["defaultTransport"] = AnySendable("quic")
-            config["transportPolicy"] = AnySendable("auto")
-            config["protocolRaceOrder"] = AnySendable(["quic"])
-        case .race:
-            guard !quic.isEmpty else { throw LoginTransportConfigError.missingQuicUrl }
-            guard !ws.isEmpty else { throw LoginTransportConfigError.missingWebSocketUrl }
-            config["quicUrl"] = AnySendable(quic)
-            config["wsUrl"] = AnySendable(ws)
-            config["defaultTransport"] = AnySendable("quic")
-            config["transportPolicy"] = AnySendable("protocol_race")
-            config["protocolRaceOrder"] = AnySendable(["quic", "websocket"])
-        }
+        let path = tlsCaCertPath.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !path.isEmpty { config["tlsCaCertPath"] = AnySendable(path) }
+        let inline = tlsCaCert.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !inline.isEmpty { config["tlsCaCert"] = AnySendable(inline) }
         return config
     }
 }
 
 enum LoginDefaults {
-    /// 允许用环境变量覆盖联调地址与接入 token。
+    /// 允许用环境变量预填用户与接入 token。
     ///
     /// 模拟器上没法可靠地手输 256 字符的 JWT（Android 那边实测 adb input text
     /// 只落 12~26 个字符就被 IME 丢掉），没有注入口就没法做端到端验证。
     /// 注入的是**token**而不是签名密钥：密钥进客户端等于让任何拿到安装包的人
     /// 伪造任意用户身份。用法：
-    ///   SIMCTL_CHILD_FLARE_WS_URL=... SIMCTL_CHILD_FLARE_ACCESS_TOKEN=... \
+    ///   SIMCTL_CHILD_FLARE_USER_ID=... SIMCTL_CHILD_FLARE_ACCESS_TOKEN=... \
     ///     xcrun simctl launch <udid> <bundle-id>
     static func envOverride(_ key: String) -> String? {
         let value = ProcessInfo.processInfo.environment[key]?
@@ -325,19 +209,9 @@ enum LoginDefaults {
         return (value?.isEmpty == false) ? value : nil
     }
 
-    static var webSocketURL: String { envOverride("FLARE_WS_URL") ?? defaultWebSocketURL }
-    static var httpURL: String { envOverride("FLARE_HTTP_URL") ?? defaultHttpURL }
     /// 模拟器自动化用：预填用户 ID（SIMCTL_CHILD_FLARE_USER_ID）。
     static var userId: String { envOverride("FLARE_USER_ID") ?? "" }
     static var accessToken: String { envOverride("FLARE_ACCESS_TOKEN") ?? "" }
-
-    static let defaultWebSocketURL = "ws://127.0.0.1:60051/ws"
-    static let defaultHttpURL = "http://127.0.0.1:50050"
-    static var quicURL: String { envOverride("FLARE_QUIC_URL") ?? "quic://127.0.0.1:60052" }
-    /// 模拟器自动化用：预选传输模式（websocket / quic / race）。
-    static var transportMode: LoginTransportMode {
-        envOverride("FLARE_TRANSPORT_MODE").flatMap(LoginTransportMode.init(rawValue:)) ?? .websocket
-    }
     /// 内联信任 CA，SIMCTL_CHILD_FLARE_TLS_CA_CERT 注入（base64 DER 或 PEM）。
     static var tlsCaCert: String { envOverride("FLARE_TLS_CA_CERT") ?? "" }
     static let tenantId = "0"
@@ -368,7 +242,6 @@ struct CapabilityLabDraft: Equatable {
     var userId = ""
     var capability = "call"
     var operation = "probe"
-    var callSignalType = "offer"
     var payload = "{}"
 }
 

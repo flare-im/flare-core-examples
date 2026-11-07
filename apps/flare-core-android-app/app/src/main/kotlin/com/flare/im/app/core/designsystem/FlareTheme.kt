@@ -6,6 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import com.flare.im.ui.FlareColors as KitColors
@@ -13,6 +14,7 @@ import com.flare.im.ui.LocalFlareStrings
 import com.flare.im.ui.FlareThemeProvider
 import com.flare.im.ui.FlareThemeMode
 import com.flare.im.ui.FlareSizes
+import com.flare.im.ui.flareColors
 
 // FlareTheme — Compose 设计系统（品牌锁定，关闭 dynamic-color）。
 // 颜色/圆角**委托给 kit 设计 token**(com.flare.im.ui.FlareColors/FlareSizes,
@@ -41,47 +43,29 @@ data class FlareColors(
     val isDark: Boolean,
 )
 
-// 值委托给 kit FlareColors.Light（app 语义名 → kit token 字段）。
-private val LightFlareColors = FlareColors(
-    brand = KitColors.Light.primary,
-    brandSoft = KitColors.Light.bgSelected,
-    accent = KitColors.Light.info,
-    background = KitColors.Light.bgSecondary,
-    surface = KitColors.Light.bgPrimary,
-    surfaceAlt = KitColors.Light.bgTertiary,
-    textPrimary = KitColors.Light.textPrimary,
-    textSecondary = KitColors.Light.textSecondary,
-    textTertiary = KitColors.Light.textTertiary,
-    success = KitColors.Light.success,
-    warning = KitColors.Light.warning,
-    danger = KitColors.Light.error,
-    incomingBubble = KitColors.Light.messageIncomingBackground,
-    outgoing = KitColors.Light.messageOutgoingBackground,
-    outgoingText = KitColors.Light.messageOutgoingForeground,
-    hairline = KitColors.Light.borderPrimary,
-    isDark = false,
+// 值委托给 kit 色板（app 语义名 → kit token 字段）。
+internal fun flareAppColors(kit: KitColors, dark: Boolean): FlareColors = FlareColors(
+    brand = kit.primary,
+    brandSoft = kit.bgSelected,
+    accent = kit.info,
+    background = kit.bgSecondary,
+    surface = kit.bgPrimary,
+    surfaceAlt = kit.bgTertiary,
+    textPrimary = kit.textPrimary,
+    textSecondary = kit.textSecondary,
+    textTertiary = kit.textTertiary,
+    success = kit.success,
+    warning = kit.warning,
+    danger = kit.error,
+    incomingBubble = kit.messageIncomingBackground,
+    outgoing = kit.messageOutgoingBackground,
+    outgoingText = kit.messageOutgoingForeground,
+    hairline = kit.borderPrimary,
+    isDark = dark,
 )
 
-// 值委托给 kit FlareColors.Dark。
-private val DarkFlareColors = FlareColors(
-    brand = KitColors.Dark.primary,
-    brandSoft = KitColors.Dark.bgSelected,
-    accent = KitColors.Dark.info,
-    background = KitColors.Dark.bgSecondary,
-    surface = KitColors.Dark.bgPrimary,
-    surfaceAlt = KitColors.Dark.bgTertiary,
-    textPrimary = KitColors.Dark.textPrimary,
-    textSecondary = KitColors.Dark.textSecondary,
-    textTertiary = KitColors.Dark.textTertiary,
-    success = KitColors.Dark.success,
-    warning = KitColors.Dark.warning,
-    danger = KitColors.Dark.error,
-    incomingBubble = KitColors.Dark.messageIncomingBackground,
-    outgoing = KitColors.Dark.messageOutgoingBackground,
-    outgoingText = KitColors.Dark.messageOutgoingForeground,
-    hairline = KitColors.Dark.borderPrimary,
-    isDark = true,
-)
+private val LightFlareColors = flareAppColors(KitColors.Light, dark = false)
+private val DarkFlareColors = flareAppColors(KitColors.Dark, dark = true)
 
 /** 运行时状态色调。 */
 enum class FlareTone { Neutral, Info, Success, Warning, Danger }
@@ -141,4 +125,16 @@ fun FlareAppTheme(
             content = content,
         )
     }
+}
+
+/**
+ * 让 `FlareTheme.colors` 跟上这里生效的 kit 色板。资源包在 [FlareAppTheme] 里层才到，
+ * 改底色时页面和 kit 组件要同一套，所以放在覆盖层下面。
+ */
+@Composable
+fun FlareAppPalette(content: @Composable () -> Unit) {
+    val kit = flareColors()
+    val dark = FlareTheme.colors.isDark
+    val palette = remember(kit, dark) { flareAppColors(kit, dark) }
+    CompositionLocalProvider(LocalFlareColors provides palette, content = content)
 }

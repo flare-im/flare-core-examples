@@ -8,7 +8,7 @@ import XCTest
 /// 直接驱动会话层验证的是同一套客户端栈（Apple SDK + Rust 核心），而且可复跑。
 ///
 /// 默认跳过。要跑就给三个环境变量——**别把 token 写进仓库**：
-///   FLARE_E2E_WS_URL=ws://<host>/ws \
+///   FLARE_E2E_WS_URL=ws://<host>:60051 \
 ///   FLARE_E2E_TOKEN="$(ssh <server> mint_token.py <user>)" \
 ///   FLARE_E2E_USER=<user> swift test --filter RemoteTokenFlowTests
 final class RemoteTokenFlowTests: XCTestCase {
@@ -16,7 +16,7 @@ final class RemoteTokenFlowTests: XCTestCase {
     func testLoginWithServerIssuedToken() async throws {
         let env = ProcessInfo.processInfo.environment
         guard
-            let wsUrl = env["FLARE_E2E_WS_URL"], !wsUrl.isEmpty,
+            let endpoint = env["FLARE_E2E_WS_URL"], !endpoint.isEmpty,
             let token = env["FLARE_E2E_TOKEN"], !token.isEmpty,
             let userId = env["FLARE_E2E_USER"], !userId.isEmpty
         else {
@@ -30,14 +30,13 @@ final class RemoteTokenFlowTests: XCTestCase {
 
         var draft = LoginDraft()
         draft.userId = userId
-        draft.wsUrl = wsUrl
-        draft.transportMode = .websocket
         // 关键：用服务端签好的 token，不碰本地签名密钥。
         // 若实现哪天回退成本地自签，占位密钥签出来的 token 服务端会直接验不过，
         // 这条用例就会红。
         draft.tokenOverride = token
 
-        let session = AppSession()
+        let access = try AppAccess.resolve(lookup: { $0 == "FLARE_DEV_WS_URL" ? endpoint : nil }, allowDevelopment: true)
+        let session = AppSession(access: access)
         defer { Task { try? await session.dispose() } }
 
         _ = try await session.start(draft: draft, dataURL: root) { _ in }

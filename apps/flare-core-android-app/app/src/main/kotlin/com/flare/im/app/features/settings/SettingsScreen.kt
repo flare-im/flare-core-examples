@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.flare.im.app.R
+import com.flare.im.app.BuildConfig
 import com.flare.im.app.core.FlareAppStore
 import com.flare.im.app.core.designsystem.FlareTheme
 import com.flare.im.app.core.domain.ThemeChoice
@@ -42,9 +43,11 @@ import com.flare.im.ui.LocalFlareDialog
 import com.flare.im.ui.LocalFlareToast
 import com.flare.im.ui.SettingsItem
 import com.flare.im.ui.SettingsRow
+import com.flare.im.ui.flareStrings
+import com.flare.im.update.ui.FlareUpdateVersionPanel
 import kotlinx.coroutines.launch
 
-/** 设置屏：主题 + 会话态 + 诊断/登出/释放 + 下载位置与媒体缓存。 */
+/** 设置屏：主题 + 网络与线路 + 会话态 + 诊断/登出/释放 + 下载位置与媒体缓存。 */
 @Composable
 fun SettingsScreen(store: FlareAppStore) {
     val tk = FlareTheme.tokens
@@ -52,7 +55,7 @@ fun SettingsScreen(store: FlareAppStore) {
     val vm = store.settingsViewModel
     val theme by vm.theme.collectAsState()
     val user by vm.currentUserId.collectAsState()
-    val conn by vm.connectionState.collectAsState()
+    val conn by vm.connectionStatus.collectAsState()
     val toast = LocalFlareToast.current
     val dialogs = LocalFlareDialog.current
     val context = LocalContext.current
@@ -100,10 +103,17 @@ fun SettingsScreen(store: FlareAppStore) {
                 FilterChip(theme == t, { vm.setTheme(t) }, { Text(t.name) }, colors = FilterChipDefaults.filterChipColors(selectedContainerColor = colors.brandSoft, selectedLabelColor = colors.brand))
             }
         }
+        FlareGroupedCard(Modifier.padding(vertical = tk.sm)) {
+            SettingsRow(
+                SettingsItem("network", flareStrings().accessDiagnosticsTitle, "link", FlareSettingKind.Navigation),
+                onSelect = { store.accessDiagnostics.presented = true },
+            )
+        }
+        FlareUpdateVersionPanel(store.updateCenter, BuildConfig.VERSION_NAME)
         Spacer(Modifier.height(tk.md))
         Text(stringResource(R.string.settings_session), style = MaterialTheme.typography.titleMedium, color = colors.textPrimary)
         Text("User: ${user ?: "-"}", style = MaterialTheme.typography.bodyMedium, color = colors.textSecondary)
-        Text("Connection: ${conn.name}", style = MaterialTheme.typography.bodyMedium, color = colors.textSecondary)
+        Text("Connection: ${conn?.phase?.name ?: "-"}", style = MaterialTheme.typography.bodyMedium, color = colors.textSecondary)
         Spacer(Modifier.height(tk.sm))
         Row(horizontalArrangement = Arrangement.spacedBy(tk.sm)) {
             com.flare.im.ui.Button(label = stringResource(R.string.settings_refresh_diagnostics), variant = com.flare.im.ui.FlareButtonVariant.Secondary, onClick = { vm.refreshDiagnostics() })

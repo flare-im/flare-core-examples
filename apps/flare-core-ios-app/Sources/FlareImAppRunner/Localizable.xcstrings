@@ -2,6 +2,56 @@
   "sourceLanguage": "en",
   "version": "1.0",
   "strings": {
+  "MESSAGING, CONNECTED.": {
+    "localizations": {
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "即时沟通 · 多端连接"
+        }
+      }
+    }
+  },
+  "Every conversation,\na little closer.": {
+    "localizations": {
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "让沟通，\n自然发生。"
+        }
+      }
+    }
+  },
+  "Stay connected to the people who matter. Messages, files and groups, together across your devices.": {
+    "localizations": {
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "与重要的人保持连接。消息、文件与群组，在你的设备间轻松衔接。"
+        }
+      }
+    }
+  },
+  "YOUR CONVERSATION SPACE": {
+    "localizations": {
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "你的沟通空间"
+        }
+      }
+    }
+  },
+  "Use the user ID assigned to you to continue.": {
+    "localizations": {
+      "zh-Hans": {
+        "stringUnit": {
+          "state": "translated",
+          "value": "使用分配给你的用户 ID 登录。"
+        }
+      }
+    }
+  },
   "More conversation actions": {
     "localizations": {
       "zh-Hans": {
@@ -498,6 +548,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "最常使用"
+          }
+        }
+      }
+    },
+    "Close": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "关闭"
           }
         }
       }
@@ -3112,6 +3172,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "保存的图片、视频和文件都在这里，打开「文件」App 就能找到。"
+          }
+        }
+      }
+    },
+    "This line is no longer available. The list has been refreshed.": {
+      "localizations": {
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "这条线路已不可用，列表已刷新"
           }
         }
       }

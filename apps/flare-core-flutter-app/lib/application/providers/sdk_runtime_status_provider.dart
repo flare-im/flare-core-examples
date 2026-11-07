@@ -160,49 +160,6 @@ class SdkRuntimeStatusNotifier extends StateNotifier<SdkRuntimeStatus> {
     };
   }
 
-  void applyConnection(Map<String, dynamic> payload) {
-    final event = '${payload['event'] ?? ''}';
-    final error = _errorMessage(payload['error']);
-    state = switch (event) {
-      'connecting' || 'reconnecting' => SdkRuntimeStatus(
-        phase: SdkRuntimePhase.connecting,
-        title: event == 'reconnecting' ? '正在重连服务器' : '正在连接服务器',
-        detail: '连接建立后会继续同步离线数据',
-        updatedAt: DateTime.now(),
-      ),
-      'connected' || 'ready' => SdkRuntimeStatus(
-        phase: SdkRuntimePhase.syncing,
-        title: '连接就绪，正在同步',
-        detail: '正在拉取服务端会话和消息增量',
-        updatedAt: DateTime.now(),
-      ),
-      'server_error' || 'reconnect_failed' => SdkRuntimeStatus(
-        phase: SdkRuntimePhase.failed,
-        title: '连接服务器失败',
-        detail: error ?? '${payload['reason'] ?? '请检查服务地址和网络状态'}',
-        error: error,
-        updatedAt: DateTime.now(),
-      ),
-      'disconnected' => SdkRuntimeStatus(
-        phase: SdkRuntimePhase.failed,
-        title: '连接已断开',
-        detail: '${payload['reason'] ?? '等待 SDK 自动恢复连接'}',
-        updatedAt: DateTime.now(),
-      ),
-      'kicked_off' => const SdkRuntimeStatus(
-        phase: SdkRuntimePhase.failed,
-        title: '账号已在其他设备登录',
-        detail: '当前设备会话已被下线',
-      ),
-      'token_expired' => const SdkRuntimeStatus(
-        phase: SdkRuntimePhase.failed,
-        title: '登录凭证已过期',
-        detail: '请重新登录后继续使用',
-      ),
-      _ => state,
-    };
-  }
-
   void applySync(Map<String, dynamic> payload) {
     final event = '${payload['event'] ?? ''}';
     final phase = '${payload['phase'] ?? ''}'.trim();

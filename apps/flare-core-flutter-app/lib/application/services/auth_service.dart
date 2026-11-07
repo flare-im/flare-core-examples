@@ -1,7 +1,5 @@
 import 'package:flare_im/domain/entities/user.dart';
 import 'package:flare_im/domain/repositories/i_auth_repository.dart';
-import 'package:flare_im/domain/value_objects/conversation_type.dart';
-import 'package:flare_im/domain/value_objects/transport_mode.dart';
 
 class AuthService {
   final IAuthRepository _repo;
@@ -11,20 +9,12 @@ class AuthService {
   bool get isSdkInitialized => _repo.isSdkInitialized;
 
   Future<void> initSdk({
-    required String wsUrl,
-    required SdkTransportMode transportMode,
-    required String quicUrl,
     required String tenantId,
-    required String httpUrl,
     String? tlsCaCertPath,
     String? tlsCaCert,
     String? dataUrl,
   }) => _repo.initSdk(
-    wsUrl: wsUrl,
-    transportMode: transportMode,
-    quicUrl: quicUrl,
     tenantId: tenantId,
-    httpUrl: httpUrl,
     tlsCaCertPath: tlsCaCertPath,
     tlsCaCert: tlsCaCert,
     dataUrl: dataUrl,
@@ -43,8 +33,6 @@ class AuthService {
   Future<void> logout() => _repo.logout();
 
   Future<User?> getCurrentUser() => _repo.getCurrentUser();
-
-  Future<ConnectionState> getConnectionState() => _repo.getConnectionState();
 
   Future<String> sdkVersion() => _repo.sdkVersion();
 }

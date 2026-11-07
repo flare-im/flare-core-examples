@@ -48,7 +48,7 @@ final class SdkLabViewModel: ObservableObject {
         [
             CoverageRow(family: "Lifecycle", api: "create, init, login, logout (token issued by the gateway)", status: "Real", entryPoint: "Login and Settings"),
             CoverageRow(family: "Lifecycle", api: "updateAccessToken, disconnect, uninit, hardReset, dispose", status: "Lab", entryPoint: "SDK Lab Lifecycle"),
-            CoverageRow(family: "Connection", api: "isConnected, sessionActive, connection.getConnectionState", status: "Lab", entryPoint: "Diagnostics"),
+            CoverageRow(family: "Connection", api: "isConnected, sessionActive, connection.getStatus, connection.reconnectNow, access.getStatus, access.listAccessPoints", status: "Lab", entryPoint: "Diagnostics"),
             CoverageRow(family: "Conversations", api: "list, query, archived, paginated, raw, bootstrap, open timeline", status: "Real/Lab", entryPoint: "Conversation list and Lab"),
             CoverageRow(family: "Conversations", api: "mark read/unread, pin, mute, archive, draft, clear, delete", status: "Real", entryPoint: "Conversation actions and Details"),
             CoverageRow(family: "Messages", api: "messageBuilder.buildText, sendMessage, listMessages, setTyping", status: "Real", entryPoint: "Chat composer and timeline"),
@@ -56,7 +56,7 @@ final class SdkLabViewModel: ObservableObject {
             CoverageRow(family: "Message Builder", api: "listSupportedBuildOperations and all typed build operations", status: "Lab", entryPoint: "Builder catalog and quick probes"),
             CoverageRow(family: "Search", api: "searchMessages, searchMessagesByQuery, searchMessagesInConversation", status: "Real", entryPoint: "Search screen"),
             CoverageRow(family: "Media", api: "upload, delete, URL, cache, downloads", status: "Lab", entryPoint: "Media Center"),
-            CoverageRow(family: "Capabilities/Calls", api: "list, dispatch, grant, revoke, sendCallSignal", status: "Lab/Unavailable", entryPoint: "Capability Center"),
+            CoverageRow(family: "Capabilities/Calls", api: "list, dispatch, grant, revoke", status: "Lab/Unavailable", entryPoint: "Capability Center"),
             CoverageRow(family: "Events", api: "subscribeEvents, typed listeners, unsubscribe, unsubscribeAll", status: "Real/Lab", entryPoint: "Event console"),
             CoverageRow(family: "Diagnostics", api: "getSdkVersion, getFfiContractVersion, getDataRoot", status: "Lab", entryPoint: "Diagnostics")
         ]
@@ -65,7 +65,6 @@ final class SdkLabViewModel: ObservableObject {
     // MARK: - 转发(让迁移来的方法体零改动)
     private var client: (any FlareImClientProtocol)? { session.client }
     private var currentUserId: String? { session.currentUserId }
-    private var connectionState: ConnectionState { session.connectionState }
     private var selectedConversationId: String? { environment.selectedConversationId }
     private var selectedMessages: [AppMessage] { messaging.selectedMessages }
     private func messageMutationRequest(_ message: AppMessage) -> [String: AnySendable] { messaging.messageMutationRequest(message) }
@@ -96,7 +95,7 @@ final class SdkLabViewModel: ObservableObject {
             let current = try await client.currentUserId()
             let active = try await client.sessionActive()
             let connected = try await client.isConnected()
-            try await session.refreshConnectionState()
+            try await session.refreshConnectionStatus()
             diagnostics = [
                 "sdkVersion": stringField(version, "version"),
                 "ffiContract": stringField(contract, "version"),
@@ -104,7 +103,7 @@ final class SdkLabViewModel: ObservableObject {
                 "currentUser": FlareFormatters.jsonPreview(current),
                 "sessionActive": String(active),
                 "isConnected": String(connected),
-                "connectionState": connectionState.rawValue
+                "connectionPhase": session.connectionStatus?.phase.rawValue ?? ConnectionPhase.idle.rawValue
             ]
         }
     }
@@ -130,7 +129,7 @@ final class SdkLabViewModel: ObservableObject {
                 try await client.updateAccessToken(["token": AnySendable(token)])
             case "connection.disconnect":
                 try await client.connection.disconnect()
-                try await session.refreshConnectionState()
+                try await session.refreshConnectionStatus()
             case "session.uninit":
                 try await client.uninit()
             case "session.hard_reset":
@@ -191,9 +190,6 @@ final class SdkLabViewModel: ObservableObject {
             case "session.heartbeat_interval":
                 let interval = try await client.heartbeatEffectiveInterval()
                 appendLab(operation, status: "ok", detail: "\(interval)")
-            case "session.heartbeat_app_state":
-                try await client.setHeartbeatAppState(SetHeartbeatAppStateRequest(appState: .foreground))
-                appendLab(operation, status: "ok", detail: "appState=foreground")
             case "session.heartbeat_nat_timeout":
                 try await client.setHeartbeatNatTimeout(SetHeartbeatNatTimeoutRequest(natTimeoutSecs: 120))
                 appendLab(operation, status: "ok", detail: "natTimeout=120s")
@@ -216,9 +212,15 @@ final class SdkLabViewModel: ObservableObject {
             case "message_builder.normalize_docjson":
                 _ = try await client.messageBuilder.normalizeRichDocFromDocJson(NormalizeRichDocFromDocJsonRequest(docJson: "{\"version\":2,\"blocks\":[]}"))
                 appendLab(operation, status: "ok", detail: "normalized docjson")
-            case "connection.notify_network_change":
-                _ = try await client.connection.notifyNetworkChange(NetworkChangeRequest(available: true, expensive: false, metered: false, reason: "iOS lab probe"))
-                appendLab(operation, status: "ok", detail: "network change notified (available=true)")
+            case "connection.reconnect_now":
+                try await client.connection.reconnectNow()
+                appendLab(operation, status: "ok", detail: "next round started")
+            case "access.get_status":
+                let status = try await client.access.getStatus()
+                appendLab(operation, status: "ok", detail: String(describing: status))
+            case "access.list_access_points":
+                let points = try await client.access.listAccessPoints()
+                appendLab(operation, status: "ok", detail: points.map { "\($0.accessPointId) \($0.status)" }.joined(separator: ", "))
             default:
                 throw unavailable("Operation \(operation) is not wired")
             }
@@ -332,21 +334,6 @@ final class SdkLabViewModel: ObservableObject {
                 try await client.capabilities.revokeCapability([
                     "userId": AnySendable(uid),
                     "capability": AnySendable(capabilityLabDraft.capability)
-                ])
-            case "capability.call_signal":
-                guard let selectedConversationId else { throw unavailable("Select a conversation before sending call signal") }
-                if capabilities.isEmpty {
-                    capabilities = try await client.capabilities.listCapabilities([:])
-                }
-                let available = FlareFormatters.jsonPreview(capabilities).localizedCaseInsensitiveContains("call")
-                    || FlareFormatters.jsonPreview(capabilities).localizedCaseInsensitiveContains("rtc")
-                guard available else {
-                    throw unavailable("Call capability is not advertised by the runtime")
-                }
-                try await client.capabilities.sendCallSignal([
-                    "conversationId": AnySendable(selectedConversationId),
-                    "signalType": AnySendable(capabilityLabDraft.callSignalType),
-                    "payload": AnySendable(FlareFormatters.unwrap(sendableJSON(capabilityLabDraft.payload)))
                 ])
             default:
                 throw unavailable("Unsupported capability operation")

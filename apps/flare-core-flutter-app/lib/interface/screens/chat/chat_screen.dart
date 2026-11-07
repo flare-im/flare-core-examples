@@ -24,6 +24,7 @@ import 'package:flare_im/interface/widgets/composer/composer_emoji_span_builder.
 import 'package:flare_im/interface/widgets/composer/message_composer.dart';
 import 'package:flare_im/interface/widgets/composer/sdk_message_build_catalog.dart';
 import 'package:flare_im/interface/widgets/composer/sdk_message_build_sheet.dart';
+import 'package:flare_im/interface/widgets/connection_notice_host.dart';
 import 'package:flare_im/interface/widgets/conversation_details_panel.dart';
 import 'package:flare_im/interface/widgets/location/location_picker_sheet.dart';
 import 'package:flare_im/interface/widgets/message/chat_message_list_item.dart';
@@ -1821,7 +1822,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> with RouteAware {
             .length,
       ),
     );
-    final conn = ref.watch(connectionStateProvider);
     final chat = ref.watch(flareMessagesProvider).chat;
 
     final title = conversation?.displayTitle.trim().isNotEmpty == true
@@ -1977,13 +1977,12 @@ class _ChatScreenState extends ConsumerState<ChatScreen> with RouteAware {
       ),
       body: Column(
         children: [
-          // 与 Tauri Chat 状态条一致：仅在非稳定已连接时展示（Ready 时不占位）
-          if (conn != im.ConnectionState.connected)
-            Listener(
-              behavior: HitTestBehavior.translucent,
-              onPointerDown: (_) => _dismissComposerMoreGrid(),
-              child: _connectionStatusBanner(conn),
-            ),
+          // 连接横幅：Kit 的 ConnectionNotice，按核心的 connection://status 决定显示与否。
+          Listener(
+            behavior: HitTestBehavior.translucent,
+            onPointerDown: (_) => _dismissComposerMoreGrid(),
+            child: const ConnectionNoticeHost(),
+          ),
           Expanded(
             child: Listener(
               behavior: HitTestBehavior.translucent,
@@ -2066,57 +2065,6 @@ class _ChatScreenState extends ConsumerState<ChatScreen> with RouteAware {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _connectionStatusBanner(im.ConnectionState conn) {
-    final i18n = ref.read(flareMessagesProvider).chat;
-    final ok = conn == im.ConnectionState.connected;
-    final reconnecting = conn == im.ConnectionState.reconnecting;
-    final connecting = conn == im.ConnectionState.connecting;
-    final fg = ok
-        ? kit_theme.FlareColors.of(context).primary
-        : kit_theme.FlareColors.of(context).textSecondary;
-    final String text;
-    if (ok) {
-      text = i18n.connectionStable;
-    } else if (reconnecting) {
-      text =
-          '${ref.read(flareMessagesProvider).connection.reconnecting} · ${i18n.connectionSendingHint}';
-    } else if (connecting) {
-      text = '${i18n.connectionConnecting} · ${i18n.connectionSendingHint}';
-    } else {
-      text = '${i18n.connectionDisconnected} · ${i18n.connectionSendingHint}';
-    }
-    return Material(
-      color: kit_theme.FlareColors.of(context).bgSelected,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 16),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (reconnecting || connecting) ...[
-              SizedBox(
-                width: 14,
-                height: 14,
-                child: CircularProgressIndicator(strokeWidth: 2, color: fg),
-              ),
-              const SizedBox(width: 8),
-            ],
-            Flexible(
-              child: Text(
-                text,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: kit_sizes.FlareSizes.fontSizeSm,
-                  fontWeight: FontWeight.w500,
-                  color: fg,
-                ),
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

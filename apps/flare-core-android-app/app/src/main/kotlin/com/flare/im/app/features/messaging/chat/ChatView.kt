@@ -47,6 +47,7 @@ fun ChatScreen(store: FlareAppStore) {
     val messages by vm.selectedMessages.collectAsState()
     val me by vm.currentUserId.collectAsState()
     val status by store.environment.runtimeStatus.collectAsState()
+    val updateStatus by store.updateCenter.state.collectAsState()
     var searchOpen by remember { mutableStateOf(false) }
 
     Column(Modifier.fillMaxSize()) {
@@ -68,7 +69,7 @@ fun ChatScreen(store: FlareAppStore) {
                 items(messages, key = { it.appStableId }) { m -> MessageRow(m, outgoing = m.core.senderId == me, vm = vm) }
             }
         }
-        ComposerBar(vm, conversation?.appTitle ?: "")
+        ComposerBar(vm, conversation?.appTitle ?: "", readOnly = updateStatus?.readOnly == true)
     }
 
     if (searchOpen) InChatSearchSheet(store) { searchOpen = false }

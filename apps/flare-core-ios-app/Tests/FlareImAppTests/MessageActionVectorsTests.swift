@@ -34,7 +34,7 @@ final class MessageActionVectorsTests: XCTestCase {
             .deletingLastPathComponent()   // flare-core-ios-app
             .deletingLastPathComponent()   // examples
             .deletingLastPathComponent()   // flare-im-core-client-sdk 根
-        let url = root.appendingPathComponent("sdk-spec/message-action-vectors.json")
+        let url = root.appendingPathComponent("../flare-core-sdk/sdk-spec/message-action-vectors.json")
         let data = try Data(contentsOf: url)
         let vectors = try JSONDecoder().decode(Vectors.self, from: data)
 

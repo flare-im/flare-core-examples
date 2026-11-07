@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flare_im/shared/i18n/flare_locale.dart';
 import 'package:flare_im/shared/i18n/flare_messages.dart';
+import 'package:flare_im_ui/flare_im_ui.dart'
+    show FlareStrings, flareStringsEnglish;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -35,6 +37,12 @@ class FlareLocaleNotifier extends StateNotifier<FlareLocale> {
     await prefs.setString(_prefKey, locale.code);
   }
 }
+
+/// The Kit's copy in [locale]; its defaults are Chinese.
+FlareStrings kitStringsFor(FlareLocale locale) => switch (locale) {
+  FlareLocale.zhCn => const FlareStrings(),
+  FlareLocale.enUs => flareStringsEnglish,
+};
 
 /// Material [Locale] for [MaterialApp].
 Locale materialLocaleFor(FlareLocale locale) {

@@ -12,14 +12,14 @@ import XCTest
 ///   cp target/release/libflare_im_core_sdk_ffi.dylib examples/flare-core-ios-app/Frameworks/
 ///
 /// 默认跳过。要跑：
-///   FLARE_E2E_WS_URL=ws://<host>/ws FLARE_E2E_TOKEN=... FLARE_E2E_USER=...
+///   FLARE_E2E_WS_URL=ws://<host>:60051 FLARE_E2E_TOKEN=... FLARE_E2E_USER=...
 ///   FLARE_E2E_TAG=<发送端写进正文的标记> swift test --filter RemoteRealtimeReceiveTests
 final class RemoteRealtimeReceiveTests: XCTestCase {
 
     func testReceivesRealtimeMessageFromAnotherClient() async throws {
         let env = ProcessInfo.processInfo.environment
         guard
-            let wsUrl = env["FLARE_E2E_WS_URL"], !wsUrl.isEmpty,
+            let endpoint = env["FLARE_E2E_WS_URL"], !endpoint.isEmpty,
             let token = env["FLARE_E2E_TOKEN"], !token.isEmpty,
             let userId = env["FLARE_E2E_USER"], !userId.isEmpty,
             let tag = env["FLARE_E2E_TAG"], !tag.isEmpty
@@ -34,11 +34,10 @@ final class RemoteRealtimeReceiveTests: XCTestCase {
 
         var draft = LoginDraft()
         draft.userId = userId
-        draft.wsUrl = wsUrl
-        draft.transportMode = .websocket
         draft.tokenOverride = token
 
-        let session = AppSession()
+        let access = try AppAccess.resolve(lookup: { $0 == "FLARE_DEV_WS_URL" ? endpoint : nil }, allowDevelopment: true)
+        let session = AppSession(access: access)
         defer { Task { try? await session.dispose() } }
         let client = try await session.start(draft: draft, dataURL: root) { _ in }
 

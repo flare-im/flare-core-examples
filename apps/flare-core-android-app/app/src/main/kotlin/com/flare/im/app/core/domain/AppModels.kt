@@ -66,87 +66,24 @@ sealed interface RuntimeStatus {
         }
 }
 
-/** 传输模式；保留现有 AndroidTransportMode 行为。 */
-enum class LoginTransportMode(val title: String) {
-    WebSocket("WebSocket"),
-    Quic("QUIC"),
-    Race("QUIC Race"),
-    ;
-
-    companion object {
-        fun fromNameOrDefault(raw: String?): LoginTransportMode =
-            entries.firstOrNull { it.name.equals(raw?.trim(), ignoreCase = true) } ?: WebSocket
-    }
-}
-
-/** 登录默认值（与 LoginDraft 等价，含 transportConfig 生成）。 */
+/** The sign-in form. Where to connect is not part of it: the build's access configuration (`AppAccess`) is. */
 data class LoginDraft(
     val userId: String = com.flare.im.app.BuildConfig.DEFAULT_USER_ID,
-    val transportMode: LoginTransportMode = LoginTransportMode.fromNameOrDefault(com.flare.im.app.BuildConfig.DEFAULT_TRANSPORT_MODE),
-    val wsUrl: String = com.flare.im.app.BuildConfig.DEFAULT_WS_URL,
-    val quicUrl: String = com.flare.im.app.BuildConfig.DEFAULT_QUIC_URL,
     val tlsCaCertPath: String = "",
     /** 内联信任 CA（PEM 或 base64 DER）：QUIC / wss 连自建 CA 签发证书的服务端时必配；移动端没有稳定文件路径。 */
     val tlsCaCert: String = com.flare.im.app.BuildConfig.DEFAULT_TLS_CA_CERT,
     val tenantId: String = "0",
-    /** 网关 HTTP 基址：SDK 托管 token 时向它签发/刷新；也是媒体等 HTTP 接口的基址。 */
-    val httpUrl: String = com.flare.im.app.BuildConfig.DEFAULT_HTTP_URL,
     /**
      * 可选：应用托管形态——直接填业务后端签好的接入 token，SDK 原样使用、不做刷新。
-     * 留空则 SDK 托管：向 `httpUrl` 的网关签发并自动刷新。客户端从不持有签名密钥。
+     * 留空则 SDK 托管（`auth: {}`）：核心在当前接入点的 Core API 上签发并自动刷新。客户端从不持有签名密钥。
      */
     val accessToken: String = com.flare.im.app.BuildConfig.DEFAULT_ACCESS_TOKEN,
     val dataSubfolder: String = "flare-core-android-app",
 ) {
-    /** 当前传输模式下用户可编辑的服务地址。 */
-    val visibleServerAddress: String
-        get() = when (transportMode) {
-            LoginTransportMode.WebSocket -> wsUrl
-            LoginTransportMode.Quic, LoginTransportMode.Race -> quicUrl
-        }
-
-    fun withVisibleServerAddress(value: String): LoginDraft = when (transportMode) {
-        LoginTransportMode.WebSocket -> copy(wsUrl = value)
-        LoginTransportMode.Quic, LoginTransportMode.Race -> copy(quicUrl = value)
-    }
-
-    /** race 模式下的备用 WebSocket 地址（否则 null）。 */
-    val secondaryServerAddress: String?
-        get() = if (transportMode == LoginTransportMode.Race) wsUrl else null
-
-    fun withSecondaryServerAddress(value: String): LoginDraft =
-        if (transportMode == LoginTransportMode.Race) copy(wsUrl = value) else this
-
-    /** 生成 SDK init 的 transport 配置（与现有 androidTransportConfig 等价，含 tenant/token 元信息留给调用方拼装）。 */
-    fun transportConfig(): Map<String, Any> {
-        val ws = wsUrl.trim()
-        require(ws.isNotEmpty()) { "WebSocket URL is required" }
-        val tls = buildMap<String, Any> {
-            tlsCaCertPath.trim().takeIf { it.isNotEmpty() }?.let { put("tlsCaCertPath", it) }
-            tlsCaCert.trim().takeIf { it.isNotEmpty() }?.let { put("tlsCaCert", it) }
-        }
-        if (transportMode == LoginTransportMode.WebSocket) {
-            return mapOf(
-                "wsUrl" to ws,
-                "transportPolicy" to "websocket_only",
-                "defaultTransport" to "websocket",
-            ) + tls
-        }
-        val quic = quicUrl.trim()
-        require(quic.isNotEmpty()) { "QUIC URL is required for selected transport" }
-        return when (transportMode) {
-            LoginTransportMode.WebSocket -> error("unreachable")
-            LoginTransportMode.Quic -> mapOf(
-                "wsUrl" to ws, "quicUrl" to quic,
-                "transportPolicy" to "auto", "defaultTransport" to "quic",
-                "protocolRaceOrder" to listOf("quic"),
-            ) + tls
-            LoginTransportMode.Race -> mapOf(
-                "wsUrl" to ws, "quicUrl" to quic,
-                "transportPolicy" to "protocol_race", "defaultTransport" to "quic",
-                "protocolRaceOrder" to listOf("quic", "websocket"),
-            ) + tls
-        }
+    /** The private CA the SDK trusts besides the system roots, when one is given. */
+    fun trustConfig(): Map<String, Any> = buildMap {
+        tlsCaCertPath.trim().takeIf { it.isNotEmpty() }?.let { put("tlsCaCertPath", it) }
+        tlsCaCert.trim().takeIf { it.isNotEmpty() }?.let { put("tlsCaCert", it) }
     }
 }
 

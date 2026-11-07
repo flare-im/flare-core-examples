@@ -64,7 +64,6 @@
     "@flare-im/tokens" "2.0.0-rc.1"
     "@lucide/vue" "1.44.0"
     "@types/markdown-it" "^14.1.2"
-    "@vicons/ionicons5" "^0.12.0"
     markdown-it "^14.2.0"
 
 "@jridgewell/sourcemap-codec@^1.5.5":
@@ -82,32 +81,39 @@
   resolved "https://registry.npmjs.org/@rollup/rollup-darwin-arm64/-/rollup-darwin-arm64-4.62.2.tgz"
   integrity sha512-v39RCCvj4He82I9sFmk+M1VZ0PLM9sfsLVikjfx2hYBNALhrrOR2D3JjQA6AhlaSOgcR+RzrKY7e1+bT6SUO/A==
 
-"@tauri-apps/api@^2.11.0", "@tauri-apps/api@^2.8.0", "@tauri-apps/api@2.11.0":
-  version "2.11.0"
-  resolved "https://registry.npmjs.org/@tauri-apps/api/-/api-2.11.0.tgz"
-  integrity sha512-7CinYODhky9lmO23xHnUFv0Xt43fbtWMyxZcLcRBlFkcgXKuEirBvHpmtJ89YMhyeGcq20Wuc47Fa4XjyniywA==
+"@tauri-apps/api@^2.11.0", "@tauri-apps/api@^2.12.0", "@tauri-apps/api@^2.8.0", "@tauri-apps/api@2.12.4":
+  version "2.12.4"
+  resolved "https://registry.npmjs.org/@tauri-apps/api/-/api-2.12.4.tgz"
+  integrity sha512-pVmfis+4zT8H0Qhp3xPZx9Ju7kpzvA6rr/PSJPyuwfvucTQ8sVt61NYU9KMkK703UFlYadFmjKA4HhybOtN0gg==
 
-"@tauri-apps/cli-darwin-arm64@2.11.0":
-  version "2.11.0"
-  resolved "https://registry.npmjs.org/@tauri-apps/cli-darwin-arm64/-/cli-darwin-arm64-2.11.0.tgz"
-  integrity sha512-UfMeDNlgIP252rm/KSTuu8yHatPua5TjtUEUf+jyIzVwBNcIl7Ywkdpfj+e5jVVg3EfCTp+4gwuL1dNpgF8clg==
+"@tauri-apps/cli-darwin-arm64@2.12.4":
+  version "2.12.4"
+  resolved "https://registry.npmjs.org/@tauri-apps/cli-darwin-arm64/-/cli-darwin-arm64-2.12.4.tgz"
+  integrity sha512-OxqKSckIkoJ6vX2AjifIJpTasFC0Hbdoo7gEiCmAjauABO3U8m2MRsLWe+QTiBwDx1mIrvgA+rvI7tvDnbnHVg==
 
-"@tauri-apps/cli@2.11.0":
-  version "2.11.0"
-  resolved "https://registry.npmjs.org/@tauri-apps/cli/-/cli-2.11.0.tgz"
-  integrity sha512-W5Wbuqsb2pHFPTj4TaRNKTj5rwXhDShPiLSY9T18y4ouSR/NNCptAEFxFsBtyNRgL6Vs1a/q9LzfqqYzEwC+Jw==
+"@tauri-apps/cli@2.12.4":
+  version "2.12.4"
+  resolved "https://registry.npmjs.org/@tauri-apps/cli/-/cli-2.12.4.tgz"
+  integrity sha512-JI9bHfudSRJikGOrjbXEm6RjzzvmKuLc+JixB1NE8hNzQkNlCCIC3pTES3uypkR9lxHrsbxzcnSwhI2IxBQphw==
   optionalDependencies:
-    "@tauri-apps/cli-darwin-arm64" "2.11.0"
-    "@tauri-apps/cli-darwin-x64" "2.11.0"
-    "@tauri-apps/cli-linux-arm-gnueabihf" "2.11.0"
-    "@tauri-apps/cli-linux-arm64-gnu" "2.11.0"
-    "@tauri-apps/cli-linux-arm64-musl" "2.11.0"
-    "@tauri-apps/cli-linux-riscv64-gnu" "2.11.0"
-    "@tauri-apps/cli-linux-x64-gnu" "2.11.0"
-    "@tauri-apps/cli-linux-x64-musl" "2.11.0"
-    "@tauri-apps/cli-win32-arm64-msvc" "2.11.0"
-    "@tauri-apps/cli-win32-ia32-msvc" "2.11.0"
-    "@tauri-apps/cli-win32-x64-msvc" "2.11.0"
+    "@tauri-apps/cli-darwin-arm64" "2.12.4"
+    "@tauri-apps/cli-darwin-x64" "2.12.4"
+    "@tauri-apps/cli-linux-arm-gnueabihf" "2.12.4"
+    "@tauri-apps/cli-linux-arm64-gnu" "2.12.4"
+    "@tauri-apps/cli-linux-arm64-musl" "2.12.4"
+    "@tauri-apps/cli-linux-riscv64-gnu" "2.12.4"
+    "@tauri-apps/cli-linux-x64-gnu" "2.12.4"
+    "@tauri-apps/cli-linux-x64-musl" "2.12.4"
+    "@tauri-apps/cli-win32-arm64-msvc" "2.12.4"
+    "@tauri-apps/cli-win32-ia32-msvc" "2.12.4"
+    "@tauri-apps/cli-win32-x64-msvc" "2.12.4"
+
+"@tauri-apps/plugin-deep-link@2.6.3":
+  version "2.6.3"
+  resolved "https://registry.npmjs.org/@tauri-apps/plugin-deep-link/-/plugin-deep-link-2.6.3.tgz"
+  integrity sha512-L+fjyGe5RPBtfh3VUSl1HslC0/xW7frDvdsZk37d9UdqOpKwD9P0PmblSk7Q/WCiAEHZ9J9Pn7VyiecBBdiy/A==
+  dependencies:
+    "@tauri-apps/api" "^2.12.0"
 
 "@tauri-apps/plugin-dialog@2.7.1":
   version "2.7.1"
@@ -129,6 +135,20 @@
   integrity sha512-1HnPkb+AmgO29HBazm4uPLKB+r7zzcTBW1d0fyYp1uP+jwtpoiNDGKMMzz58SFp49nOIrxdE3aUJtT57lfO9CQ==
   dependencies:
     "@tauri-apps/api" "^2.11.0"
+
+"@tauri-apps/plugin-process@2.4.0":
+  version "2.4.0"
+  resolved "https://registry.npmjs.org/@tauri-apps/plugin-process/-/plugin-process-2.4.0.tgz"
+  integrity sha512-GddrmsSLAYrLa/yTXlXK/YRDzUgYeeOnUXTbiyvJWkmI424RmDPD3FVLeqcon7rv6O6ZfhBilcrHWnSo7o6hIQ==
+  dependencies:
+    "@tauri-apps/api" "^2.12.0"
+
+"@tauri-apps/plugin-updater@2.14.1":
+  version "2.14.1"
+  resolved "https://registry.npmjs.org/@tauri-apps/plugin-updater/-/plugin-updater-2.14.1.tgz"
+  integrity sha512-Hr7nlBm1wT6xbwzjZ/S36YULazu8MNlj5vvOwMl47fXI7HTa5Bjl1PbDEwVHaZTAKzE1VZsUy35UqnbrQxmYQw==
+  dependencies:
+    "@tauri-apps/api" "^2.12.0"
 
 "@types/estree@1.0.9":
   version "1.0.9"

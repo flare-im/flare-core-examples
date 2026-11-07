@@ -4,7 +4,7 @@ import { fileURLToPath } from "node:url";
 
 import vue from "@vitejs/plugin-vue";
 import { createFlareCoreWebAppViteConfig } from "@flare-im/sdk/devtools/vite";
-import { defineConfig, loadEnv, type UserConfig } from "vite";
+import { build, defineConfig, loadEnv, type UserConfig } from "vite";
 import type { OutputOptions } from "rollup";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -39,6 +39,7 @@ export default createFlareCoreWebAppViteConfig({
   }),
   loadEnv,
   vuePlugin: vue,
+  webUpdate: { viteBuild: build },
   extraAliases: [
     ...(process.env.FLARE_USE_PUBLISHED_KIT !== "true" && existsSync(path.resolve(__dirname, "../../../flare-im-design/tokens/dist/tokens.js")) ? [
       { find: "@flare-im/tokens/tokens.css", replacement: path.resolve(__dirname, "../../../flare-im-design/tokens/dist/tokens.css") },

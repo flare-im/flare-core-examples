@@ -30,8 +30,8 @@ contracts and intents form the visual boundary; do not import private renderers.
 
 ```bash
 export ANDROID_HOME=/path/to/android/sdk
-../flare-core-flutter-app/android/gradlew :app:testDebugUnitTest :app:lintDebug :app:assembleDebug
-../flare-core-flutter-app/android/gradlew :app:compileDebugAndroidTestKotlin
+../flare-core-flutter-app/android/gradlew :app:testDirectDebugUnitTest :app:lintDirectDebug :app:assembleDirectDebug
+../flare-core-flutter-app/android/gradlew :app:compileDirectDebugAndroidTestKotlin
 ```
 
 ## Demo Mode
@@ -41,9 +41,56 @@ Unit/widget fixtures are test inputs, not a supported product demo mode.
 
 ## Real SDK Mode
 
-Enter a test user ID and the WebSocket and HTTP gateway endpoints on the login
-screen. Credentials are issued by the configured gateway; do not put signing
-keys in UI code. Use isolated test accounts for destructive or send workflows.
+Enter a test user ID on the login screen. Where the SDK connects is not a login
+setting: it comes from the build's access configuration (below). The SDK issues
+and refreshes connect tokens itself (`auth: {}`) on the Core API of the access
+point it is on; do not put signing keys in UI code.
+Use isolated test accounts for destructive or send workflows.
+
+## Access Configuration
+
+The app hands the core SDK `sdkConfig.access` (`AppAccess.kt`) and `auth: {}`
+(SDK-managed connect tokens, issued on the Core API: in development
+`developmentEndpoints.coreApiUrl`, in production the access point's Core API). Each setting is read from a Gradle property first, then the
+environment variable of the same name; blank counts as unset.
+
+| Setting | Meaning |
+|---|---|
+| `FLARE_ACCESS_JSON` | The whole `access` object: the production one (`bootstrapId`, `trustRoots`, `seed`, `trustMode: production`), or a complete development one. Required for release builds. |
+| `FLARE_DEV_WS_URL` | Development IM entry. Default `ws://10.0.2.2:60051` (the emulator reaches the host's `access-gateway.toml` port). |
+| `FLARE_DEV_QUIC_URL` | Development QUIC entry; QUIC is offered only when given (for example `quic://10.0.2.2:60052`). |
+| `FLARE_DEV_CORE_API_URL` | Development Core HTTP entry. Default `http://10.0.2.2:50050` (`api-gateway.toml`). |
+| `FLARE_DEV_MEDIA_URL` | Development media entry. Defaults to the Core HTTP entry. |
+
+Debug builds without `FLARE_ACCESS_JSON` build development endpoints from the
+`FLARE_DEV_*` settings; the connection notice then wears the development badge.
+Two access points on the local stack (failover drills) take the full object:
+
+```bash
+FLARE_ACCESS_JSON='{"trustMode":"development","developmentEndpoints":{"wsUrl":"ws://10.0.2.2:60051","coreApiUrl":"http://10.0.2.2:50050","accessPoints":[{"id":"dev-b","wsUrl":"ws://10.0.2.2:61051","coreApiUrl":"http://10.0.2.2:51050"}]}}' \
+  ./gradlew :app:assembleDirectDebug
+```
+
+A release build without `FLARE_ACCESS_JSON`, or with a development one, stops
+at `preDirectReleaseBuild` (`prePlayReleaseBuild` on the play flavor), and the app refuses development access at runtime.
+Line choice, protocol racing, reconnecting, network changes and foreground
+state are the SDK's: `FlareCoreSdk.createClient(context)` installs the platform
+lifecycle after `init`, and the connection banner is the kit `ConnectionNotice`
+fed by `connection://status`.
+
+## Distribution flavors
+
+The `distribution` dimension sets `app.distribution`, which the release manifest picks a package by.
+
+| Flavor | For | Installs through |
+|---|---|---|
+| `direct` (default) | The website | A system install session. Only this flavor declares `REQUEST_INSTALL_PACKAGES`. |
+| `play` | Google Play | Play In-App Updates. Only this flavor carries the Play dependency. |
+
+Task names carry the flavor: `assembleDirectDebug`, `assemblePlayRelease`,
+`compileDirectDebugKotlin`, `testDirectDebugUnitTest`. The update channel is
+`stable` unless `-PFLARE_UPDATE_CHANNEL=beta` or the environment variable of
+the same name says otherwise.
 
 ## Supported Features
 
