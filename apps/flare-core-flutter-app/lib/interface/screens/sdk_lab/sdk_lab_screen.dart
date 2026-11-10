@@ -578,10 +578,6 @@ class _CapabilitySection extends StatelessWidget {
           ],
         ),
         _JsonBlock(title: 'Global Capabilities', data: state.capabilities),
-        _JsonBlock(
-          title: 'Current User Capabilities',
-          data: state.userCapabilities,
-        ),
       ],
     );
   }

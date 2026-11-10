@@ -13,7 +13,6 @@ final class SdkLabViewModel: ObservableObject {
     @Published var capabilityLabDraft = CapabilityLabDraft()
     @Published private(set) var diagnostics: [String: String] = [:]
     @Published private(set) var capabilities: [String: AnySendable] = [:]
-    @Published private(set) var userCapabilities: [String: AnySendable] = [:]
     @Published private(set) var presence: [String: Bool] = [:]
     @Published private(set) var builderCatalog: [MessageBuildCatalogEntry] = []
 
@@ -311,10 +310,6 @@ final class SdkLabViewModel: ObservableObject {
             case "capability.list":
                 capabilities = try await client.capabilities.listCapabilities([:])
                 appendLab(operation, status: "ok", detail: FlareFormatters.jsonPreview(capabilities))
-            case "capability.list_user":
-                let uid = capabilityLabDraft.userId.isEmpty ? (currentUserId ?? environment.loginDraft.userId) : capabilityLabDraft.userId
-                userCapabilities = try await client.capabilities.listUserCapabilities(["userId": AnySendable(uid)])
-                appendLab(operation, status: "ok", detail: FlareFormatters.jsonPreview(userCapabilities))
             case "capability.dispatch":
                 let raw = try await client.capabilities.dispatchCapability([
                     "capability": AnySendable(capabilityLabDraft.capability),
@@ -322,19 +317,6 @@ final class SdkLabViewModel: ObservableObject {
                     "payload": AnySendable(FlareFormatters.unwrap(sendableJSON(capabilityLabDraft.payload)))
                 ])
                 appendLab(operation, status: "ok", detail: FlareFormatters.jsonPreview(raw))
-            case "capability.grant":
-                let uid = capabilityLabDraft.userId.isEmpty ? (currentUserId ?? environment.loginDraft.userId) : capabilityLabDraft.userId
-                try await client.capabilities.grantCapability([
-                    "userId": AnySendable(uid),
-                    "capability": AnySendable(capabilityLabDraft.capability),
-                    "payload": AnySendable([String: Any]())
-                ])
-            case "capability.revoke":
-                let uid = capabilityLabDraft.userId.isEmpty ? (currentUserId ?? environment.loginDraft.userId) : capabilityLabDraft.userId
-                try await client.capabilities.revokeCapability([
-                    "userId": AnySendable(uid),
-                    "capability": AnySendable(capabilityLabDraft.capability)
-                ])
             default:
                 throw unavailable("Unsupported capability operation")
             }

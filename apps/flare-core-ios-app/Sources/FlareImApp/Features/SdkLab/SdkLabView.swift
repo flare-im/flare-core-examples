@@ -241,8 +241,6 @@ private struct CapabilityLab: View {
         VStack(alignment: .leading, spacing: FlareDesign.Spacing.md) {
             SectionHeader(title: "Capabilities And Calls", subtitle: "Optional plugin operations stay explicit and diagnostic when unavailable.")
             HStack {
-                TextField("User id", text: $sdkLab.capabilityLabDraft.userId)
-                    .textFieldStyle(.roundedBorder)
                 TextField("Capability", text: $sdkLab.capabilityLabDraft.capability)
                     .textFieldStyle(.roundedBorder)
                 TextField("Operation", text: $sdkLab.capabilityLabDraft.operation)
@@ -254,15 +252,11 @@ private struct CapabilityLab: View {
             }
             LazyVGrid(columns: [GridItem(.adaptive(minimum: 190), spacing: FlareDesign.Spacing.md)], spacing: FlareDesign.Spacing.md) {
                 CapabilityButton(title: "List capabilities", operation: "capability.list")
-                CapabilityButton(title: "List user", operation: "capability.list_user")
                 CapabilityButton(title: "Dispatch", operation: "capability.dispatch")
-                CapabilityButton(title: "Grant", operation: "capability.grant")
-                CapabilityButton(title: "Revoke", operation: "capability.revoke")
             }
             .buttonStyle(.bordered)
             KeyValueRows(values: [
-                ("Capabilities", FlareFormatters.jsonPreview(sdkLab.capabilities)),
-                ("User capabilities", FlareFormatters.jsonPreview(sdkLab.userCapabilities))
+                ("Capabilities", FlareFormatters.jsonPreview(sdkLab.capabilities))
             ])
             .padding(FlareDesign.Spacing.md)
         }

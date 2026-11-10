@@ -20,8 +20,6 @@ mixin _$SdkRuntimeSnapshot {
   bool get loading => throw _privateConstructorUsedError;
   Map<String, Object?> get diagnostics => throw _privateConstructorUsedError;
   Map<String, Object?> get capabilities => throw _privateConstructorUsedError;
-  Map<String, Object?> get userCapabilities =>
-      throw _privateConstructorUsedError;
   Map<String, Object?> get mediaCache => throw _privateConstructorUsedError;
   String? get error => throw _privateConstructorUsedError;
 
@@ -43,7 +41,6 @@ abstract class $SdkRuntimeSnapshotCopyWith<$Res> {
     bool loading,
     Map<String, Object?> diagnostics,
     Map<String, Object?> capabilities,
-    Map<String, Object?> userCapabilities,
     Map<String, Object?> mediaCache,
     String? error,
   });
@@ -67,7 +64,6 @@ class _$SdkRuntimeSnapshotCopyWithImpl<$Res, $Val extends SdkRuntimeSnapshot>
     Object? loading = null,
     Object? diagnostics = null,
     Object? capabilities = null,
-    Object? userCapabilities = null,
     Object? mediaCache = null,
     Object? error = freezed,
   }) {
@@ -84,10 +80,6 @@ class _$SdkRuntimeSnapshotCopyWithImpl<$Res, $Val extends SdkRuntimeSnapshot>
             capabilities: null == capabilities
                 ? _value.capabilities
                 : capabilities // ignore: cast_nullable_to_non_nullable
-                      as Map<String, Object?>,
-            userCapabilities: null == userCapabilities
-                ? _value.userCapabilities
-                : userCapabilities // ignore: cast_nullable_to_non_nullable
                       as Map<String, Object?>,
             mediaCache: null == mediaCache
                 ? _value.mediaCache
@@ -116,7 +108,6 @@ abstract class _$$SdkRuntimeSnapshotImplCopyWith<$Res>
     bool loading,
     Map<String, Object?> diagnostics,
     Map<String, Object?> capabilities,
-    Map<String, Object?> userCapabilities,
     Map<String, Object?> mediaCache,
     String? error,
   });
@@ -139,7 +130,6 @@ class __$$SdkRuntimeSnapshotImplCopyWithImpl<$Res>
     Object? loading = null,
     Object? diagnostics = null,
     Object? capabilities = null,
-    Object? userCapabilities = null,
     Object? mediaCache = null,
     Object? error = freezed,
   }) {
@@ -156,10 +146,6 @@ class __$$SdkRuntimeSnapshotImplCopyWithImpl<$Res>
         capabilities: null == capabilities
             ? _value._capabilities
             : capabilities // ignore: cast_nullable_to_non_nullable
-                  as Map<String, Object?>,
-        userCapabilities: null == userCapabilities
-            ? _value._userCapabilities
-            : userCapabilities // ignore: cast_nullable_to_non_nullable
                   as Map<String, Object?>,
         mediaCache: null == mediaCache
             ? _value._mediaCache
@@ -181,12 +167,10 @@ class _$SdkRuntimeSnapshotImpl implements _SdkRuntimeSnapshot {
     this.loading = false,
     final Map<String, Object?> diagnostics = const <String, Object?>{},
     final Map<String, Object?> capabilities = const <String, Object?>{},
-    final Map<String, Object?> userCapabilities = const <String, Object?>{},
     final Map<String, Object?> mediaCache = const <String, Object?>{},
     this.error,
   }) : _diagnostics = diagnostics,
        _capabilities = capabilities,
-       _userCapabilities = userCapabilities,
        _mediaCache = mediaCache;
 
   @override
@@ -210,15 +194,6 @@ class _$SdkRuntimeSnapshotImpl implements _SdkRuntimeSnapshot {
     return EqualUnmodifiableMapView(_capabilities);
   }
 
-  final Map<String, Object?> _userCapabilities;
-  @override
-  @JsonKey()
-  Map<String, Object?> get userCapabilities {
-    if (_userCapabilities is EqualUnmodifiableMapView) return _userCapabilities;
-    // ignore: implicit_dynamic_type
-    return EqualUnmodifiableMapView(_userCapabilities);
-  }
-
   final Map<String, Object?> _mediaCache;
   @override
   @JsonKey()
@@ -233,7 +208,7 @@ class _$SdkRuntimeSnapshotImpl implements _SdkRuntimeSnapshot {
 
   @override
   String toString() {
-    return 'SdkRuntimeSnapshot(loading: $loading, diagnostics: $diagnostics, capabilities: $capabilities, userCapabilities: $userCapabilities, mediaCache: $mediaCache, error: $error)';
+    return 'SdkRuntimeSnapshot(loading: $loading, diagnostics: $diagnostics, capabilities: $capabilities, mediaCache: $mediaCache, error: $error)';
   }
 
   @override
@@ -251,10 +226,6 @@ class _$SdkRuntimeSnapshotImpl implements _SdkRuntimeSnapshot {
               _capabilities,
             ) &&
             const DeepCollectionEquality().equals(
-              other._userCapabilities,
-              _userCapabilities,
-            ) &&
-            const DeepCollectionEquality().equals(
               other._mediaCache,
               _mediaCache,
             ) &&
@@ -267,7 +238,6 @@ class _$SdkRuntimeSnapshotImpl implements _SdkRuntimeSnapshot {
     loading,
     const DeepCollectionEquality().hash(_diagnostics),
     const DeepCollectionEquality().hash(_capabilities),
-    const DeepCollectionEquality().hash(_userCapabilities),
     const DeepCollectionEquality().hash(_mediaCache),
     error,
   );
@@ -289,7 +259,6 @@ abstract class _SdkRuntimeSnapshot implements SdkRuntimeSnapshot {
     final bool loading,
     final Map<String, Object?> diagnostics,
     final Map<String, Object?> capabilities,
-    final Map<String, Object?> userCapabilities,
     final Map<String, Object?> mediaCache,
     final String? error,
   }) = _$SdkRuntimeSnapshotImpl;
@@ -300,8 +269,6 @@ abstract class _SdkRuntimeSnapshot implements SdkRuntimeSnapshot {
   Map<String, Object?> get diagnostics;
   @override
   Map<String, Object?> get capabilities;
-  @override
-  Map<String, Object?> get userCapabilities;
   @override
   Map<String, Object?> get mediaCache;
   @override

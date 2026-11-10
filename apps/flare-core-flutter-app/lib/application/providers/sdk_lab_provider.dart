@@ -21,7 +21,6 @@ final class SdkLabSnapshot {
     this.runningOperation,
     this.diagnostics = const <String, Object?>{},
     this.capabilities = const <String, Object?>{},
-    this.userCapabilities = const <String, Object?>{},
     this.mediaCache = const <String, Object?>{},
     this.presence = const <String, Object?>{},
     this.builderOperations = const <Map<String, Object?>>[],
@@ -35,7 +34,6 @@ final class SdkLabSnapshot {
   final String? runningOperation;
   final Map<String, Object?> diagnostics;
   final Map<String, Object?> capabilities;
-  final Map<String, Object?> userCapabilities;
   final Map<String, Object?> mediaCache;
   final Map<String, Object?> presence;
   final List<Map<String, Object?>> builderOperations;
@@ -52,7 +50,6 @@ final class SdkLabSnapshot {
     bool clearRunningOperation = false,
     Map<String, Object?>? diagnostics,
     Map<String, Object?>? capabilities,
-    Map<String, Object?>? userCapabilities,
     Map<String, Object?>? mediaCache,
     Map<String, Object?>? presence,
     List<Map<String, Object?>>? builderOperations,
@@ -69,7 +66,6 @@ final class SdkLabSnapshot {
           : runningOperation ?? this.runningOperation,
       diagnostics: diagnostics ?? this.diagnostics,
       capabilities: capabilities ?? this.capabilities,
-      userCapabilities: userCapabilities ?? this.userCapabilities,
       mediaCache: mediaCache ?? this.mediaCache,
       presence: presence ?? this.presence,
       builderOperations: builderOperations ?? this.builderOperations,
@@ -598,13 +594,6 @@ class SdkLabNotifier extends StateNotifier<SdkLabSnapshot> {
       <String, Object?>{},
       sdk.listCapabilities,
     );
-    final userCapabilities = userId.isEmpty
-        ? <String, Object?>{}
-        : await capture(
-            'capabilities.list_user',
-            <String, Object?>{},
-            () => sdk.listUserCapabilities(userId),
-          );
     final mediaCache = await capture(
       'media.cache_stats',
       <String, Object?>{},
@@ -627,7 +616,6 @@ class SdkLabNotifier extends StateNotifier<SdkLabSnapshot> {
       loading: false,
       diagnostics: diagnostics,
       capabilities: capabilities,
-      userCapabilities: userCapabilities,
       mediaCache: mediaCache,
       builderOperations: builderOperations,
       presence: presence,

@@ -23,7 +23,6 @@ data class LabDraft(
     val mediaFilePath: String = "",
     val cacheMaxBytes: String = "52428800",
     val downloadSubfolder: String = "flare-downloads",
-    val capabilityUserId: String = "",
     val capability: String = "rtc.call",
     val operation: String = "invite",
     val payloadJson: String = "{}",
@@ -152,17 +151,9 @@ class SdkLabViewModel(
     // ---- Capabilities ----
     fun refreshCapabilities() {
         probe("capabilities.listCapabilities") { it.capabilities.listCapabilities(emptyMap()) }
-        val uid = draft.value.capabilityUserId.ifBlank { currentUserId.value ?: "self" }
-        probe("capabilities.listUserCapabilities") { it.capabilities.listUserCapabilities(mapOf("userId" to uid)) }
     }
     fun runDispatchCapability() = probe("capabilities.dispatchCapability") {
         it.capabilities.dispatchCapability(mapOf("capability" to draft.value.capability, "operation" to draft.value.operation, "payload" to draft.value.payloadJson))
-    }
-    fun runGrantCapability() = probe("capabilities.grantCapability") {
-        it.capabilities.grantCapability(mapOf("userId" to draft.value.capabilityUserId, "capability" to draft.value.capability))
-    }
-    fun runRevokeCapability() = probe("capabilities.revokeCapability") {
-        it.capabilities.revokeCapability(mapOf("userId" to draft.value.capabilityUserId, "capability" to draft.value.capability))
     }
 
     // ---- Media center ----

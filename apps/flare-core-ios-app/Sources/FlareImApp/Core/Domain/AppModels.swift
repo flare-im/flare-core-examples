@@ -239,7 +239,6 @@ struct MediaLabDraft: Equatable {
 }
 
 struct CapabilityLabDraft: Equatable {
-    var userId = ""
     var capability = "call"
     var operation = "probe"
     var payload = "{}"

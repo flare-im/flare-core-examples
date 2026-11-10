@@ -301,24 +301,10 @@ final class SdkWrapper {
     return _dynamicMap(await _client.capabilities.listCapabilities({}));
   }
 
-  Future<Map<String, dynamic>> listUserCapabilities(String userId) async {
-    return _dynamicMap(
-      await _client.capabilities.listUserCapabilities({'userId': userId}),
-    );
-  }
-
   Future<Map<String, dynamic>> dispatchCapability(
     Map<String, Object?> request,
   ) async {
     return _dynamicMap(await _client.capabilities.dispatchCapability(request));
-  }
-
-  Future<void> grantCapability(Map<String, Object?> request) {
-    return _client.capabilities.grantCapability(request);
-  }
-
-  Future<void> revokeCapability(Map<String, Object?> request) {
-    return _client.capabilities.revokeCapability(request);
   }
 
   Future<List<Map<String, Object?>>> listMessageBuildOperations() async {
