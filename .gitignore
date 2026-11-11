@@ -1,0 +1,31 @@
+# Rebuildable dependency, native build and test caches.
+node_modules/
+build/
+Build/
+!**/command/message/build/
+!**/command/message/build/**
+dist/
+dist-electron/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.gradle/
+.kotlin/
+.cxx/
+.build/
+Pods/
+DerivedData/
+__pycache__/
+*.pyc
+*.tsbuildinfo
+coverage/
+test-results/
+playwright-report/
+
+# Local machine configuration; example templates remain shareable.
+local.properties
+.env
+.env.*
+!.env.example
+.DS_Store
+*.log

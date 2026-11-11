@@ -11,7 +11,7 @@
 //    服务端 Redis/内部读不了(策略拦截),只能用客户端可观测信号做退化代理。
 //
 // 运行(本机,跑满 12h):
-//   cd examples/flare-core-web-app
+//   cd apps/flare-core-web-app
 //   SOAK_BASE_URL=http://<host> SOAK_A=<user> SOAK_B=<user> SOAK_BIG_CONV=<大群会话 id> \
 //     nohup node soak/soak.mjs > soak/soak.out 2>&1 &
 //   (不跑 10万群 burst 时 SOAK_BIG=0,可不给 SOAK_BIG_CONV)

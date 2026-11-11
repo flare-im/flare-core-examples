@@ -6,7 +6,7 @@
 **Done** = `./gradlew :app:compileDebugKotlin` 通过 + `:app:testDebugUnitTest` 通过 + CAPABILITY-PARITY.md Android 列复核更新（≈97）。
 
 ## Constraints & decisions
-- **核心发现：不需要改 core / SDK**。`flare-core-android-sdk` 已暴露完整 12 模块 API（MessagesApi 28 / ConversationsApi 18 / SessionApi 17 …），与 apple-sdk 1:1。本任务 100% 在 `examples/flare-core-android-app` 内写代码（flare-im-spec 层归属：product/UI → examples，干净满足）。
+- **核心发现：不需要改 core / SDK**。`flare-core-android-sdk` 已暴露完整 12 模块 API（MessagesApi 28 / ConversationsApi 18 / SessionApi 17 …），与 apple-sdk 1:1。本任务 100% 在 `apps/flare-core-android-app` 内写代码（flare-im-spec 层归属：product/UI → examples，干净满足）。
 - **反应式契约（唯一 correctness 敏感点）**：`AppSession` 唯一持有 `FlareImClient`，**只订阅一次** `client.events.onViewUpdated` → 路由给 `ViewDataRepository.apply()` → 暴露 `StateFlow`；绝不轮询。乐观发送立即返回 optimistic message，靠 view-update 流对账；`onMessageSendFailed` 标记失败。
 - **乐观/离线优先**：用户动作不等待网络（下一帧反映意图）。SDK 调用走 `Dispatchers.IO`/`viewModelScope`，UI 读 StateFlow。LazyColumn 虚拟化 + 稳定 key。
 - **构建**：gradlew 已提交（wrapper 在）；JDK17；快速门禁 `./gradlew :app:compileDebugKotlin`。现有包根 `com.flare.im.app.*`；空 DDD 脚手架 `com.flare.im.{interface,application,...}` 暂留/复用。
@@ -46,7 +46,7 @@
 
 ### 构建配方（已验证）
 ```
-cd examples/flare-core-android-app
+cd apps/flare-core-android-app
 export JAVA_HOME=/opt/homebrew/Cellar/openjdk@17/17.0.19/libexec/openjdk.jdk/Contents/Home
 export ANDROID_HOME=/Users/hg/Library/Android/sdk
 ./gradlew :app:compileDebugKotlin --console=plain
@@ -102,6 +102,6 @@ export ANDROID_HOME=/Users/hg/Library/Android/sdk
 ## Notes / open questions
 - Android SDK 关键类型：`FlareImClient`(facade, extends SessionApi)、`client.{messages,conversations,media,messageBuilder,views,events,presence,sync,connection,capabilities,diagnostics}`、`EventsApi.onViewUpdated(ViewUpdate)`、`ViewsApi.{openTimeline,openConversationList,loadOlderTimeline,close}`。
 - FlareTheme 色值（光/暗）见本会话设计输出（brand #7D3BED / #9D6BFF …）。
-- 构建命令：`cd examples/flare-core-android-app && ./gradlew :app:compileDebugKotlin`（首跑可能需下载 gradle/依赖，耗时）。
+- 构建命令：`cd apps/flare-core-android-app && ./gradlew :app:compileDebugKotlin`（首跑可能需下载 gradle/依赖，耗时）。
 - 规模预警：~76 op + 完整 Compose UI，多执行周期。每 Phase 收尾必跑门禁 + 回填本文件。
 - 踩坑预防：Kotlin `*Request` 构造参数顺序逐一核对（不臆断）。

@@ -7,7 +7,7 @@ allprojects {
 
 val newBuildDir: Directory =
     rootProject.layout.buildDirectory
-        .dir("../../../../flare-core-sdk/examples/build")
+        .dir("../../build")
         .get()
 rootProject.layout.buildDirectory.value(newBuildDir)
 

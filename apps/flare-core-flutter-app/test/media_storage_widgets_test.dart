@@ -1,4 +1,5 @@
-import 'dart:io' show Platform;
+import 'dart:convert';
+import 'dart:io' show Platform, Directory, File;
 
 import 'package:flare_im/application/providers/service_providers.dart';
 import 'package:flare_im/application/services/media_storage_service.dart';
@@ -167,10 +168,20 @@ void main() {
   group('timeline media', () {
     testWidgets('a picture in the SDK cache is drawn from disk, and its '
         'preview saves it to the download location', (tester) async {
+      final directory = await tester.runAsync(
+        () => Directory.systemTemp.createTemp('flare-picture-'),
+      );
+      final path = '${directory!.path}/img-1.png';
+      await tester.runAsync(
+        () => File(path).writeAsBytes(
+          base64Decode(
+            'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP4z8DwHwAFAAH/iZk9HQAAAABJRU5ErkJggg==',
+          ),
+        ),
+      );
+      addTearDown(() => directory.delete(recursive: true));
       final repo = _StorageRepository(location: _defaultLocation)
-        ..pictures['img-1'] = const PictureAccess(
-          localPath: '/cache/media/img-1.jpg',
-        );
+        ..pictures['img-1'] = PictureAccess(localPath: path);
       await _pumpBubble(
         tester,
         repo,
@@ -183,15 +194,14 @@ void main() {
       );
 
       final picture = find.byWidgetPredicate(
-        (w) =>
-            w is FlareImageMessage &&
-            w.src == '/cache/media/img-1.jpg' &&
-            w.allowLocalFile,
+        (w) => w is FlareImageMessage && w.src == path && w.allowLocalFile,
       );
       expect(picture, findsOneWidget);
       expect(repo.resolved, ['img-1']);
 
-      await tester.tap(picture);
+      // This adapter test checks the host preview action. Native image decoding
+      // and the failed-image retry gesture are covered by the UI kit tests.
+      tester.widget<FlareImageMessage>(picture).onTap!();
       await tester.pumpAndSettle();
       await tester.tap(_downloadKey);
       await tester.pumpAndSettle();

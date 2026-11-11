@@ -1,0 +1,4 @@
+[package]
+name = "flare-core-cangjie-app"
+version = "0.1.0"
+description = "HarmonyOS Cangjie IM app template for flare-core-harmony-cangjie-sdk"

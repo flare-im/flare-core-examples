@@ -17,3 +17,5 @@
 | android | [`apps/flare-core-android-app`](apps/flare-core-android-app) |
 
 各端的工具链、配置和构建命令见对应应用的 README。共享行为在同级 SDK 和 UI 仓库维护。
+
+完整应用与平台脚手架统一维护在本仓 `apps/`；Vue 应用组合位于 `shared/vue-reference`。SDK 仓仅保留契约测试数据和独立示例仓入口。额外平台包括 Electron、React Native、uni-app、ArkTS、Cangjie，其成熟度仍以各应用 README 为准。

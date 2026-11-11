@@ -5,7 +5,7 @@ import { test } from "node:test";
 
 const appRoot = join(import.meta.dirname, "..");
 const monorepoRoot = join(appRoot, "../../..");
-const sharedRoot = join(monorepoRoot, "flare-core-sdk/examples/shared/vue-reference");
+const sharedRoot = join(monorepoRoot, "flare-core-examples/shared/vue-reference");
 const accessModule = join(sharedRoot, "workbench/app/runtime/access.ts");
 
 const read = (path) => readFileSync(path, "utf8");

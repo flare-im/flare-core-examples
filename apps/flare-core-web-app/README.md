@@ -8,9 +8,9 @@ canonical UI migration, not a claim that every screen is already migrated.
 
 ## Architecture
 
-`src/App.vue` mounts `../../../flare-core-sdk/examples/shared/vue-reference/ReferenceApp.vue`. Web and Tauri
+`src/App.vue` mounts `../../shared/vue-reference/ReferenceApp.vue`. Web and Tauri
 share routing, SDK-to-UI adapters and workbench composition under
-`examples/shared/vue-reference/workbench`. Reusable presentation belongs in
+`shared/vue-reference/workbench`. Reusable presentation belongs in
 `flare-im-design`; moving code into shared composition does not exempt it from
 ownership checks. No Web-specific screen implementation is imported by Tauri.
 
@@ -59,7 +59,7 @@ UI code. Use isolated test accounts for destructive or send workflows.
 ## Access Configuration
 
 The core SDK's `access` object comes from `VITE_FLARE_ACCESS_JSON` at build time
-(`../../../flare-core-sdk/examples/shared/vue-reference/workbench/app/runtime/access.ts`):
+(`../../shared/vue-reference/workbench/app/runtime/access.ts`):
 
 - unset, `npm run dev:web` connects to the local stack in development mode:
   IM `ws://127.0.0.1:60051` (access-gateway), core API and media

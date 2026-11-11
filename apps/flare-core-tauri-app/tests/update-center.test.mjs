@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { test } from "node:test";
 
 const appRoot = join(import.meta.dirname, "..");
-const sharedRoot = join(appRoot, "../../../flare-core-sdk/examples/shared/vue-reference");
+const sharedRoot = join(appRoot, "../../shared/vue-reference");
 const read = (path) => readFileSync(path, "utf8");
 
 const conf = JSON.parse(read(join(appRoot, "src-tauri/tauri.conf.json")));

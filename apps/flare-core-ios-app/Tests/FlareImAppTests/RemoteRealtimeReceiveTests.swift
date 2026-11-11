@@ -9,7 +9,7 @@ import XCTest
 ///
 /// 需要本机有 FFI 产物（SIP 会剥掉 DYLD_LIBRARY_PATH，只能放进 Frameworks/）：
 ///   cargo build --release -p flare-im-core-sdk-ffi
-///   cp target/release/libflare_im_core_sdk_ffi.dylib examples/flare-core-ios-app/Frameworks/
+///   cp target/release/libflare_im_core_sdk_ffi.dylib apps/flare-core-ios-app/Frameworks/
 ///
 /// 默认跳过。要跑：
 ///   FLARE_E2E_WS_URL=ws://<host>:60051 FLARE_E2E_TOKEN=... FLARE_E2E_USER=...

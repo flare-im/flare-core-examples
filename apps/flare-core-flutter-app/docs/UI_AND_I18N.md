@@ -32,7 +32,7 @@
 
 ## SDK 包边界
 
-`flare_core_flutter_sdk` 仅做 **契约化 FFI 适配**，不含 IM 业务 UI。示例应用的 IM 界面全部在 `examples/flare-core-flutter-app/lib/interface/`。
+`flare_core_flutter_sdk` 仅做 **契约化 FFI 适配**，不含 IM 业务 UI。示例应用的 IM 界面全部在 `apps/flare-core-flutter-app/lib/interface/`。
 
 ## 消息搜索
 

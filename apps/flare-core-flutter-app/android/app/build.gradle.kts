@@ -45,7 +45,7 @@ flutter {
 }
 
 val verifyRustFfiAndroid by tasks.registering(Exec::class) {
-    workingDir = rootProject.file("../../../../../flare-core-sdk/examples")
+    workingDir = rootProject.file("../../../../flare-core-sdk")
     commandLine("cargo", "xtask", "build", "android-verify")
     environment("FLUTTER_EXAMPLE_DIR", rootProject.projectDir.parentFile.absolutePath)
 }
