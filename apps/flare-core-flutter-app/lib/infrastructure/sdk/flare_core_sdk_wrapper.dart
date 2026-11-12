@@ -255,6 +255,28 @@ final class SdkWrapper {
   /// The update center's routes; the update controller is what calls them.
   core.UpdateApi get update => _client.update;
 
+  /// 系统推送的宿主：令牌、权限、远程推送、点击与角标都交给这个客户端。
+  core.FlarePushHost pushHost() => core.CorePushHost(_client);
+
+  /// 屏幕上的会话（null：没有），它的新消息在前台不再提醒。不等登录、不等网络；客户端还没建出来时不报，
+  /// 登录后再报一次。
+  Future<void> setNotificationFocus(String? conversationId) async {
+    final client = _clientOrNull;
+    if (client == null) return;
+    await client.notification.setFocus(
+      core.SetNotificationFocusRequest(conversationId: conversationId),
+    );
+  }
+
+  /// 用户级通知设置（勿扰时段、预览、多设备），同一账号的所有设备共用一份；要已登录。
+  Future<core.UserNotificationSettings> notificationSettings() =>
+      _client.notification.getSettings();
+
+  /// 部分更新用户级通知设置，返回存好的完整设置；基于的版本过期时整次被拒。
+  Future<core.UserNotificationSettings> updateNotificationSettings(
+    core.UpdateUserNotificationSettingsRequest request,
+  ) => _client.notification.updateSettings(request);
+
   /// Access lines for diagnostics.
   Future<core.AccessStatus> accessStatus() => _client.access.getStatus();
 
@@ -747,6 +769,13 @@ final class SdkWrapper {
     return _client.conversations.setConversationMuted({
       'conversationId': conversationId,
       'muted': muted,
+    });
+  }
+
+  Future<void> conversationSetNotifyAll(String conversationId, bool enabled) {
+    return _client.conversations.setConversationNotifyAll({
+      'conversationId': conversationId,
+      'enabled': enabled,
     });
   }
 

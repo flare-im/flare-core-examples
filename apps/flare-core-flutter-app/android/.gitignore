@@ -12,3 +12,6 @@ GeneratedPluginRegistrant.java
 key.properties
 **/*.keystore
 **/*.jks
+
+# Firebase 客户端配置按部署各自提供，不入库。
+/app/google-services.json

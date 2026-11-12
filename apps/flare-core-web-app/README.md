@@ -28,6 +28,18 @@ Composer, preview, form, forward picker, settings and status components.
 `workbench/app/sdk/flareSdkContext.ts` and `useFlareCoreClient.ts` own SDK state,
 subscriptions and commands. The kit receives presentation contracts and intents.
 
+`src/notifications/MessageAlerts.vue`, mounted inside the reference app (its default slot), shows
+what the engine decided: browser notifications through the SDK notifier
+(`startSystemNotifications`, the browser presenter; a click opens the
+conversation) and the kit in-app banner for surface `inApp` with the app's
+message sound. It reports the open chat of a focused window
+(`notification.setFocus`) and asks for the notification permission once per
+account from the conversation list with the kit `PermissionPrompt` soft-ask.
+The same permission (`src/notifications/permission.ts`) is the "New message
+notifications" row of the workbench settings sheet, next to quiet hours,
+notification preview and the multi-device policy (the core's
+`notification.getSettings` / `updateSettings`).
+
 ## Run
 
 ```bash

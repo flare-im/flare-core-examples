@@ -13,9 +13,20 @@ options:
     iOS: "16.0"
   createIntermediateGroups: true
 
+settings:
+  base:
+    # One version for the app and its notification service extension: an extension without CFBundleVersion, or
+    # with one that differs from the app's, does not install. The update center compares CFBundleVersion as the
+    # build number and checks for nothing without one.
+    MARKETING_VERSION: "0.1.0"
+    CURRENT_PROJECT_VERSION: "1"
+
 packages:
   FlareImApp:
     path: .
+  # The notification service extension links FlareNotificationService alone (no engine, no FFI).
+  FlareCoreAppleSDK:
+    path: ../../../flare-core-sdk/packages/flare-core-apple-sdk
 
 targets:
   FlareImExampleApp:
@@ -26,6 +37,16 @@ targets:
     dependencies:
       - package: FlareImApp
         product: FlareImApp
+      - target: NotificationService
+    # Push Notifications capability. The APNs environment is read at run time from the embedded provisioning profile
+    # (development registers as sandbox; a distribution export rewrites this key to production). The App Group is
+    # shared with NotificationService: the engine writes the notification snapshot there and the extension appends
+    # arrival receipts (PushNotifications passes the same identifier to the push module).
+    entitlements:
+      path: Resources/FlareImApp.entitlements
+      properties:
+        aps-environment: development
+        com.apple.security.application-groups: [group.com.flare.im.example.app]
     # "Save" writes pictures, videos and files to Documents/flare (the core's iOS download location). These two
     # keys put the app's Documents in the Files app (On My iPhone › FlareIM), where the person finds them. They
     # have no INFOPLIST_KEY_* build setting, so they live in this partial Info.plist; the generated one keeps the rest.
@@ -49,13 +70,13 @@ targets:
         # What the release manifest is picked by (AppAccess.updateApp). An empty distribution is left to the App Store receipt.
         FLARE_UPDATE_CHANNEL: $(FLARE_UPDATE_CHANNEL)
         FLARE_UPDATE_DISTRIBUTION: $(FLARE_UPDATE_DISTRIBUTION)
+        # Silent pushes (`content-available`) run app code: the push module hands them to the core for a short wake.
+        # `fetch` lets the push module's background refresh task (BGAppRefreshTask) prefetch new messages.
+        UIBackgroundModes: [fetch, remote-notification]
+        BGTaskSchedulerPermittedIdentifiers: [com.flare.im.example.app.refresh]
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.flare.im.example.app
-        # Info.plist takes these; the update center compares CFBundleVersion as the build number and checks
-        # for nothing without one.
-        MARKETING_VERSION: "0.1.0"
-        CURRENT_PROJECT_VERSION: "1"
         GENERATE_INFOPLIST_FILE: "YES"
         INFOPLIST_KEY_UILaunchScreen_Generation: "YES"
         INFOPLIST_KEY_CFBundleDisplayName: FlareIM
@@ -82,3 +103,32 @@ targets:
           - $(PROJECT_DIR)/FFI/ios/$(FLARE_FFI_TARGET)/libflare_im_core_sdk_ffi.a
           - -Xlinker
           - -export_dynamic
+
+  # Notification service extension (FlareNotificationServiceBase): re-renders alert titles and sender names from the
+  # snapshot in the App Group and records arrival receipts. With it the push module registers the `serviceExtension`
+  # capability, so the server marks alert pushes `mutable-content`.
+  NotificationService:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: NotificationService
+    dependencies:
+      - package: FlareCoreAppleSDK
+        product: FlareNotificationService
+    entitlements:
+      path: Resources/NotificationService.entitlements
+      properties:
+        com.apple.security.application-groups: [group.com.flare.im.example.app]
+    info:
+      path: Resources/NotificationServiceInfo.plist
+      properties:
+        CFBundleDisplayName: FlareIM
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.usernotifications.service
+          NSExtensionPrincipalClass: $(PRODUCT_MODULE_NAME).NotificationService
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.flare.im.example.app.NotificationService
+        GENERATE_INFOPLIST_FILE: "YES"
+        ONLY_ACTIVE_ARCH: "YES"
+        SWIFT_VERSION: "6.0"

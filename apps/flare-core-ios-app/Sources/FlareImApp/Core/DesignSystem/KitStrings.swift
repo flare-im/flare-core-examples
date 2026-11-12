@@ -13,8 +13,8 @@ enum KitStrings {
         isChinese ? FlareStrings() : english
     }
 
-    /// The language the app shows, for what the update center words in it: the system's can be one this app has no
-    /// localization for.
+    /// The language the app shows, for what the update center and the push registration word in it: the system's can
+    /// be one this app has no localization for.
     static var localeTag: String {
         isChinese ? "zh-CN" : "en-US"
     }

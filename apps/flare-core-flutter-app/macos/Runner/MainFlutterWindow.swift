@@ -10,8 +10,25 @@ class MainFlutterWindow: NSWindow {
 
     RegisterGeneratedPlugins(registry: flutterViewController)
     FlareFilesChannel.register(with: flutterViewController.engine.binaryMessenger)
+    FlareSoundChannel.register(with: flutterViewController.engine.binaryMessenger)
 
     super.awakeFromNib()
+  }
+}
+
+/// 应用内横幅的提示音（`flare.im/sound`）：系统提示音，跟着系统的音量。
+enum FlareSoundChannel {
+  static func register(with messenger: FlutterBinaryMessenger) {
+    let channel = FlutterMethodChannel(name: "flare.im/sound", binaryMessenger: messenger)
+    channel.setMethodCallHandler { call, result in
+      switch call.method {
+      case "message":
+        NSSound.beep()
+        result(nil)
+      default:
+        result(FlutterMethodNotImplemented)
+      }
+    }
   }
 }
 

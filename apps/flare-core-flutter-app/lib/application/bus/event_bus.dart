@@ -1,6 +1,6 @@
 import 'package:event_bus/event_bus.dart';
 import 'package:flare_core_flutter_sdk/flare_core_flutter_sdk.dart'
-    show ConnectionStatus;
+    show ConnectionStatus, NotificationPresentation;
 import 'package:flare_im/domain/entities/conversation.dart';
 import 'package:flare_im/domain/entities/message.dart';
 import 'package:flare_im/domain/entities/user.dart';
@@ -222,4 +222,24 @@ final class PresenceUpdateEvent {
 final class ConnectionStatusChangedEvent {
   const ConnectionStatusChangedEvent(this.status);
   final ConnectionStatus status;
+}
+
+/// The engine's `notification.present`: a notification to show, already
+/// decided and rendered by the engine (the in-app banner takes surface `inApp`).
+@immutable
+final class NotificationPresentEvent {
+  const NotificationPresentEvent(this.presentation);
+  final NotificationPresentation presentation;
+}
+
+/// The engine's `notification.clear`: take these notifications away (every one
+/// when [all]).
+@immutable
+final class NotificationClearedEvent {
+  const NotificationClearedEvent({
+    this.collapseIds = const [],
+    this.all = false,
+  });
+  final List<String> collapseIds;
+  final bool all;
 }

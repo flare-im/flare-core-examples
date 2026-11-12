@@ -1,5 +1,6 @@
 import Combine
 import FlareCoreAppleSDK
+import FlareIMUI
 import SwiftUI
 
 /// 设置特性 ViewModel：外观/登录默认值的读写绑定、会话只读态，以及诊断刷新与会话清理动作。
@@ -130,5 +131,110 @@ final class SettingsViewModel: ObservableObject {
             ok = true
         }
         return ok
+    }
+
+    // MARK: - 通知提醒（用户级设置：勿扰时段、通知预览、多设备；同一账号的所有设备共用一份，核心 notification 模块读写）
+
+    /// 设置页显示的值。改动先显示再写（乐观）；写失败退回核心存着的值。
+    @Published private(set) var alertPreferences = FlareNotificationAlertPreferences()
+    /// 读到过一次之前各行只显示、不接受操作。
+    @Published private(set) var alertSettingsLoaded = false
+    /// 核心存着的设置。它的版本随写入带回去：别的设备同时改过时整次写入被拒。
+    private var storedAlerts: UserNotificationSettings?
+    private var savingAlerts = false
+
+    /// 读一次（设置页出现时）；正在写的时候不读，写完自会带回存好的值。
+    func refreshAlertSettings() async {
+        guard let client = session.client, !savingAlerts else { return }
+        do {
+            adoptAlerts(try await client.notification.getSettings())
+        } catch {
+            environment.appendLab("notification.getSettings", status: "error", detail: FlareFormatters.errorText(error))
+        }
+    }
+
+    /// 一行改了：先显示，再把与核心存着的值的差别写进去；写的期间又改了就接着写最新的。写失败（别的设备同时
+    /// 改过也在内）退回存着的值并重读一次，重读拿到的就是别处改过的新值；返回 false 让设置页说一声。
+    @discardableResult
+    func changeAlertPreferences(_ next: FlareNotificationAlertPreferences) async -> Bool {
+        guard let client = session.client, var stored = storedAlerts else { return false }
+        alertPreferences = next
+        guard !savingAlerts else { return true }
+        savingAlerts = true
+        defer { savingAlerts = false }
+        while let request = UpdateUserNotificationSettingsRequest.changes(from: stored, to: alertPreferences) {
+            let target = alertPreferences
+            do {
+                stored = try await client.notification.updateSettings(request)
+                storedAlerts = stored
+                // 写的期间没再改：换成核心存好的值；又改过就留着新值，下一轮接着写。
+                if alertPreferences == target {
+                    alertPreferences = FlareNotificationAlertPreferences(stored, keeping: target.quietHours)
+                }
+            } catch {
+                environment.appendLab("notification.updateSettings", status: "error", detail: FlareFormatters.errorText(error))
+                alertPreferences = FlareNotificationAlertPreferences(stored, keeping: alertPreferences.quietHours)
+                if let fresh = try? await client.notification.getSettings() { adoptAlerts(fresh) }
+                return false
+            }
+        }
+        return true
+    }
+
+    private func adoptAlerts(_ settings: UserNotificationSettings) {
+        storedAlerts = settings
+        alertPreferences = FlareNotificationAlertPreferences(settings, keeping: alertPreferences.quietHours)
+        alertSettingsLoaded = true
+    }
+}
+
+extension FlareNotificationAlertPreferences {
+    /// 核心存着的设置在 kit 里的样子。没有勿扰时段时开关关着，时间沿用 `shown` 那一段：关了再打开还是原来的时间。
+    init(_ settings: UserNotificationSettings, keeping shown: FlareQuietHours) {
+        var quietHours = shown
+        quietHours.enabled = false
+        if let stored = settings.quietHours {
+            quietHours = FlareQuietHours(enabled: true, startMinute: Int(stored.startMinute), endMinute: Int(stored.endMinute),
+                                         weekdays: Int(stored.weekdays), allowMentions: stored.allowMentions)
+        }
+        self.init(
+            quietHours: quietHours,
+            preview: FlareNotificationPreview(rawValue: settings.preview.rawValue) ?? .full,
+            multiDevice: FlareMultiDeviceAlert(rawValue: settings.multiDevice.rawValue) ?? .delay
+        )
+    }
+}
+
+extension UpdateUserNotificationSettingsRequest {
+    /// 从核心存着的 `stored` 改成 `next` 要写的那几项，基于 `stored` 的版本；没有要写的时为 nil。
+    static func changes(from stored: UserNotificationSettings,
+                        to next: FlareNotificationAlertPreferences) -> UpdateUserNotificationSettingsRequest? {
+        let current = FlareNotificationAlertPreferences(stored, keeping: next.quietHours)
+        var quietHours: QuietHours?
+        var clearQuietHours = false
+        if next.quietHours != current.quietHours {
+            if next.quietHours.enabled {
+                quietHours = QuietHours(
+                    allowMentions: next.quietHours.allowMentions,
+                    endMinute: numericCast(next.quietHours.endMinute),
+                    startMinute: numericCast(next.quietHours.startMinute),
+                    weekdays: numericCast(next.quietHours.weekdays)
+                )
+            } else {
+                clearQuietHours = true
+            }
+        }
+        let preview = next.preview == current.preview ? nil : NotificationPreview(rawValue: next.preview.rawValue)
+        let multiDevice = next.multiDevice == current.multiDevice
+            ? nil
+            : MultiDeviceAlertPolicy(rawValue: next.multiDevice.rawValue)
+        guard quietHours != nil || clearQuietHours || preview != nil || multiDevice != nil else { return nil }
+        return UpdateUserNotificationSettingsRequest(
+            baseSettingsVersion: stored.settingsVersion,
+            clearQuietHours: clearQuietHours,
+            multiDevice: multiDevice,
+            preview: preview,
+            quietHours: quietHours
+        )
     }
 }

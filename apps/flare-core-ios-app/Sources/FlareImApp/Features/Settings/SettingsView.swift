@@ -5,6 +5,7 @@ import SwiftUI
 struct SettingsView: View {
     @EnvironmentObject private var settings: SettingsViewModel
     @EnvironmentObject private var store: FlareAppStore
+    @EnvironmentObject private var notifications: PushNotifications
     @Environment(\.flareFeedback) private var feedback
     @Environment(\.flareStrings) private var strings
 
@@ -24,6 +25,29 @@ struct SettingsView: View {
                     .pickerStyle(.segmented)
                 }
                 .padding(FlareDesign.Spacing.lg)
+
+                // 新消息通知（kit 分组）：系统权限的当前状态。没问过就在这里请求，已开启或已关闭都去系统设置里改。
+                // iOS 没有限制后台运行的电池设置，不给后台接收那一行。
+                NotificationDeliverySettingsView(
+                    status: notifications.permission?.notificationStatus,
+                    onStatusAction: { Task { await notifications.changeFromSettings() } }
+                )
+
+                // 勿扰时段、通知预览、其他设备活跃时（kit 分组）：账号级设置，所有设备共用一份。改了先显示再写进核心，
+                // 没写成就退回存着的值并说一声；读到之前只显示、不接受操作。
+                NotificationAlertSettingsView(
+                    value: settings.alertPreferences,
+                    disabled: !settings.alertSettingsLoaded,
+                    onChange: { next in
+                        Task {
+                            if await !settings.changeAlertPreferences(next) {
+                                feedback?.toast(String(localized: "Notification settings were not saved. Try again."),
+                                                tone: .danger)
+                            }
+                        }
+                    }
+                )
+                .task { await settings.refreshAlertSettings() }
 
                 ButtonView(label: strings.accessDiagnosticsTitle, variant: .secondary, icon: "link") {
                     store.accessDiagnostics.presented = true

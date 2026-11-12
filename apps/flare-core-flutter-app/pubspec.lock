@@ -360,6 +360,13 @@ packages:
       relative: true
     source: path
     version: "0.1.0"
+  flare_core_flutter_push:
+    dependency: "direct main"
+    description:
+      path: "../../../flare-core-sdk/packages/flare-core-flutter-push"
+      relative: true
+    source: path
+    version: "0.1.0"
   flare_core_flutter_sdk:
     dependency: "direct main"
     description:

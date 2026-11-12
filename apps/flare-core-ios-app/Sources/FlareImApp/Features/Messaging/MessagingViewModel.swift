@@ -24,6 +24,8 @@ final class MessagingViewModel: ObservableObject {
     @Published var replyTarget: AppMessage?
     @Published var previewTarget: AppMessage?
     @Published private(set) var selectedActionMessageIds: Set<String> = []
+    /// 大群「接收全部消息通知」正在送去核心的选择，核心答复前开关显示它（会话 id → 选择）。
+    @Published private(set) var notifyAllPending: [String: Bool] = [:]
 
     private let session: AppSession
     private let repository: ViewDataRepository
@@ -638,6 +640,32 @@ final class MessagingViewModel: ObservableObject {
             }
             await refreshConversations()
         }
+    }
+
+    /// 打开或关掉大群的「接收全部消息通知」。开关先动；核心先写本地再同步到服务端，没写成时核心退回原值，开关
+    /// 跟着回到核心的值。返回是否写成，没写成由调用方提示。
+    func setNotifyAll(_ conversation: AppConversation, enabled: Bool) async -> Bool {
+        let id = conversation.conversationId
+        notifyAllPending[id] = enabled
+        var saved = false
+        do {
+            let client = try await requireConnectedClient("Login before conversation actions")
+            try await client.conversations.setConversationNotifyAll([
+                "conversationId": AnySendable(id),
+                "enabled": AnySendable(enabled)
+            ])
+            saved = true
+        } catch {
+            appendLab("conversation.set_notify_all", status: "error", detail: FlareFormatters.errorText(error))
+        }
+        do {
+            try await syncConversationList(reason: "notify_all")
+        } catch {
+            appendLab("view.conversation_list.open", status: "warn", detail: FlareFormatters.errorText(error))
+        }
+        // A newer flip of the same switch keeps showing until its own answer.
+        if notifyAllPending[id] == enabled { notifyAllPending[id] = nil }
+        return saved
     }
 
     func saveDraft(_ text: String) async {

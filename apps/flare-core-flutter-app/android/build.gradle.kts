@@ -2,6 +2,20 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+        // 个推的制品只在它自己的仓库里；只让 com.getui 下的坐标走这里，别的依赖不去问它。
+        exclusiveContent {
+            forRepository {
+                maven {
+                    name = "Getui"
+                    url = uri("https://mvn.getui.com/nexus/content/repositories/releases/")
+                }
+            }
+            filter {
+                includeGroupByRegex("com\\.getui(\\..+)?")
+                // gtsdk pulls com.zxid.sdk:sdk-prod-channel-getui from the same repository.
+                includeGroupByRegex("com\\.zxid(\\..+)?")
+            }
+        }
     }
 }
 

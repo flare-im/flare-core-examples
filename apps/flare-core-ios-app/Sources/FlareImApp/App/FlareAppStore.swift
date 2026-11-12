@@ -7,6 +7,10 @@ import SwiftUI
 
 @MainActor
 final class FlareAppStore: ObservableObject, AppLifecycle {
+    /// 进程里唯一的组合根（其中是唯一的客户端）。应用代理在启动时取它、恢复保存的会话并接上推送宿主，界面之后用的
+    /// 是同一个：被后台刷新或静默推送冷启动起来的进程没有界面，会话只能在进程这一级恢复。
+    static let shared = FlareAppStore()
+
     /// 组合根 / 协调器:装配 Core(session/repository/environment)+ 各特性 ViewModel,
     /// 持有跨切面的登录/登出/释放编排([AppLifecycle])。下列计算属性把视图仍读的 `store.xxx` 转发到 Core。
     let session: AppSession
@@ -17,6 +21,10 @@ final class FlareAppStore: ObservableObject, AppLifecycle {
     let searchViewModel: SearchViewModel
     let authViewModel: AuthViewModel
     let settingsViewModel: SettingsViewModel
+    /// 推送：登录或恢复会话后接上客户端，登出、释放前摘下（进程唯一，由应用代理在启动时开起来）。
+    let notifications: PushNotifications
+    /// 应用内横幅、提示音与屏幕上的会话：登录或恢复会话后报给新客户端，登出、释放前收走。
+    let alerts: MessageAlerts
     /// The network and line page. `access.*` needs no session, so it reads before sign-in as well.
     private(set) lazy var accessDiagnostics = AccessDiagnostics(
         access: { [unowned self] in
@@ -61,6 +69,12 @@ final class FlareAppStore: ObservableObject, AppLifecycle {
         self.searchViewModel = SearchViewModel(session: session, environment: environment)
         self.authViewModel = AuthViewModel(environment: environment)
         self.settingsViewModel = SettingsViewModel(session: session, environment: environment, sdkLab: sdkLabViewModel)
+        self.notifications = PushNotifications.shared
+        let alerts = MessageAlerts(session: session)
+        self.alerts = alerts
+        notifications.onError = { [weak environment] detail in environment?.appendLab("push", status: "warn", detail: detail) }
+        session.onNotificationPresent = { [weak alerts] presentation in alerts?.present(presentation) }
+        session.onNotificationClear = { [weak alerts] event in alerts?.clear(event) }
         for publisher in [session.objectWillChange, repository.objectWillChange, environment.objectWillChange] {
             publisher.sink { [weak self] in self?.objectWillChange.send() }.store(in: &cancellables)
         }
@@ -89,9 +103,11 @@ final class FlareAppStore: ObservableObject, AppLifecycle {
 
     func login() async {
         await perform("login") {
-            try await session.start(draft: environment.loginDraft, dataURL: dataURL()) { stage in
+            let client = try await session.start(draft: environment.loginDraft, dataURL: dataURL()) { stage in
                 environment.setRuntimeStatus(.loading(stage))
             }
+            notifications.signedIn(client: client, tenantId: environment.loginDraft.tenantId, userId: environment.loginDraft.userId)
+            alerts.signedIn()
             SavedSessionStore.save(draft: environment.loginDraft)
             environment.section = .conversations
             environment.setRuntimeStatus(.ready)
@@ -103,16 +119,54 @@ final class FlareAppStore: ObservableObject, AppLifecycle {
         if isLoggedIn { updateCenter.onLoginSucceeded() } else { updateCenter.onLoginFailed() }
     }
 
+    /// 进行中的会话恢复。应用代理启动时发起的与界面随后要的是同一次：进程里只恢复一次、只建一个客户端。
+    private var resumption: Task<Bool, Never>?
+
     /// 热启动：本地会话档案存在时 prepare 本地出图（不等网络），后台建连+同步。
-    /// 成功返回 true，UI 直接进入会话工作台。
+    /// 成功返回 true，UI 直接进入会话工作台。应用代理（[resumeInBackground]）与界面都会调：一次只恢复一个，
+    /// 后到的一方等前一个出结果，已经登录就直接返回。
     @discardableResult
     func resumeSavedSession() async -> Bool {
+        await startResumption().value
+    }
+
+    /// 没有界面时恢复会话：应用代理在启动时调。后台刷新、静默推送把进程冷启动起来时，推送宿主靠它接上；
+    /// 界面之后再调 [resumeSavedSession] 时直接拿到同一个结果。
+    func resumeInBackground() {
+        startResumption()
+    }
+
+    /// 进行中的那次恢复，没有就开一次。同步记下：启动后紧接着到的系统回调（静默推送）已经看得到它。
+    @discardableResult
+    private func startResumption() -> Task<Bool, Never> {
+        if let resumption { return resumption }
+        let task = Task {
+            let resumed = await self.resumeSavedSessionOnce()
+            self.resumption = nil
+            return resumed
+        }
+        resumption = task
+        return task
+    }
+
+    /// 启动时的会话恢复还在进行就等它，最多 `limitMs` 毫秒；没在恢复时立刻返回。
+    func waitForResumption(limitMs: UInt64) async {
+        let deadline = DispatchTime.now().uptimeNanoseconds + limitMs * 1_000_000
+        while resumption != nil, DispatchTime.now().uptimeNanoseconds < deadline {
+            try? await Task.sleep(nanoseconds: 50_000_000)
+        }
+    }
+
+    private func resumeSavedSessionOnce() async -> Bool {
         guard !isLoggedIn, let draft = SavedSessionStore.load() else { return isLoggedIn }
         environment.loginDraft = draft
         do {
-            try await session.resumeLocal(draft: draft, dataURL: dataURL()) { stage in
+            let client = try await session.resumeLocal(draft: draft, dataURL: dataURL()) { stage in
                 environment.setRuntimeStatus(.loading(stage))
             }
+            // 本地库一开就接上：推送冷启动的点击此时才解析出会话，不必等连上网
+            notifications.signedIn(client: client, tenantId: draft.tenantId, userId: draft.userId)
+            alerts.signedIn()
             environment.section = .conversations
             environment.setRuntimeStatus(.ready)
             await messagingViewModel.bootstrapHome()
@@ -135,6 +189,9 @@ final class FlareAppStore: ObservableObject, AppLifecycle {
     }
 
     func logout() async {
+        // 先摘下推送：之后到的推送不再按这个账号处理，通知中心与角标也清掉
+        await notifications.signedOut()
+        alerts.signedOut()
         await perform("logout") {
             // A session the server already ended (kicked, expired) may fail its logout: this device signs out anyway.
             SavedSessionStore.clear()
@@ -144,6 +201,8 @@ final class FlareAppStore: ObservableObject, AppLifecycle {
     }
 
     func dispose() async {
+        await notifications.signedOut()
+        alerts.signedOut()
         await perform("dispose") {
             SavedSessionStore.clear()
             try await session.dispose()

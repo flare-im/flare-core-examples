@@ -137,6 +137,11 @@ class ConversationRepositoryImpl implements IConversationRepository {
   }
 
   @override
+  Future<void> setNotifyAll(String conversationId, bool enabled) {
+    return _sdk.conversationSetNotifyAll(conversationId, enabled);
+  }
+
+  @override
   Future<void> setArchived(String conversationId, bool archived) {
     return _sdk.conversationSetArchived(conversationId, archived);
   }

@@ -21,6 +21,9 @@ app/src/main/jniLibs/
 *.keystore
 key.properties
 
+# Firebase client configuration: each deployment brings its own
+google-services.json
+
 # Logs and reports
 *.log
 logs/

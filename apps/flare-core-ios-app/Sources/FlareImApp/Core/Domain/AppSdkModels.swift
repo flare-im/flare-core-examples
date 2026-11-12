@@ -18,6 +18,7 @@ struct AppConversation: Identifiable, Sendable {
     var unreadCount: UInt32 { core.unreadCount }
     var isPinned: Bool { core.isPinned }
     var isMuted: Bool { core.isMuted }
+    var notifyAll: Bool { core.notifyAll }
     var isArchived: Bool { core.isArchived }
     var draft: String? { core.draft }
     var mentionCount: UInt32 { core.mentionCount }
@@ -27,6 +28,11 @@ struct AppConversation: Identifiable, Sendable {
     var lastReadSeq: UInt64 { core.lastReadSeq }
     var maxSeq: UInt64 { core.maxSeq }
     var memberPreview: [ConversationParticipant] { core.memberPreview }
+
+    /// Groups above this many members alert only on mentions unless the member turns on all messages.
+    static let largeGroupMembers: UInt32 = 1000
+    /// A group of more than 1000 members: it alerts only on mentions until the member turns on all messages.
+    var isLargeGroup: Bool { conversationType == .group && membersCount > Self.largeGroupMembers }
 
     var appTitle: String {
         if let remark = core.remark?.trimmingCharacters(in: .whitespacesAndNewlines), !remark.isEmpty {

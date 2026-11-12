@@ -4,6 +4,8 @@ import 'package:flare_im/infrastructure/platform/app_platform_adapter.dart';
 import 'package:flare_im/interface/router/app_router.dart';
 import 'package:flare_im/interface/sdk_event_scope.dart';
 import 'package:flare_im/interface/theme/flare_im_design.dart';
+import 'package:flare_im/interface/widgets/message_alert_host.dart';
+import 'package:flare_im/interface/widgets/push_notification_host.dart';
 import 'package:flare_im/interface/widgets/recovery_link_host.dart';
 import 'package:flare_im/interface/widgets/update_host.dart';
 import 'package:flare_im_ui/flare_im_ui.dart'
@@ -44,11 +46,16 @@ class FlareImApp extends ConsumerWidget {
           darkTheme: FlareImDesign.darkTheme(),
           routerConfig: router,
           // The Kit reads its copy here, on the same choice as the app's own.
+          // The in-app message banner sits above every route.
           builder: (context, child) => FlareStringsScope(
             strings: kitStringsFor(flareLocale),
-            child: RecoveryLinkHost(
-              launchArguments: launchArguments,
-              child: UpdateHost(child: child!),
+            child: PushNotificationHost(
+              child: MessageAlertHost(
+                child: RecoveryLinkHost(
+                  launchArguments: launchArguments,
+                  child: UpdateHost(child: child!),
+                ),
+              ),
             ),
           ),
         ),

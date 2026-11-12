@@ -30,6 +30,7 @@ import com.flare.im.app.core.domain.formatByteSize
 import com.flare.im.app.core.domain.isUnwritableFolderError
 import com.flare.im.app.core.domain.shortDownloadLocation
 import com.flare.im.app.core.domain.treeDocumentPath
+import com.flare.im.app.features.notifications.NotificationDeliverySection
 import com.flare.im.app.features.shell.SectionTitle
 import com.flare.im.ui.BottomSheet
 import com.flare.im.ui.FlareButtonVariant
@@ -41,13 +42,14 @@ import com.flare.im.ui.FlareSettingKind
 import com.flare.im.ui.FlareStatusTone
 import com.flare.im.ui.LocalFlareDialog
 import com.flare.im.ui.LocalFlareToast
+import com.flare.im.ui.NotificationAlertSettings
 import com.flare.im.ui.SettingsItem
 import com.flare.im.ui.SettingsRow
 import com.flare.im.ui.flareStrings
 import com.flare.im.update.ui.FlareUpdateVersionPanel
 import kotlinx.coroutines.launch
 
-/** 设置屏：主题 + 网络与线路 + 会话态 + 诊断/登出/释放 + 下载位置与媒体缓存。 */
+/** 设置屏：主题 + 网络与线路 + 通知与后台接收 + 会话态 + 诊断/登出/释放 + 下载位置与媒体缓存。 */
 @Composable
 fun SettingsScreen(store: FlareAppStore) {
     val tk = FlareTheme.tokens
@@ -62,11 +64,14 @@ fun SettingsScreen(store: FlareAppStore) {
     val scope = rememberCoroutineScope()
     val location by vm.downloadLocation.collectAsState()
     val cacheStats by vm.cacheStats.collectAsState()
+    val alertPreferences by vm.alertPreferences.collectAsState()
+    val alertSettingsLoaded by vm.alertSettingsLoaded.collectAsState()
     var locationSheet by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
         vm.refreshCacheStats()
         vm.refreshDownloadLocation()
+        vm.refreshAlertSettings()
     }
 
     fun locationFailed(error: Throwable) {
@@ -110,6 +115,18 @@ fun SettingsScreen(store: FlareAppStore) {
             )
         }
         FlareUpdateVersionPanel(store.updateCenter, BuildConfig.VERSION_NAME)
+        Spacer(Modifier.height(tk.md))
+        // 通知是否开着、系统是否限制后台运行（kit 分组，自带标题）：只读状态并打开系统自己的页面。
+        NotificationDeliverySection()
+        Spacer(Modifier.height(tk.md))
+        // 勿扰时段、通知预览、其他设备活跃时（kit 分组）：账号级设置，所有设备共用一份。改了先显示再写进核心，没写成就
+        // 退回存着的值并说一声；读到之前只显示、不接受操作。
+        val alertsNotSaved = stringResource(R.string.settings_notification_alerts_not_saved)
+        NotificationAlertSettings(
+            value = alertPreferences,
+            disabled = !alertSettingsLoaded,
+            onChange = { next -> vm.changeAlertPreferences(next) { toast.show(alertsNotSaved, tone = FlareStatusTone.Danger) } },
+        )
         Spacer(Modifier.height(tk.md))
         Text(stringResource(R.string.settings_session), style = MaterialTheme.typography.titleMedium, color = colors.textPrimary)
         Text("User: ${user ?: "-"}", style = MaterialTheme.typography.bodyMedium, color = colors.textSecondary)

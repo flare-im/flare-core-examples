@@ -14,6 +14,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -32,12 +33,19 @@ import com.flare.im.app.features.messaging.messagerow.MessageRow
 import com.flare.im.app.features.shell.EmptyState
 import com.flare.im.app.features.shell.StatusDot
 import com.flare.im.app.features.shell.statusLabel
+import com.flare.im.ui.BottomSheet
 import com.flare.im.ui.ConversationHeader
 import com.flare.im.ui.ConversationIdentity
 import com.flare.im.ui.ConversationHeaderAction
 import com.flare.im.ui.ConversationHeaderCapabilities
+import com.flare.im.ui.FlareSettingKind
+import com.flare.im.ui.FlareStatusTone
+import com.flare.im.ui.LocalFlareToast
+import com.flare.im.ui.SettingsItem
+import com.flare.im.ui.SettingsList
+import com.flare.im.ui.SettingsSection
 
-/** 聊天屏：返回 + 标题头(状态副标题 + 会话内搜索) + 时间线 + 输入区(ComposerBar)。 */
+/** 聊天屏：返回 + 标题头(状态副标题 + 会话内搜索 + 聊天设置) + 时间线 + 输入区(ComposerBar)。 */
 @Composable
 fun ChatScreen(store: FlareAppStore) {
     val colors = FlareTheme.colors
@@ -48,7 +56,16 @@ fun ChatScreen(store: FlareAppStore) {
     val me by vm.currentUserId.collectAsState()
     val status by store.environment.runtimeStatus.collectAsState()
     val updateStatus by store.updateCenter.state.collectAsState()
+    val selectedId by store.environment.selectedConversationId.collectAsState()
     var searchOpen by remember { mutableStateOf(false) }
+    var settingsOpen by remember { mutableStateOf(false) }
+
+    // 屏幕上的会话报给引擎：它的新消息在前台不再提醒（前后台由 MainActivity 报）。
+    DisposableEffect(selectedId) {
+        val shown = selectedId
+        if (shown != null) store.alerts.chatShown(shown)
+        onDispose { if (shown != null) store.alerts.chatHidden(shown) }
+    }
 
     Column(Modifier.fillMaxSize()) {
         ConversationHeader(
@@ -56,11 +73,19 @@ fun ChatScreen(store: FlareAppStore) {
                 id = conversation?.conversationId ?: "",
                 title = conversation?.appTitle ?: "",
             ),
-            capabilities = ConversationHeaderCapabilities(setOf("search")),
-            actions = listOf(ConversationHeaderAction("search", stringResource(R.string.chat_search_title), "search")),
+            capabilities = ConversationHeaderCapabilities(setOf("search", "details")),
+            actions = listOf(
+                ConversationHeaderAction("search", stringResource(R.string.chat_search_title), "search"),
+                ConversationHeaderAction("details", stringResource(R.string.chat_settings_title), "more"),
+            ),
             showBack = true,
             onBack = { store.environment.setSelectedConversationId(null) },
-            onAction = { if (it.id == "search") searchOpen = true },
+            onAction = {
+                when (it.id) {
+                    "search" -> searchOpen = true
+                    "details" -> settingsOpen = true
+                }
+            },
         )
         if (messages.isEmpty()) {
             Box(Modifier.weight(1f)) { EmptyState(stringResource(R.string.chat_empty_title), stringResource(R.string.chat_empty_message)) }
@@ -73,6 +98,53 @@ fun ChatScreen(store: FlareAppStore) {
     }
 
     if (searchOpen) InChatSearchSheet(store) { searchOpen = false }
+    if (settingsOpen) ConversationSettingsSheet(store) { settingsOpen = false }
+}
+
+private const val MUTE_ROW = "mute"
+private const val NOTIFY_ALL_ROW = "notifyAll"
+
+/**
+ * 聊天设置：免打扰；超过 1000 人的群另有「接收全部消息通知」（大群默认只在 @我 时提醒）。全部消息通知的开关先动，
+ * 核心没写成时回到核心的值并提示。
+ */
+@Composable
+private fun ConversationSettingsSheet(store: FlareAppStore, onDismiss: () -> Unit) {
+    val vm = store.messagingViewModel
+    val conversation by vm.selectedConversation.collectAsState()
+    val pending by vm.notifyAllPending.collectAsState()
+    val toast = LocalFlareToast.current
+    val title = stringResource(R.string.chat_settings_title)
+    val muteLabel = stringResource(R.string.chat_settings_mute)
+    val notifyAllLabel = stringResource(R.string.chat_settings_notify_all)
+    val notifyAllHint = stringResource(R.string.chat_settings_notify_all_hint)
+    val notSaved = stringResource(R.string.chat_settings_notify_all_not_saved)
+    val current = conversation ?: return
+
+    val sections = buildList {
+        add(SettingsSection(items = listOf(SettingsItem(MUTE_ROW, muteLabel, kind = FlareSettingKind.Toggle, value = current.core.isMuted))))
+        if (current.isLargeGroup) {
+            val notifyAll = pending[current.conversationId] ?: current.core.notifyAll
+            add(
+                SettingsSection(
+                    items = listOf(SettingsItem(NOTIFY_ALL_ROW, notifyAllLabel, kind = FlareSettingKind.Toggle, value = notifyAll)),
+                    footer = notifyAllHint,
+                ),
+            )
+        }
+    }
+    BottomSheet(onClose = onDismiss, title = title) {
+        SettingsList(
+            sections = sections,
+            onToggle = { item, on ->
+                when (item.key) {
+                    MUTE_ROW -> vm.conversationAction("mute", current)
+                    NOTIFY_ALL_ROW -> vm.setNotifyAll(current, on) { toast.show(notSaved, tone = FlareStatusTone.Danger) }
+                }
+            },
+            scrollable = false,
+        )
+    }
 }
 
 /** 会话内消息搜索：复用 SearchViewModel 的 conversation-scoped 搜索。 */

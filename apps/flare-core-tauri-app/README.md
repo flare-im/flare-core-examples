@@ -20,9 +20,22 @@ Tauri owns no separate message/composer CSS; shared ownership gaps still count.
 ## SDK Adapter
 
 `src/integration/referenceRuntime.ts` uses `FlareCoreSdk.createClient()` and
-registers native file-path resolution, scoped file picking, the private TLS CA,
-notifications and unread-count bridges. Rust commands/plugins remain in
-`src-tauri`; SDK events and outgoing operations use the shared workbench adapter.
+registers native file-path resolution, scoped file picking and the private TLS
+CA. Rust commands/plugins remain in `src-tauri`; SDK events and outgoing
+operations use the shared workbench adapter.
+
+`src/notifications/MessageAlerts.vue`, mounted inside the reference app (its default slot), shows
+what the engine decided: system notifications through the SDK notifier
+(`startSystemNotifications`) with a presenter over the Tauri notification plugin
+(`src/desktopNotifications.ts`), the kit in-app banner for surface `inApp` with
+the app's message sound, and the dock / taskbar badge and tray title from
+`notification.badge`. It reports the open chat of a focused window
+(`notification.setFocus`) and asks for the notification permission once per
+account from the conversation list with the kit `PermissionPrompt` soft-ask.
+The same permission (`src/notifications/permission.ts`) is the "New message
+notifications" row of the workbench settings sheet, next to quiet hours,
+notification preview and the multi-device policy (the core's
+`notification.getSettings` / `updateSettings`).
 
 ## Run
 

@@ -29,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.flare.im.app.core.FlareAppStore
 import com.flare.im.app.core.designsystem.FlareAppPalette
@@ -40,6 +41,7 @@ import com.flare.im.app.core.domain.toKitStatus
 import com.flare.im.app.features.auth.LoginScreen
 import com.flare.im.app.features.messaging.chat.ChatScreen
 import com.flare.im.app.features.messaging.conversationlist.ConversationListScreen
+import com.flare.im.app.features.notifications.playMessageSound
 import com.flare.im.app.features.sdklab.SdkLabScreen
 import com.flare.im.app.features.search.SearchScreen
 import com.flare.im.app.features.settings.AccessDiagnosticsScreen
@@ -59,8 +61,10 @@ import com.flare.im.ui.FlareIMAppConfiguration
 import com.flare.im.ui.FlareThemeMode
 import com.flare.im.ui.FlareToastHost
 import com.flare.im.ui.IMAppKit
+import com.flare.im.ui.InAppNotificationHost
 import com.flare.im.ui.flareStrings
 import com.flare.im.ui.resolveApplicationResponsiveMode
+import com.flare.im.push.FlarePush
 import com.flare.im.update.FlareUpdatePromptForm
 import com.flare.im.update.ui.FlareUpdatePromptHost
 import com.flare.im.update.ui.FlareUpdateResourceScope
@@ -97,6 +101,11 @@ fun FlareApp(store: FlareAppStore, recoveryLink: String?, onRecoveryLinkTaken: (
     LaunchedEffect(resumeAttempted, locale) {
         if (resumeAttempted) store.updateCenter.launch { setLocale(locale) }
     }
+    // 推送令牌登记带同一种语言，服务端兜底文案才和界面一致：启动时给一次（模块装上之前给也算数），语言变了再给。
+    LaunchedEffect(locale) { FlarePush.setLocale(locale) }
+    // 引擎要横幅响一声时放系统的通知提示音。
+    val context = LocalContext.current
+    LaunchedEffect(store.alerts, context) { store.alerts.sounds.collect { playMessageSound(context) } }
     // A recovery link waits for the saved session's resume, which is what brings the client up.
     LaunchedEffect(resumeAttempted, recoveryLink) {
         if (resumeAttempted && recoveryLink != null) {
@@ -109,30 +118,36 @@ fun FlareApp(store: FlareAppStore, recoveryLink: String?, onRecoveryLinkTaken: (
             val colors = FlareTheme.colors
             // The kit's feedback presenter: toasts (保存到本机 answers with one) and the danger confirm dialog.
             FlareToastHost(modifier = Modifier.fillMaxSize()) {
-                Box(Modifier.fillMaxSize().background(colors.background)) {
-                    when {
-                        loggedIn -> {
-                            WorkbenchScreen(store)
-                            WorkbenchConnectionNotice(store, Modifier.align(Alignment.TopCenter))
+                // 应用内新消息横幅盖在页面之上；点开与点系统通知走同一条路，打开那个会话。
+                InAppNotificationHost(
+                    store.alerts.banners,
+                    onOpen = { conversationId, _ -> store.openFromNotification(conversationId) },
+                ) {
+                    Box(Modifier.fillMaxSize().background(colors.background)) {
+                        when {
+                            loggedIn -> {
+                                WorkbenchScreen(store)
+                                WorkbenchConnectionNotice(store, Modifier.align(Alignment.TopCenter))
+                            }
+                            resumeAttempted -> LoginScreen(store)
+                            else -> Unit
                         }
-                        resumeAttempted -> LoginScreen(store)
-                        else -> Unit
-                    }
-                    val busy by store.environment.isBusy.collectAsState()
-                    if (busy) {
-                        Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.08f)), Alignment.Center) {
-                            CircularProgressIndicator(color = colors.brand)
+                        val busy by store.environment.isBusy.collectAsState()
+                        if (busy) {
+                            Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.08f)), Alignment.Center) {
+                                CircularProgressIndicator(color = colors.brand)
+                            }
                         }
-                    }
-                    // The network and line page sits over sign-in and the workbench: a recovery link can open it in either.
-                    if (store.accessDiagnostics.presented) {
-                        // The empty pointer modifier keeps taps from reaching the page underneath.
-                        Box(Modifier.fillMaxSize().pointerInput(Unit) {}) {
-                            AccessDiagnosticsScreen(store.accessDiagnostics, onBack = { store.accessDiagnostics.presented = false })
+                        // The network and line page sits over sign-in and the workbench: a recovery link can open it in either.
+                        if (store.accessDiagnostics.presented) {
+                            // The empty pointer modifier keeps taps from reaching the page underneath.
+                            Box(Modifier.fillMaxSize().pointerInput(Unit) {}) {
+                                AccessDiagnosticsScreen(store.accessDiagnostics, onBack = { store.accessDiagnostics.presented = false })
+                            }
                         }
+                        // The update prompt over everything, in either sign-in state.
+                        FlareUpdatePromptHost(store.updateCenter)
                     }
-                    // The update prompt over everything, in either sign-in state.
-                    FlareUpdatePromptHost(store.updateCenter)
                 }
             }
         }

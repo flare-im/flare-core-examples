@@ -26,6 +26,9 @@ final class AppSession: ObservableObject {
     var onViewUpdate: (@MainActor (ViewUpdate) -> Void)?
     var onMessageSendFailed: (@MainActor (String) -> Void)?
     var onUpdateState: (@MainActor (UpdateStatus) -> Void)?
+    /// 引擎交来的应用内提醒（`notification.present`、`notification.clear`），交给 ``MessageAlerts``。
+    var onNotificationPresent: (@MainActor (NotificationPresentation) -> Void)?
+    var onNotificationClear: (@MainActor (NotificationClearEvent) -> Void)?
 
     private let clientFactory: SdkClientFactory
     private let access: AppAccess
@@ -293,6 +296,13 @@ final class AppSession: ObservableObject {
             },
             client.events.onPluginCatalogChanged { [weak self] event in
                 Task { @MainActor in self?.appendEvent("plugin", name: "catalog_changed", detail: event.version) }
+            },
+            // 标题与正文是消息预览，不进事件记录。
+            client.events.onNotificationPresent { [weak self] presentation in
+                Task { @MainActor in self?.onNotificationPresent?(presentation) }
+            },
+            client.events.onNotificationClear { [weak self] event in
+                Task { @MainActor in self?.onNotificationClear?(event) }
             }
         ]
     }

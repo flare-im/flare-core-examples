@@ -5,17 +5,21 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.repeatOnLifecycle
 import com.flare.im.app.core.platform.AndroidPlatformAdapter
 import com.flare.im.app.features.settings.parseRecoveryLink
 import com.flare.im.app.features.shell.FlareApp
-import com.flare.im.FlareCoreSdk
+import com.flare.im.push.FlarePush
 import com.flare.im.update.FlareResumedActivity
 import com.flare.im.ui.FlarePlatformProvider
+import kotlinx.coroutines.awaitCancellation
 
 /**
- * 单 Activity 宿主：装配 [FlareRootViewModel]（持组合根 FlareAppStore）并渲染 [FlareApp]。
+ * 单 Activity 宿主：取进程级的 [FlareRootViewModel]（持组合根 FlareAppStore，由 [FlareCoreApplication] 持有）并渲染
+ * [FlareApp]。
  */
 class MainActivity : ComponentActivity() {
     // Recovery link `flare-recover://…` (manifest VIEW filter): a cold start reads it here, a warm one arrives through
@@ -24,6 +28,8 @@ class MainActivity : ComponentActivity() {
 
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
+        // 点开的通知：载荷交给推送模块，核对过的去向从 FlarePush.routes 出来。它不是恢复链接，不动那一项。
+        if (FlarePush.handleLaunchIntent(intent)) return
         recoveryLink.value = parseRecoveryLink(intent.dataString)
     }
 
@@ -31,22 +37,16 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         // The Play update dialog needs the activity on screen, which the view model outlives.
         FlareResumedActivity.track(application)
-        if (savedInstanceState == null) recoveryLink.value = parseRecoveryLink(intent?.dataString)
+        if (savedInstanceState == null) {
+            recoveryLink.value = parseRecoveryLink(intent?.dataString)
+            // 冷启动的那次点击：会话恢复之前模块先留着它，会话就绪（FlarePush.refresh）后再解析成去向。
+            FlarePush.handleLaunchIntent(intent)
+        }
         // 全屏：内容铺到状态栏/导航栏之下（渐变品牌头满铺，对齐 iOS）。各屏自行用 inset padding。
         enableEdgeToEdge()
-        val dataDir = filesDir.absolutePath
-        // The native core resolves its default data root from XDG/HOME conventions, which on
-        // Android point under the read-only "/" mount. Anchor them to app-private storage so
-        // any default-root fallback (and SQLite/media-cache roots) lands in a writable place.
-        runCatching {
-            android.system.Os.setenv("HOME", dataDir, true)
-            android.system.Os.setenv("XDG_DATA_HOME", dataDir, true)
-            android.system.Os.setenv("TMPDIR", cacheDir.absolutePath, true)
-        }
-        val savedSessionStore = com.flare.im.app.core.session.SavedSessionStore(applicationContext)
-        // The view model outlives this activity: its client factory holds the application context only.
-        val appContext = applicationContext
-        val installer = updateInstaller(appContext)
+        // 进程级的组合根（唯一的客户端）由 Application 持有：这个页面只用它，关掉或重建都不释放它。
+        // The native data roots are anchored there too, before any client exists.
+        val root = (application as FlareCoreApplication).root
         // Layer 5（spec/platform-contract.json）：宿主声明并执行原生能力，kit 只读 capabilities。
         // 在 onCreate 注册 ActivityResult 契约（onStart 之前），配置变更后结果仍能回到新实例。
         val platform = AndroidPlatformAdapter(
@@ -55,16 +55,23 @@ class MainActivity : ComponentActivity() {
             widthDp = { resources.configuration.screenWidthDp },
         )
         setContent {
-            val root: FlareRootViewModel =
-                viewModel(
-                    // createClient(context) reports this app's version on connect and installs the platform
-                    // lifecycle (network and foreground) after init: the app wires neither.
-                    factory = FlareRootViewModel.factory(
-                        dataDir,
-                        savedSessionStore,
-                        installer,
-                    ) { FlareCoreSdk.createClient(appContext) },
-                )
+            // 通知点击的去向只在这里收集：界面在前台时打开那条会话，冷启动的点击等会话就绪后才会到。
+            LaunchedEffect(root) {
+                lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                    FlarePush.routes.collect { route -> root.store.openFromNotification(route.conversationId) }
+                }
+            }
+            // 界面可见时聊天页上的会话才算在屏幕上：退到后台时引擎照常提醒那个会话的新消息。
+            LaunchedEffect(root) {
+                lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                    root.store.alerts.setForeground(true)
+                    try {
+                        awaitCancellation()
+                    } finally {
+                        root.store.alerts.setForeground(false)
+                    }
+                }
+            }
             FlarePlatformProvider(platform) {
                 FlareApp(root.store, recoveryLink.value, onRecoveryLinkTaken = { recoveryLink.value = null })
             }
