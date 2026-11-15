@@ -7,40 +7,66 @@ import {
   requestPermission,
   sendNotification,
 } from "@tauri-apps/plugin-notification";
+import type { NotificationPresenter } from "@flare-im/sdk/notifications";
 import { translateFlare } from "@flare-im/vue-ui/i18n";
+import { playDesktopNotificationSound } from "../../../shared/vue-reference/workbench/app";
 
-type DesktopNotificationPayload = {
-  title: string;
-  body: string;
-  kind?: "message" | "call";
-  requireAttention?: boolean;
-};
-
-let permissionTask: Promise<boolean> | undefined;
 let trayTask: Promise<TrayIcon | null> | undefined;
 let trayUnavailable = false;
-let currentUnreadCount = 0;
+let currentBadgeCount = 0;
 const trayId = "flare-core-tauri-tray";
 
 export function configureTauriDesktopNotifications(): void {
   void ensureTrayIcon();
 }
 
-export async function notifyDesktop(payload: DesktopNotificationPayload): Promise<void> {
-  if (await ensureNotificationPermission()) {
-    sendNotification({
-      title: notificationText(payload.title, "Flare IM"),
-      body: notificationText(payload.body, translateFlare("notifications.newAlert")),
-    });
-  }
-  if (payload.requireAttention !== false) await requestAttention(payload);
+/**
+ * The engine's system notifications on the desktop, through the Tauri notification plugin. The engine decided each
+ * one (and rendered its text); this only puts it on screen: one notification per conversation (its collapse id as the
+ * notification id, its thread as the group), the app's message sound and a dock / taskbar bounce when the engine asks
+ * for a sound, urgent ones bouncing until the window is brought forward. The desktop plugin reports no clicks and
+ * cannot take a shown notification down, so a click only brings the app to the front through the system and the
+ * notification centre tidies itself.
+ */
+export function tauriNotificationPresenter(): NotificationPresenter {
+  let denied = false;
+  return {
+    async permission() {
+      if (await isPermissionGranted()) return "granted";
+      return denied ? "denied" : "prompt";
+    },
+    async requestPermission() {
+      const answer = await requestPermission();
+      denied = answer === "denied";
+      if (answer === "granted") return "granted";
+      return denied ? "denied" : "prompt";
+    },
+    async show(notification) {
+      if (!(await isPermissionGranted())) return;
+      sendNotification({
+        id: notificationId(notification.collapseId),
+        ...(notification.threadId ? { group: notification.threadId } : {}),
+        title: notification.title || notification.body,
+        body: notification.title ? notification.body : "",
+      });
+      if (!notification.sound) return;
+      await playDesktopNotificationSound("message");
+      await getCurrentWindow().requestUserAttention(
+        notification.channel === "urgent" ? UserAttentionType.Critical : UserAttentionType.Informational,
+      );
+    },
+    close() {},
+    closeAll() {},
+    focus: revealMainWindow,
+  };
 }
 
-export async function setDesktopUnreadCount(count: number): Promise<void> {
+/** The dock / taskbar badge and the tray title: the engine's unread total (`notification.badge`). */
+export async function setDesktopBadgeCount(count: number): Promise<void> {
   const normalized = Math.max(0, Math.trunc(count));
-  currentUnreadCount = normalized;
+  currentBadgeCount = normalized;
   await getCurrentWindow().setBadgeCount(normalized > 0 ? normalized : undefined);
-  await updateTrayUnreadCount(normalized);
+  await updateTrayBadgeCount(normalized);
 }
 
 function ensureTrayIcon(): Promise<TrayIcon | null> {
@@ -48,7 +74,7 @@ function ensureTrayIcon(): Promise<TrayIcon | null> {
   trayTask ??= (async () => {
     const existing = await TrayIcon.getById(trayId);
     if (existing) {
-      await updateTrayUnreadCount(currentUnreadCount, existing);
+      await updateTrayBadgeCount(currentBadgeCount, existing);
       return existing;
     }
     const icon = await defaultWindowIcon();
@@ -70,14 +96,14 @@ function ensureTrayIcon(): Promise<TrayIcon | null> {
       menu,
       showMenuOnLeftClick: false,
       tooltip: "Flare Core Tauri",
-      title: badgeLabel(currentUnreadCount),
+      title: badgeLabel(currentBadgeCount),
       action: (event) => {
         if (event.type === "Click" && event.button === "Left" && event.buttonState === "Up") {
           void revealMainWindow();
         }
       },
     });
-    await updateTrayUnreadCount(currentUnreadCount, tray);
+    await updateTrayBadgeCount(currentBadgeCount, tray);
     return tray;
   })().catch((error) => {
     trayTask = undefined;
@@ -96,7 +122,7 @@ async function revealMainWindow(): Promise<void> {
   await window.setFocus();
 }
 
-async function updateTrayUnreadCount(count: number, trayOverride?: TrayIcon | null): Promise<void> {
+async function updateTrayBadgeCount(count: number, trayOverride?: TrayIcon | null): Promise<void> {
   const tray = trayOverride ?? await ensureTrayIcon();
   if (!tray) return;
   const label = badgeLabel(count);
@@ -108,29 +134,13 @@ async function updateTrayUnreadCount(count: number, trayOverride?: TrayIcon | nu
   );
 }
 
-function ensureNotificationPermission(): Promise<boolean> {
-  permissionTask ??= (async () => {
-    if (await isPermissionGranted()) return true;
-    const permission = await requestPermission();
-    return permission === "granted";
-  })().catch((error) => {
-    permissionTask = undefined;
-    console.warn("[flare-tauri] notification_permission_failed", error);
-    return false;
-  });
-  return permissionTask;
-}
-
-async function requestAttention(payload: DesktopNotificationPayload): Promise<void> {
-  const requestType = payload.kind === "call"
-    ? UserAttentionType.Critical
-    : UserAttentionType.Informational;
-  await getCurrentWindow().requestUserAttention(requestType);
-}
-
-function notificationText(value: string, fallback: string): string {
-  const trimmed = value.trim();
-  return (trimmed || fallback).slice(0, 180);
+/** The collapse id as a 32-bit notification id: a later notification for the conversation reuses it. */
+function notificationId(collapseId: string): number {
+  let hash = 0;
+  for (let index = 0; index < collapseId.length; index += 1) {
+    hash = (Math.imul(hash, 31) + collapseId.charCodeAt(index)) | 0;
+  }
+  return hash;
 }
 
 function badgeLabel(count: number): string {

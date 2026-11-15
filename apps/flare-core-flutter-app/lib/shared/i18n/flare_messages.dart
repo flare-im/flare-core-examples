@@ -529,6 +529,7 @@ final class FlareSettingsCopy {
   String get clearCacheConfirm => _m.t('settings.clearCacheConfirm');
   String get cacheCleared => _m.t('settings.cacheCleared');
   String get clearCacheFailed => _m.t('settings.clearCacheFailed');
+  String get notificationAlertsNotSaved => _m.t('settings.notificationAlertsNotSaved');
 }
 
 final class FlareSdkLabCopy {
@@ -614,6 +615,9 @@ final class FlareDetailsCopy {
   String get archivedTag => _m.t('details.archivedTag');
   String membersCount(int n) =>
       _m.t('details.membersCount').replaceAll('{count}', '$n');
+  String get notifyAll => _m.t('details.notifyAll');
+  String get notifyAllHint => _m.t('details.notifyAllHint');
+  String get notifyAllFailed => _m.t('details.notifyAllFailed');
 }
 
 const _catalog = <FlareLocale, Map<String, dynamic>>{
@@ -1067,6 +1071,7 @@ const _catalog = <FlareLocale, Map<String, dynamic>>{
       'clearCacheConfirm': '清除后，看过的图片需要重新下载。',
       'cacheCleared': '缓存已清除',
       'clearCacheFailed': '缓存没有清除，请重试',
+      'notificationAlertsNotSaved': '通知设置没有保存，请重试',
     },
     'sdkLab': {
       'title': 'SDK 能力中心',
@@ -1142,6 +1147,9 @@ const _catalog = <FlareLocale, Map<String, dynamic>>{
       'muteTag': '免打扰',
       'archivedTag': '已归档',
       'membersCount': '{count} 位成员',
+      'notifyAll': '接收全部消息通知',
+      'notifyAllHint': '超过 1000 人的群默认只在 @我 时提醒，打开后每条新消息都提醒。',
+      'notifyAllFailed': '设置没有保存，请重试',
     },
   },
   FlareLocale.enUs: {
@@ -1596,6 +1604,7 @@ const _catalog = <FlareLocale, Map<String, dynamic>>{
       'clearCacheConfirm': 'Pictures you have seen will be downloaded again.',
       'cacheCleared': 'Cache cleared',
       'clearCacheFailed': 'Could not clear the cache. Try again.',
+      'notificationAlertsNotSaved': 'Notification settings were not saved. Try again.',
     },
     'sdkLab': {
       'title': 'SDK Lab',
@@ -1671,6 +1680,10 @@ const _catalog = <FlareLocale, Map<String, dynamic>>{
       'muteTag': 'Muted',
       'archivedTag': 'Archived',
       'membersCount': '{count} members',
+      'notifyAll': 'Notify me of all messages',
+      'notifyAllHint':
+          'Groups of more than 1,000 members alert only when you are mentioned. Turn this on to be alerted for every new message.',
+      'notifyAllFailed': 'The setting was not saved. Try again.',
     },
   },
 };

@@ -58,6 +58,11 @@
     <string name="chat_search_hint">Keyword</string>
     <string name="chat_search_action">Search</string>
     <string name="chat_search_empty">Enter a keyword to search this conversation</string>
+    <string name="chat_settings_title">Chat settings</string>
+    <string name="chat_settings_mute">Mute notifications</string>
+    <string name="chat_settings_notify_all">Notify me of all messages</string>
+    <string name="chat_settings_notify_all_hint">Groups of more than 1,000 members alert only when you are mentioned. Turn this on to be alerted for every new message.</string>
+    <string name="chat_settings_notify_all_not_saved">The setting was not saved. Try again.</string>
     <string name="composer_hint">Send to %1$s</string>
     <string name="composer_form_send">Send</string>
 
@@ -161,4 +166,8 @@
     <string name="settings_clear_cache_confirm">Pictures you have seen will be downloaded again.</string>
     <string name="settings_clear_cache_failed">Could not clear the cache. Try again.</string>
     <string name="settings_cache_cleared">Cache cleared</string>
+
+    <!-- Notifications: the kit owns the prompt, status and guide copy, including the vendor auto-start entry; the failure toast is the app's -->
+    <string name="settings_open_failed">Couldn\'t open the system settings.</string>
+    <string name="settings_notification_alerts_not_saved">Notification settings were not saved. Try again.</string>
 </resources>

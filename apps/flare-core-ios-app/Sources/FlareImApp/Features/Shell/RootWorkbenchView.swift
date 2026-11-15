@@ -89,6 +89,7 @@ private struct WorkbenchView: View {
     @EnvironmentObject private var messaging: MessagingViewModel
     @EnvironmentObject private var environment: AppEnvironment
     @EnvironmentObject private var updateCenter: FlareUpdateController
+    @EnvironmentObject private var notifications: PushNotifications
     @Environment(\.flareStrings) private var strings
     @State private var mobileChatOpen = false
 
@@ -123,6 +124,22 @@ private struct WorkbenchView: View {
         .task {
             if messaging.allConversations.isEmpty {
                 await messaging.refreshConversations()
+            }
+        }
+        // 点通知打开的会话。冷启动时它在会话恢复之后才解析出来，工作台可能早已显示，也可能刚出现。
+        .onAppear { openNotificationTap() }
+        .onChange(of: notifications.openRequest) { _ in openNotificationTap() }
+    }
+
+    /// 切到消息、打开那个会话；手机上进聊天页。这个应用的时间线不支持定位到某条消息，只打开会话。
+    private func openNotificationTap() {
+        guard let request = notifications.takeOpenRequest() else { return }
+        environment.section = .conversations
+        Task { @MainActor in
+            await messaging.openConversation(request.conversationId)
+            // 会话打开了才进聊天页：打不开就留在列表上，不停在一个空的聊天页
+            if messaging.selectedConversation?.conversationId == request.conversationId {
+                mobileChatOpen = true
             }
         }
     }

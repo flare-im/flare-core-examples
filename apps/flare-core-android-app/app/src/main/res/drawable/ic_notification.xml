@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Status bar icon for message notifications: the flare mark, single colour on a transparent background
+     (the system tints it). The viewport crops the mark's 108-unit launcher canvas to the mark itself. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="60"
+    android:viewportHeight="60">
+    <group
+        android:translateX="-24"
+        android:translateY="-24">
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M54,26 Q58.5,49.5 82,54 Q58.5,58.5 54,82 Q49.5,58.5 26,54 Q49.5,49.5 54,26 Z" />
+        <path
+            android:fillColor="#FFFFFFFF"
+            android:pathData="M72,27 Q73.4,34.6 81,36 Q73.4,37.4 72,45 Q70.6,37.4 63,36 Q70.6,34.6 72,27 Z" />
+    </group>
+</vector>

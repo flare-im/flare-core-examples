@@ -23,7 +23,8 @@ test("tauri reference runtime keeps native transport and file picking in the pla
   assert.match(adapter, /"CANCELLED"/);
   assert.match(runtime, /platform:\s*\{[\s\S]*kind:\s*"tauri"[\s\S]*adapter:\s*createTauriPlatformAdapter\(\)/);
   assert.doesNotMatch(runtime, /@tauri-apps\/plugin-dialog|configureAppMediaPathPicker/);
-  assert.match(runtime, /setDesktopUnreadCount/);
+  // Alerts and the badge are the engine's: the workbench gets no desktop notification adapter of its own.
+  assert.doesNotMatch(runtime, /configureDesktopNotifications|notifyDesktop|setDesktopUnreadCount/);
   assert.match(main, /configureReferenceApp\(referenceRuntime\)/);
   assert.match(main, /configureNativeReferenceBridges\(\)/);
   assert.match(runtime, /configureAppMediaLocalPathResolver\(convertFileSrc\)/);
@@ -59,6 +60,24 @@ test("tauri native SDK enables the QUIC cargo feature chain", () => {
   assert.match(tauriCargo, /flare-im-core-sdk-tauri\s*=\s*\{[^}]*features\s*=\s*\[[^\]]*"quic"/s);
   assert.match(tauriBindingCargo, /quic\s*=\s*\[[^\]]*"flare-im-core-sdk\/quic"/s);
   assert.match(sdkCargo, /quic\s*=\s*\[[^\]]*"flare-core\/quic"/s);
+});
+
+test("tauri shows the engine's notifications, banner and badge", () => {
+  const app = readFromApp("src/App.vue");
+  const alerts = readFromApp("src/notifications/MessageAlerts.vue");
+  const permission = readFromApp("src/notifications/permission.ts");
+  const desktopNotifications = readFromApp("src/desktopNotifications.ts");
+
+  assert.match(app, /<ReferenceApp[^>]*:notification-permission="notificationPermission"[^>]*>\s*<MessageAlerts \/>/);
+  assert.match(alerts, /startSystemNotifications\(client\.events/);
+  assert.match(alerts, /presenter:\s*notificationPresenter/);
+  assert.match(permission, /notificationPresenter = tauriNotificationPresenter\(\)/);
+  assert.match(alerts, /FlareInAppNotificationHost/);
+  assert.match(alerts, /onNotificationBadge[\s\S]*setDesktopBadgeCount/);
+  assert.match(alerts, /client\.notification\.setFocus/);
+  assert.match(alerts, /FlarePermissionPrompt/);
+  assert.match(desktopNotifications, /@tauri-apps\/plugin-notification/);
+  assert.doesNotMatch(alerts, /notification\.message_sound|onNotificationMessageSound/);
 });
 
 test("tauri shell exposes a tray icon with unread badge text", () => {

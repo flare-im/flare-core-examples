@@ -40,7 +40,9 @@ class AppSessionAccessClientTest {
             return (if (descriptor.responseEncoding == "unit") Unit else emptyMap<String, Any?>()) as T
         }
 
-        fun count(descriptor: NativeCallDescriptor): Int = operations.count { it == descriptor.operation }
+        // A synchronized list still needs its lock while it is iterated: calls arrive from other threads.
+        fun count(descriptor: NativeCallDescriptor): Int =
+            synchronized(operations) { operations.count { it == descriptor.operation } }
     }
 
     private val bridge = AnsweringBridge()

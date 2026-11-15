@@ -4,6 +4,12 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
+// FCM 的客户端配置（Firebase 控制台下载的 google-services.json）放在本模块目录下才套 Google 服务插件。
+// 没有它照样构建：Firebase 不初始化，推送模块报 FCM 不可用，个推与通知的其余部分照常。
+if (file("google-services.json").isFile) {
+    apply(plugin = "com.google.gms.google-services")
+}
+
 /** The build settings that name where the SDK connects (see AppAccess.kt). */
 val accessBuildSettings = listOf(
     "FLARE_ACCESS_JSON",
@@ -61,6 +67,11 @@ android {
         buildConfigField("String", "DEFAULT_USER_ID", buildConfigString(defaultUserId))
         // 更新渠道：发布清单按它选（`stable`、`beta`、`internal`）。
         buildConfigField("String", "FLARE_UPDATE_CHANNEL", buildConfigString(accessBuildSetting("FLARE_UPDATE_CHANNEL").ifEmpty { "stable" }))
+        // 个推（国内安卓推送）按构建启用：给了 FLARE_GETUI_APP_ID 才在登录后启动它。它填个推 SDK 清单里的
+        // GETUI_APPID 占位符，也进 BuildConfig 供应用判断；没给时模块照样编进来，运行时不初始化。
+        val getuiAppId = accessBuildSetting("FLARE_GETUI_APP_ID")
+        manifestPlaceholders["GETUI_APPID"] = getuiAppId
+        buildConfigField("String", "FLARE_GETUI_APP_ID", buildConfigString(getuiAppId))
     }
 
     sourceSets {
@@ -127,7 +138,11 @@ tasks.matching { releasePreBuild.matches(it.name) }.configureEach {
 }
 
 dependencies {
+    // The core package brings the platform push module (`api`); Getui is installed at run time only with an app id.
     implementation(project(":flare-core-android-sdk"))
+    implementation(project(":flare-core-android-push-getui"))
+    // Resident connection mode: offered in settings only when the build has no push provider; off by default.
+    implementation(project(":flare-core-android-keepalive"))
     implementation(project(":flare-core-android-update-ui"))
     "playImplementation"(project(":flare-core-android-update-play"))
     implementation("com.flare.im:im-ui-compose:2.0.0-rc.1")

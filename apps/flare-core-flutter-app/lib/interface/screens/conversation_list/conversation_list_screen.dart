@@ -13,6 +13,7 @@ import 'package:flare_im/interface/theme/flare_im_design.dart';
 import 'package:flare_im/interface/widgets/connection_notice_host.dart';
 import 'package:flare_im/interface/widgets/conversation_filter_bar.dart';
 import 'package:flare_im/interface/widgets/conversation_item/conversation_item.dart';
+import 'package:flare_im/interface/widgets/notification_permission_prompt.dart';
 import 'package:flare_im/interface/widgets/unread_badge.dart';
 import 'package:flare_im/shared/i18n/flare_locale.dart';
 import 'package:flare_im/shared/i18n/flare_messages.dart';
@@ -59,6 +60,11 @@ class _ConversationListScreenState
     Future.microtask(() {
       if (!mounted) return;
       unawaited(_imOutbound.conversationListReload());
+    });
+    // 登录后来到这里、通知还没开时问一次（这次运行只问一次，答过的账号不再问）。
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(askForNotificationsOnce(context, ref));
     });
   }
 

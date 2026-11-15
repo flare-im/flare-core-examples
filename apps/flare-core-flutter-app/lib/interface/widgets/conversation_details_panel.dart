@@ -157,6 +157,13 @@ class ConversationDetailsPanel extends ConsumerWidget {
                 ),
               ],
             ),
+            if (c.isLargeGroup) ...[
+              const SizedBox(height: 16),
+              _NotifyAllSetting(
+                key: ValueKey(c.conversationId),
+                conversation: c,
+              ),
+            ],
             const SizedBox(height: 20),
             Text(
               i18n.statusSection,
@@ -202,7 +209,7 @@ class ConversationDetailsPanel extends ConsumerWidget {
 
   String _subtitle(Conversation c, FlareDetailsCopy i18n) {
     if (c.conversationType == ConversationType.group) {
-      return i18n.membersCount(0);
+      return i18n.membersCount(c.membersCount);
     }
     final peer = c.peerUserId?.trim() ?? '';
     return peer.isNotEmpty ? peer : c.conversationId;
@@ -273,6 +280,74 @@ class ConversationDetailsPanel extends ConsumerWidget {
         context.pop();
       }
     }
+  }
+}
+
+/// 超过 1000 人的群默认只在 @我 时提醒：「接收全部消息通知」打开后每条新消息都提醒。开关先动，核心没写成时回到
+/// 核心的值并提示。
+class _NotifyAllSetting extends ConsumerStatefulWidget {
+  const _NotifyAllSetting({super.key, required this.conversation});
+
+  final Conversation conversation;
+
+  @override
+  ConsumerState<_NotifyAllSetting> createState() => _NotifyAllSettingState();
+}
+
+class _NotifyAllSettingState extends ConsumerState<_NotifyAllSetting> {
+  static const _row = 'notifyAll';
+
+  /// 正在送去核心的选择，核心答复前开关显示它。
+  bool? _pending;
+
+  /// 每拨一次加一：只有最近一次的答复收起它的选择。
+  int _flips = 0;
+
+  Future<void> _toggle(bool on) async {
+    final flip = ++_flips;
+    final copy = ref.read(flareMessagesProvider).details;
+    setState(() => _pending = on);
+    try {
+      await ref
+          .read(imOutboundProvider)
+          .conversationSetNotifyAll(widget.conversation.conversationId, on);
+    } catch (_) {
+      if (mounted) {
+        ui.FlareToast.show(
+          context,
+          message: copy.notifyAllFailed,
+          variant: ui.FlareToastVariant.error,
+        );
+      }
+    } finally {
+      // A newer flip of the same switch keeps showing until its own answer.
+      if (mounted && flip == _flips) setState(() => _pending = null);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final copy = ref.watch(flareMessagesProvider).details;
+    final enabled = _pending ?? widget.conversation.notifyAll;
+    return ui.FlareSettingsList(
+      shrinkWrap: true,
+      sections: [
+        ui.FlareSettingsSection(
+          items: [
+            ui.FlareSettingsItem(
+              key: _row,
+              label: copy.notifyAll,
+              kind: ui.FlareSettingKind.toggle,
+              value: enabled,
+            ),
+          ],
+          footer: copy.notifyAllHint,
+        ),
+      ],
+      onToggle: (item, on) {
+        if (item.key == _row) unawaited(_toggle(on));
+      },
+    );
   }
 }
 

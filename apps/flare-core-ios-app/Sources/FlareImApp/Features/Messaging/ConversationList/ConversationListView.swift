@@ -5,6 +5,7 @@ import SwiftUI
 struct ConversationListView: View {
     @EnvironmentObject private var messaging: MessagingViewModel
     @EnvironmentObject private var environment: AppEnvironment
+    @EnvironmentObject private var notifications: PushNotifications
     var onOpenConversation: ((AppConversation) -> Void)?
     @State private var searchText = ""
     @State private var searchActive = false
@@ -86,6 +87,28 @@ struct ConversationListView: View {
             .presentationDetents([.height(actionSheetHeight), .large])
             .presentationDragIndicator(.hidden)
         }
+        // 登录后来到会话列表、通知还没开时，先说清楚为什么要通知（kit 软询问，底部面板）：没问过时「开启通知」
+        // 弹系统授权框，关着时「前往设置」。选了哪个都按账号记住，之后不再出现；设置页的通知行随时可用。
+        .flarePermissionPrompt(
+            isPresented: notificationPromptPresented,
+            kind: .notifications,
+            // 读到权限之前什么都不画。
+            state: notifications.permission?.promptState ?? .granted,
+            softAsk: true,
+            onRequest: { Task { await notifications.requestPermission() } },
+            onOpenSettings: { Task { await notifications.openSettings() } },
+            onDismiss: { notifications.answerPrompt() }
+        )
+    }
+
+    /// 面板跟着 `showsPrompt`；一收起（按了哪个键、下滑或点遮罩）就算这个账号答过。
+    private var notificationPromptPresented: Binding<Bool> {
+        Binding(
+            get: { notifications.showsPrompt },
+            set: { presented in
+                if !presented { notifications.answerPrompt() }
+            }
+        )
     }
 
     private var header: some View {
@@ -788,7 +811,10 @@ private struct ActionRow: View {
 struct ConversationDetailsPanel: View {
     @EnvironmentObject private var messaging: MessagingViewModel
     @EnvironmentObject private var environment: AppEnvironment
+    @Environment(\.flareFeedback) private var feedback
     let conversation: AppConversation
+
+    private static let notifyAllRow = "notifyAll"
 
     var body: some View {
         ScrollView {
@@ -814,6 +840,9 @@ struct ConversationDetailsPanel: View {
 
                 StatusBanner(status: messaging.runtimeStatus, error: messaging.lastError)
                 actionGrid
+                if conversation.isLargeGroup {
+                    notifyAllSetting
+                }
 
                 KeyValueRows(values: [
                     (String(localized: "Type"), conversation.conversationType.rawValue),
@@ -835,6 +864,28 @@ struct ConversationDetailsPanel: View {
             .padding(FlareDesign.Spacing.lg)
         }
         .background(FlareDesign.appBackground)
+    }
+
+    /// 超过 1000 人的群默认只在 @我 时提醒：「接收全部消息通知」打开后每条新消息都提醒。开关先动，核心没写成时回到核心
+    /// 的值并提示。
+    private var notifyAllSetting: some View {
+        let enabled = messaging.notifyAllPending[conversation.conversationId] ?? conversation.notifyAll
+        return SettingsListView(
+            sections: [FlareSettingsSection(
+                items: [FlareSettingsItem(key: Self.notifyAllRow, label: String(localized: "Notify me of all messages"),
+                                          kind: .toggle, value: enabled)],
+                footer: String(localized: "Groups of more than 1,000 members alert only when you are mentioned. Turn this on to be alerted for every new message.")
+            )],
+            onToggle: { item, on in
+                guard item.key == Self.notifyAllRow else { return }
+                Task {
+                    if await !messaging.setNotifyAll(conversation, enabled: on) {
+                        feedback?.toast(String(localized: "The setting was not saved. Try again."), tone: .danger)
+                    }
+                }
+            },
+            scrollable: false
+        )
     }
 
     private var actionGrid: some View {

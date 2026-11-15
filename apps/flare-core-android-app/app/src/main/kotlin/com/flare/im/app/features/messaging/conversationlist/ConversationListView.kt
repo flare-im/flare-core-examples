@@ -21,6 +21,7 @@ import com.flare.im.app.core.FlareAppStore
 import com.flare.im.app.core.designsystem.FlareTheme
 import com.flare.im.app.core.domain.AppConversation
 import com.flare.im.app.core.domain.ConversationFilter
+import com.flare.im.app.features.notifications.NotificationSoftAsk
 import com.flare.im.app.features.shell.EmptyState
 import com.flare.im.app.features.shell.StatusDot
 import com.flare.im.app.features.shell.statusLabel
@@ -37,6 +38,8 @@ fun ConversationListScreen(store: FlareAppStore) {
     val filter by store.environment.filter.collectAsState()
     val status by store.environment.runtimeStatus.collectAsState()
     val all by vm.conversations.collectAsState()
+    val userId by store.session.currentUserId.collectAsState()
+    val loginDraft by store.environment.loginDraft.collectAsState()
 
     var startOpen by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { if (all.isEmpty()) vm.bootstrapHome() }
@@ -73,6 +76,10 @@ fun ConversationListScreen(store: FlareAppStore) {
                     store.environment.setFilter(ConversationFilter.valueOf(value)); vm.refreshConversations()
                 },
             )
+        }
+        // 登录后来到会话列表、通知还没开：在底部面板里问一次（按账号记住答复）。
+        userId?.takeIf { it.isNotBlank() }?.let { id ->
+            NotificationSoftAsk(account = "${loginDraft.tenantId.trim().ifEmpty { "0" }}|$id")
         }
         HorizontalDivider(color = colors.hairline)
         // 容器收敛到 kit host-rows 变体：统一空态/加载 + LazyColumn 外壳，

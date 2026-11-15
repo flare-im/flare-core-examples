@@ -31,6 +31,7 @@ let package = Package(
             dependencies: [
                 .product(name: "FlareCoreAppleSDK", package: "flare-core-apple-sdk"),
                 .product(name: "FlarePlatformUpdate", package: "flare-core-apple-sdk"),
+                .product(name: "FlarePlatformPush", package: "flare-core-apple-sdk"),
                 .product(name: "FlareUpdateUI", package: "flare-core-apple-update-ui"),
                 .product(name: "FlareIMUI", package: kitPackageName),
             ],

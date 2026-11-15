@@ -7,10 +7,8 @@ import { openUrl, revealItemInDir } from "@tauri-apps/plugin-opener";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { check } from "@tauri-apps/plugin-updater";
 import type { ReferenceRuntime } from "../../../../shared/vue-reference/runtime";
-import { notifyDesktop, setDesktopUnreadCount } from "../desktopNotifications";
 import {
   configureAppMediaLocalPathResolver,
-  configureDesktopNotifications,
   configureDownloadDirectoryPicker,
   configureNativeMediaActions,
 } from "../../../../shared/vue-reference/workbench/app";
@@ -77,5 +75,6 @@ export function configureNativeReferenceBridges(): void {
       return true;
     },
   });
-  configureDesktopNotifications({ notify: notifyDesktop, setUnreadCount: setDesktopUnreadCount });
+  // Notifications are the engine's (src/notifications/MessageAlerts.vue): no desktop notification adapter for the
+  // workbench, which would decide alerts and badges itself.
 }

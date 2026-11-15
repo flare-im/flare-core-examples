@@ -1,5 +1,7 @@
 # Flare Core iOS Reference App
 
+English · [Simplified Chinese](README.zh-CN.md)
+
 ## What This Demonstrates
 
 An official Flare design consumer under active canonical UI migration.
@@ -70,6 +72,59 @@ renews them on the Core API of the access point it uses, which in development is
 the Core HTTP entry above. A token pasted in Settings is passed to login as
 given. Do not put signing keys in UI code. Use isolated test accounts for destructive or send
 workflows.
+
+## Push Notifications
+
+APNs pushes arrive through `FlarePlatformPush` (a product of `flare-core-apple-sdk`), whose host is the core client
+(`CorePushHost`). Presentation, de-duplication and the badge are the module's and the core's; the app wires:
+
+- `FlareImAppDelegate`, installed by the runner with `@UIApplicationDelegateAdaptor`: starts the module before launch
+  returns (so a tap that launched the app is not lost) and forwards the APNs token and silent-push callbacks. It also
+  restores the saved session at launch, without any UI, on the process's one `FlareAppStore` (`FlareAppStore.shared`,
+  holding the one client): a process that a background refresh or a silent push started cold has no UI, and the push
+  host is attached as soon as the local store is open. The UI uses the same store afterwards. A silent push that
+  arrives while that restore is still running waits for it (at most 2 s) so the core can wake and sync.
+- `PushNotifications`: attaches the client once a sign-in or a session restore succeeds, and hands logout or dispose to
+  the module's `signOut()`, which detaches it and clears this SDK's notifications and the badge. Token registration
+  carries the app's language (`setLocale`).
+- Permission: the status comes from the module's `permissionChanges()`. When a signed-in account reaches the
+  conversation list with notifications off, the kit soft-ask (`flarePermissionPrompt`) explains why in a sheet: Turn on
+  notifications shows the system prompt while the system has not asked yet, Open Settings once they are off. Any
+  choice is remembered for that account. Settings shows the kit `NotificationDeliverySettingsView`: tapping New message
+  notifications asks when the system never has, and opens the app's notification settings otherwise.
+- Taps open the conversation, including a tap that launched the app before the session was restored.
+- While the app is open, the engine decides each alert and hands in-app ones over as `notification.present` (surface
+  `inApp`): `MessageAlerts` feeds them to the kit `InAppNotificationHost` at the root (tapping a banner opens the
+  conversation like a notification tap) and plays the system message sound when the engine asks. The chat page reports
+  the conversation on screen (`notification.setFocus`, cleared in the background). Settings adds the kit
+  `NotificationAlertSettingsView`: quiet hours, preview and the other-device behaviour, shared by the account's
+  devices, saved through `notification.updateSettings` (shown at once, rolled back and read again when a save fails).
+- `NotificationService`, an app extension subclassing `FlareNotificationServiceBase` (product
+  `FlareNotificationService`): re-renders alert titles and sender names from the snapshot the engine writes into the
+  App Group `group.com.flare.im.example.app`, applies the local preview setting and records arrival receipts.
+  `PushNotifications.configuration` gives the push module the same App Group, declares the extension (token
+  registration then carries `serviceExtension`, so the server marks alerts `mutable-content`) and names the background
+  refresh task `com.flare.im.example.app.refresh`, which prefetches new messages at most every 15 minutes while signed
+  in.
+
+To receive pushes:
+
+1. In the platform console, the application's APNs credential (team ID, key ID and the `.p8` auth key) lists this
+   app's bundle ID, `com.flare.im.example.app`, in its topics. A deployment without the console puts the same record
+   in the push worker's `flare.mobile-push-applications/v2` file (see `docs/offline-push-delivery.md` in
+   `flare-core-server`). One key serves both APNs environments; each device registers its own.
+2. Sign with a team whose App ID has Push Notifications enabled, using a provisioning profile that includes it.
+   `Resources/FlareImApp.entitlements` (generated from `project.yml`) carries `aps-environment: development`, and
+   automatic signing adds the capability to the App ID. The module reads the environment from the embedded profile at
+   run time: development-signed builds register as `sandbox`, App Store and TestFlight builds as `production`. A new
+   `PRODUCT_BUNDLE_IDENTIFIER` has to be added to the credential's topics as well.
+3. Run on a device, or on a simulator on an Apple silicon Mac; simulator builds always register as `sandbox`.
+4. The extension (`com.flare.im.example.app.NotificationService`) is signed by the same team, and both App IDs need the
+   App Groups capability with `group.com.flare.im.example.app` (automatic signing registers it; with manual signing
+   add the group to both profiles). Another bundle ID changes the App Group, the task identifier and the extension's
+   bundle ID together, in `project.yml`, `PushNotifications.configuration` and
+   `NotificationService/NotificationService.swift`. Without the App Group pushes still arrive, with the server's text
+   and no arrival receipts.
 
 ## Supported Features
 

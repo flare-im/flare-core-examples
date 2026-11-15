@@ -1547,6 +1547,34 @@ final class _SdkLabEventListener extends core.FlareImEventListener {
     record('plugin', 'catalog_changed', {'version': event.version});
   }
 
+  /// Title and body are message previews: only the identity and the decision
+  /// are recorded.
+  @override
+  void onNotificationPresent(core.NotificationPresentation event) {
+    record('notification', 'present', {
+      'collapseId': event.collapseId,
+      'conversationId': event.conversationId,
+      'seq': event.seq,
+      'count': event.count,
+      'sound': event.sound,
+      'channel': event.channel,
+      'surface': event.surface,
+    });
+  }
+
+  @override
+  void onNotificationClear(core.NotificationClearEvent event) {
+    record('notification', 'clear', {
+      'collapseIds': event.collapseIds,
+      'all': event.all,
+    });
+  }
+
+  @override
+  void onNotificationBadge(core.NotificationBadgeEvent event) {
+    record('notification', 'badge', {'count': event.count});
+  }
+
   void _lifecycle(String name, core.LifecycleEvent event) {
     record('lifecycle', name, SdkModelMapper.lifecycleJsonFromCore(event));
   }

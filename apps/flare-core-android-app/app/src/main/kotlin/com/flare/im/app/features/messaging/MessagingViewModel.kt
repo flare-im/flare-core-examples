@@ -479,6 +479,31 @@ class MessagingViewModel(
         }
     }
 
+    /** 大群「接收全部消息通知」正在送去核心的选择，核心答复前开关显示它（会话 id → 选择）。 */
+    private val _notifyAllPending = MutableStateFlow<Map<String, Boolean>>(emptyMap())
+    val notifyAllPending: StateFlow<Map<String, Boolean>> = _notifyAllPending.asStateFlow()
+
+    /**
+     * 打开或关掉大群的「接收全部消息通知」。开关先动；核心先写本地再同步到服务端，没写成时核心退回原值，开关跟着
+     * 回到核心的值，由 [onFailed] 告诉用户。
+     */
+    fun setNotifyAll(conversation: AppConversation, enabled: Boolean, onFailed: () -> Unit) = scope.launch {
+        val id = conversation.conversationId
+        _notifyAllPending.update { it + (id to enabled) }
+        val saved = runCatching {
+            val sdk = client ?: error("Login before conversation actions")
+            sdk.conversations.setConversationNotifyAll(mapOf("conversationId" to id, "enabled" to enabled))
+        }
+        runCatching { syncConversationList("notify_all") }
+            .onFailure { Log.w("FlareConversationSettings", "conversation list refresh failed", it) }
+        // A newer flip of the same switch keeps showing until its own answer.
+        _notifyAllPending.update { pending -> if (pending[id] == enabled) pending - id else pending }
+        saved.onFailure { error ->
+            Log.w("FlareConversationSettings", "conversation.set_notify_all failed", error)
+            onFailed()
+        }
+    }
+
     fun saveDraft(text: String) = scope.launch {
         val id = environment.selectedConversationId.value ?: return@launch
         environment.run("conversation.draft", showBusy = false) {

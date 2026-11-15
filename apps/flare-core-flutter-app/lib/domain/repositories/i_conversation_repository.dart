@@ -41,6 +41,9 @@ abstract class IConversationRepository {
 
   Future<void> setMuted(String conversationId, bool muted);
 
+  /// 大群「接收全部消息通知」；核心没写成时退回原值并抛错。
+  Future<void> setNotifyAll(String conversationId, bool enabled);
+
   Future<void> setArchived(String conversationId, bool archived);
 
   Future<void> markUnread(String conversationId);

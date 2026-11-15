@@ -172,6 +172,15 @@ class ConversationListNotifier extends StateNotifier<List<Conversation>> {
     await load();
   }
 
+  /// 大群「接收全部消息通知」：核心先改本地，没写成时退回原值并抛错；无论成败都重读列表，界面跟着核心的值走。
+  Future<void> setNotifyAll(String conversationId, bool enabled) async {
+    try {
+      await _conversationService.setNotifyAll(conversationId, enabled);
+    } finally {
+      await load();
+    }
+  }
+
   Future<void> setArchived(String conversationId, bool archived) async {
     await _conversationService.setArchived(conversationId, archived);
     await load();

@@ -166,6 +166,9 @@ class ImOutboundFacade {
   Future<void> conversationSetMuted(String conversationId, bool muted) =>
       _conversations.setMuted(conversationId, muted);
 
+  Future<void> conversationSetNotifyAll(String conversationId, bool enabled) =>
+      _conversations.setNotifyAll(conversationId, enabled);
+
   Future<void> conversationSetArchived(String conversationId, bool archived) =>
       _conversations.setArchived(conversationId, archived);
 

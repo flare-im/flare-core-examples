@@ -168,6 +168,79 @@ Limits on Windows and Linux:
 - There is one handler per user. The Flutter apps share the scheme, so the one
   started last holds it.
 
+## System push
+
+`flare_core_flutter_push` bridges the native platform push modules
+(`FlarePlatformPush` on iOS, `flare-core-android-push` on Android); the engine
+decides every alert through the core client's `CorePushHost`.
+
+- `main` starts the plugin; it never asks for permission. `PushNotificationHost`
+  hands the in-app language to `setLocale` (at start and on every change),
+  attaches the host after sign-in or a restored session and, after sign-out,
+  calls `signOut()`, which detaches it and clears this SDK's notifications.
+- The permission state is the plugin's (`permissionChanges`). When the
+  conversation list is reached after sign-in with notifications off, the Kit
+  soft-ask (`FlarePermissionPrompt.show`, `softAsk: true`) explains the request
+  in a sheet: Turn on notifications shows the system dialog while
+  `canRequestPermission()` holds, Open Settings once the system will not ask
+  again. Any choice is remembered per account. Settings places the Kit
+  `FlareNotificationDeliverySettings` as a section of its one settings list
+  (`sectionBuilder`): New message notifications asks while the system would show
+  the dialog and otherwise opens the system notification settings; on Android it
+  adds Receive messages in the background (from `backgroundChanges`), whose guide
+  opens the battery settings and, on phones that have one, the maker's auto-start
+  page.
+- A tapped notification opens its conversation. A tap that cold-starts the app
+  waits until the session is restored and the app has left the sign-in route.
+- While the app is open, the engine decides each alert and hands in-app ones over
+  as `notification.present` (surface `inApp`): `MessageAlertHost` (in
+  `MaterialApp.builder`) feeds them to the Kit `FlareInAppNotificationHost`
+  (tapping a banner opens the conversation like a notification tap) and plays the
+  system message sound through the app's `flare.im/sound` channel when the engine
+  asks. It reports the foreground chat (`notification.setFocus`, cleared in the
+  background). Settings places the Kit `FlareNotificationAlertSettings` sections
+  (quiet hours, preview, the other-device behaviour; shared by the account's
+  devices) after the notification section, saved through
+  `notification.updateSettings` (shown at once, rolled back and read again when a
+  save fails).
+- In the background the plugin's `FlareNotificationPresenter` shows the engine's
+  system presentations, attached with the same host after sign-in and signed out
+  with it. Android: the push module's background presenter; with notifications
+  allowed the engine keeps acknowledging over the live link and alerts by
+  itself, and pushes cover a frozen or killed process. macOS: the notification
+  centre, asked for authorisation once after sign-in, one notification per
+  conversation, the unread count on the dock tile. A click on either opens its
+  conversation the same way as a push tap.
+
+Android: `android/settings.gradle.kts` includes `:flare-core-android-push`, which
+the plugin depends on. FCM needs the Firebase client configuration at
+`android/app/google-services.json` (not committed, and the server's FCM
+credentials must belong to the same Firebase project); the Google services plugin
+is applied only when that file exists. Without it the app builds and runs, no FCM
+token is registered, and messages arrive only over the live connection.
+
+Getui (devices in mainland China) is off unless the build has a Getui app id,
+the same `FLARE_GETUI_APP_ID` as the native Android app, given as a define:
+
+```bash
+flutter build apk --dart-define=FLARE_GETUI_APP_ID=<Getui app id>
+```
+
+The Android build reads the same define into the Getui SDK's `GETUI_APPID`
+manifest placeholder, and the app calls `installGetui()` after sign-in, so no
+push SDK starts before someone signed in. Without it the
+`:flare-core-android-push-getui` module is compiled in but never started. Getui's
+artifacts come from its own Maven repository, which `android/build.gradle.kts`
+uses for `com.getui` coordinates only; the vendor channels are added as described
+in that module's README.
+
+iOS: `Runner.entitlements` carries `aps-environment` (`development`; a
+distribution profile turns it into production), `Info.plist` lists the
+`remote-notification` background mode, and `AppDelegate` calls
+`FlareCoreFlutterPushPlugin.prepare()` before `super` so cold-start taps and
+background launches reach the module before any scene connects. The deployment
+target is iOS 15, the floor of `FlarePlatformPush`.
+
 ## Platform-Specific Integration
 
 FFI artifact loading, Riverpod lifecycle, GoRouter navigation, file/photo

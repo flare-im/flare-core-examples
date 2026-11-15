@@ -1,9 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- The platform push module brings POST_NOTIFICATIONS, its FCM service and the vendor notification tap target. -->
     <application
+        tools:replace="android:label"
+        android:name=".FlareCoreApplication"
         android:allowBackup="true"
         android:label="Flare IM"
         android:supportsRtl="true"

@@ -3,6 +3,9 @@ import 'package:equatable/equatable.dart';
 import 'package:flare_im/domain/entities/message.dart';
 import 'package:flare_im/domain/value_objects/conversation_type.dart';
 
+/// 超过这个人数的群默认只在 @我 时提醒，成员可以打开「接收全部消息通知」。
+const int largeGroupMembers = 1000;
+
 /// 会话实体
 class Conversation extends Equatable {
   final String conversationId;
@@ -14,6 +17,9 @@ class Conversation extends Equatable {
   final int unreadCount;
   final bool isPinned;
   final bool isMuted;
+
+  /// 大群里当前用户打开了「接收全部消息通知」。
+  final bool notifyAll;
   final bool isArchived;
   final DateTime updatedAt;
   final DateTime createdAt;
@@ -25,6 +31,9 @@ class Conversation extends Equatable {
   final bool? mentionMe;
   final String? peerUserId;
   final List<String> memberUserIds;
+
+  /// 成员总数（核心会话摘要的 `membersCount`）。
+  final int membersCount;
 
   /// 对端已读位点（SDK `ext.peerReadSeq` / 回执事件累加），用于己方消息双勾回填。
   final int peerReadSeq;
@@ -39,6 +48,7 @@ class Conversation extends Equatable {
     this.unreadCount = 0,
     this.isPinned = false,
     this.isMuted = false,
+    this.notifyAll = false,
     this.isArchived = false,
     required this.updatedAt,
     required this.createdAt,
@@ -48,6 +58,7 @@ class Conversation extends Equatable {
     this.mentionMe,
     this.peerUserId,
     this.memberUserIds = const [],
+    this.membersCount = 0,
     this.peerReadSeq = 0,
   });
 
@@ -73,6 +84,7 @@ class Conversation extends Equatable {
       unreadCount: _int(core, 'unreadCount', 0),
       isPinned: _bool(core, 'isPinned'),
       isMuted: _bool(core, 'isMuted'),
+      notifyAll: _bool(core, 'notifyAll'),
       isArchived: _bool(core, 'isArchived'),
       updatedAt: DateTime.fromMillisecondsSinceEpoch(updatedAt),
       createdAt: DateTime.fromMillisecondsSinceEpoch(createdAt),
@@ -82,6 +94,7 @@ class Conversation extends Equatable {
       mentionMe: _boolOrNull(core, 'mentionMe'),
       peerUserId: _stringOrNull(core, 'peerUserId'),
       memberUserIds: _stringList(core, 'memberUserIds'),
+      membersCount: _int(core, 'membersCount', 0),
       peerReadSeq: _int(core, 'peerReadSeq', 0),
     );
   }
@@ -97,6 +110,7 @@ class Conversation extends Equatable {
     unreadCount,
     isPinned,
     isMuted,
+    notifyAll,
     isArchived,
     updatedAt,
     createdAt,
@@ -106,6 +120,7 @@ class Conversation extends Equatable {
     mentionMe,
     peerUserId,
     memberUserIds,
+    membersCount,
     peerReadSeq,
   ];
 
@@ -119,6 +134,11 @@ class Conversation extends Equatable {
   /// 业务方法：获取显示名称（优先使用备注）
   String get displayTitle => remark ?? displayName;
 
+  /// 超过 1000 人的群：默认只在 @我 时提醒，成员可以打开「接收全部消息通知」。
+  bool get isLargeGroup =>
+      conversationType == ConversationType.group &&
+      membersCount > largeGroupMembers;
+
   /// 复制并更新
   Conversation copyWith({
     String? conversationId,
@@ -130,6 +150,7 @@ class Conversation extends Equatable {
     int? unreadCount,
     bool? isPinned,
     bool? isMuted,
+    bool? notifyAll,
     bool? isArchived,
     DateTime? updatedAt,
     DateTime? createdAt,
@@ -139,6 +160,7 @@ class Conversation extends Equatable {
     bool? mentionMe,
     String? peerUserId,
     List<String>? memberUserIds,
+    int? membersCount,
     int? peerReadSeq,
   }) {
     return Conversation(
@@ -151,6 +173,7 @@ class Conversation extends Equatable {
       unreadCount: unreadCount ?? this.unreadCount,
       isPinned: isPinned ?? this.isPinned,
       isMuted: isMuted ?? this.isMuted,
+      notifyAll: notifyAll ?? this.notifyAll,
       isArchived: isArchived ?? this.isArchived,
       updatedAt: updatedAt ?? this.updatedAt,
       createdAt: createdAt ?? this.createdAt,
@@ -160,6 +183,7 @@ class Conversation extends Equatable {
       mentionMe: mentionMe ?? this.mentionMe,
       peerUserId: peerUserId ?? this.peerUserId,
       memberUserIds: memberUserIds ?? this.memberUserIds,
+      membersCount: membersCount ?? this.membersCount,
       peerReadSeq: peerReadSeq ?? this.peerReadSeq,
     );
   }

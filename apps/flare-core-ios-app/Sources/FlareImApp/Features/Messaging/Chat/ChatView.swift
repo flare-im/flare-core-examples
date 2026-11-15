@@ -8,8 +8,10 @@ struct ChatView: View {
     @EnvironmentObject private var search: SearchViewModel
     @EnvironmentObject private var messaging: MessagingViewModel
     @EnvironmentObject private var environment: AppEnvironment
+    @EnvironmentObject private var alerts: MessageAlerts
     @Environment(\.flareFeedback) private var feedback
     @Environment(\.openURL) private var openURL
+    @Environment(\.scenePhase) private var scenePhase
     let conversation: AppConversation
     var showsBackButton = false
     var onBack: () -> Void = {}
@@ -70,9 +72,16 @@ struct ChatView: View {
             await messaging.openConversation(conversation.conversationId)
             await runForegroundSyncLoop(for: conversation.conversationId)
         }
-        .onChange(of: conversation.conversationId) { _ in
+        .onChange(of: conversation.conversationId) { conversationId in
             timelineFollowsTail = true
+            alerts.chatShown(conversationId, foreground: scenePhase != .background)
         }
+        // 屏幕上的会话报给引擎：它的新消息在前台不再提醒。应用退到后台时当作屏幕上没有会话。
+        .onAppear { alerts.chatShown(conversation.conversationId, foreground: scenePhase != .background) }
+        .onChange(of: scenePhase) { phase in
+            alerts.chatShown(conversation.conversationId, foreground: phase != .background)
+        }
+        .onDisappear { alerts.chatHidden(conversation.conversationId) }
     }
 
     /// Saves a message's picture, video or file to the download location through the core: the person sees it

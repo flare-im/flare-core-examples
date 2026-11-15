@@ -49,6 +49,9 @@ class ConversationService {
 
   Future<void> setMuted(String id, bool muted) => _repo.setMuted(id, muted);
 
+  Future<void> setNotifyAll(String id, bool enabled) =>
+      _repo.setNotifyAll(id, enabled);
+
   Future<void> setArchived(String id, bool archived) =>
       _repo.setArchived(id, archived);
 

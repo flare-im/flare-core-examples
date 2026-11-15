@@ -5,6 +5,8 @@ import com.flare.im.app.core.domain.EventLogEntry
 import com.flare.im.app.core.domain.LoginDraft
 import com.flare.im.listener.EventSubscription
 import com.flare.im.model.entity.ConnectionStatus
+import com.flare.im.model.entity.NotificationClearEvent
+import com.flare.im.model.entity.NotificationPresentation
 import com.flare.im.model.entity.UpdateStatus
 import com.flare.im.model.entity.ViewUpdate
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -51,6 +53,10 @@ class AppSession(
     var onMessageReceived: ((String) -> Unit)? = null
     var onMessageSendFailed: ((String) -> Unit)? = null
     var onUpdateState: ((UpdateStatus) -> Unit)? = null
+
+    /** 引擎交来的应用内提醒（`notification.present`、`notification.clear`），交给应用内横幅。 */
+    var onNotificationPresent: ((NotificationPresentation) -> Unit)? = null
+    var onNotificationClear: ((NotificationClearEvent) -> Unit)? = null
 
     private val subscriptions = mutableListOf<EventSubscription>()
     private var lastDraft: LoginDraft? = null
@@ -297,6 +303,9 @@ class AppSession(
             appendEvent("lifecycle", event.name.name, event.operation)
         }
         subscriptions += sdk.events.onUpdateState { status -> onUpdateState?.invoke(status) }
+        // 标题与正文是消息预览，不进事件记录。
+        subscriptions += sdk.events.onNotificationPresent { presentation -> onNotificationPresent?.invoke(presentation) }
+        subscriptions += sdk.events.onNotificationClear { event -> onNotificationClear?.invoke(event) }
     }
 
     private suspend fun subscribeNativeEvents(sdk: FlareImClient) {

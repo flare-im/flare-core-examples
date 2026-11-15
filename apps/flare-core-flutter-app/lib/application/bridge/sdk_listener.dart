@@ -247,6 +247,26 @@ final class _AppSdkEventListener extends core.FlareImEventListener {
   @override
   void onPluginRealtime(core.PluginRealtimeEvent event) {}
 
+  /// Title and body are message previews: not logged.
+  @override
+  void onNotificationPresent(core.NotificationPresentation event) {
+    imEventBus.fire(NotificationPresentEvent(event));
+  }
+
+  @override
+  void onNotificationClear(core.NotificationClearEvent event) {
+    imEventBus.fire(
+      NotificationClearedEvent(
+        collapseIds: List.unmodifiable(event.collapseIds),
+        all: event.all,
+      ),
+    );
+  }
+
+  /// The push module sets the app badge itself.
+  @override
+  void onNotificationBadge(core.NotificationBadgeEvent event) {}
+
   @override
   void onPluginCatalogChanged(core.PluginCatalogChangedEvent event) {}
 

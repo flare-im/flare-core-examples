@@ -104,6 +104,13 @@ void main() {
       final semantics = tester.ensureSemantics();
       final repo = _StorageRepository(location: _defaultLocation);
       await _pumpSettings(tester, repo, size: const Size(1280, 900));
+      // The notification groups sit above storage; on a 900-high window the row
+      // starts below the fold.
+      await tester.scrollUntilVisible(
+        find.text('下载位置'),
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
       await tester.tap(find.text('下载位置'));
       await tester.pumpAndSettle();
       expect(find.byType(FlareModal), findsOneWidget);
