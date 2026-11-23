@@ -32,8 +32,8 @@ contracts and intents form the visual boundary; do not import private renderers.
 
 ```bash
 export ANDROID_HOME=/path/to/android/sdk
-../flare-core-flutter-app/android/gradlew :app:testDirectDebugUnitTest :app:lintDirectDebug :app:assembleDirectDebug
-../flare-core-flutter-app/android/gradlew :app:compileDirectDebugAndroidTestKotlin
+./gradlew :app:testDirectDebugUnitTest :app:lintDirectDebug :app:assembleDirectDebug
+./gradlew :app:compileDirectDebugAndroidTestKotlin
 ```
 
 ## Demo Mode
@@ -219,3 +219,7 @@ adapter. Group conversations are messaging targets, not group administration.
 Activity lifecycle, system back, IME, navigation, permissions (the notification
 permission included), file/camera selection and JNI loading are host responsibilities. Use `scripts/sync_ffi.sh`
 after building the matching native SDK artifacts.
+
+## Localization integration
+
+Kit strings follow the app language. Swift custom strings use the configuration closure. See [native localization integration](../../docs/native-localization.md) for the migration, generated resources, and platform adapters.

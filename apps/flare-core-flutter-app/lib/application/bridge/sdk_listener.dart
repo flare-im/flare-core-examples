@@ -247,6 +247,14 @@ final class _AppSdkEventListener extends core.FlareImEventListener {
   @override
   void onPluginRealtime(core.PluginRealtimeEvent event) {}
 
+  // Capability requests and bundle pages belong to plugin hosts; this app
+  // deliberately installs none.
+  @override
+  void onPluginCapabilityRequest(core.PluginCapabilityRequestEvent event) {}
+
+  @override
+  void onPluginBundleEvent(core.PluginBundleEvent event) {}
+
   /// Title and body are message previews: not logged.
   @override
   void onNotificationPresent(core.NotificationPresentation event) {
@@ -337,8 +345,7 @@ final class _AppSdkEventListener extends core.FlareImEventListener {
       );
       return;
     }
-    if (snapshot.viewType == 'timeline' &&
-        data is core.TimelineViewSnapshot) {
+    if (snapshot.viewType == 'timeline' && data is core.TimelineViewSnapshot) {
       final messages = SdkModelMapper.messagesFromCoreTimelineView(data);
       final fromSnapshot = SdkModelMapper.conversationIdFromCoreTimelineView(
         data,

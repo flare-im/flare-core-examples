@@ -1503,9 +1503,9 @@ export function useFlareCoreClient(options: UseFlareCoreClientOptions) {
     }
   }
 
-  /** 时间线视图的行键：clientMsgId，没有时 serverId，都没有时 seq:<会话>:<seq>（与核心 row_key 相同）。 */
+  /** 时间线增量使用核心提供的 timelineKey。 */
   function timelineRowKey(message: Message): string {
-    return message.clientMsgId || message.serverId || `seq:${message.conversationId}:${message.conversationSeq}`;
+    return message.timelineKey;
   }
 
   /**

@@ -101,8 +101,8 @@ class MessageListNotifier extends StateNotifier<List<Message>> {
   }
 
   /// 核心时间线视图的增量：删 `remove` 里的行键，原位替换 `upsert`，`prepend` 放最前、
-  /// `append` 放最后，再按时间线顺序排列（`reorder` 因此不用单独处理）。行键是
-  /// clientMsgId，没有时 serverId，都没有时 `seq:<会话>:<seq>`，发送确认前后不变。
+  /// `append` 放最后，再按时间线顺序排列（`reorder` 因此不用单独处理）。
+  /// 行键使用核心 timelineKey；ACK 显式迁移本地行身份。
   void applyCoreTimelineDelta({
     List<Message> prepend = const [],
     List<Message> append = const [],
@@ -130,9 +130,7 @@ class MessageListNotifier extends StateNotifier<List<Message>> {
   }
 
   static String _rowKey(Message message) {
-    if (message.clientMsgId.isNotEmpty) return message.clientMsgId;
-    if (message.serverId.isNotEmpty) return message.serverId;
-    return 'seq:${message.conversationId}:${message.seq}';
+    return stableTimelineSortKey(message);
   }
 
   void mergeIncomingMessages(List<Message> incoming) {
@@ -1210,16 +1208,11 @@ List<Message> _coreMessageSnapshot(List<Message> incoming) {
 }
 
 List<Message> _withPendingMessage(List<Message> current, Message pending) {
-  final clientId = pending.clientMsgId.trim();
-  if (clientId.isNotEmpty) {
-    final existingIndex = current.indexWhere(
-      (message) => message.clientMsgId.trim() == clientId,
-    );
-    if (existingIndex >= 0) {
-      final next = List<Message>.from(current);
-      next[existingIndex] = pending;
-      return _timelineDisplayOrder(next);
-    }
+  final existingIndex = _incomingMessageIndex(current, pending);
+  if (existingIndex >= 0) {
+    final next = List<Message>.from(current);
+    next[existingIndex] = pending;
+    return _timelineDisplayOrder(next);
   }
   return _timelineDisplayOrder([...current, pending]);
 }
@@ -1234,7 +1227,12 @@ int _incomingMessageIndex(List<Message> current, Message incoming) {
   final clientMsgId = incoming.clientMsgId.trim();
   if (clientMsgId.isNotEmpty) {
     final index = current.indexWhere(
-      (m) => m.clientMsgId.trim() == clientMsgId,
+      (m) =>
+          m.clientMsgId.trim() == clientMsgId &&
+          m.seq == 0 &&
+          m.source == MessageSource.local &&
+          m.conversationId == incoming.conversationId &&
+          m.senderId == incoming.senderId,
     );
     if (index >= 0) return index;
   }

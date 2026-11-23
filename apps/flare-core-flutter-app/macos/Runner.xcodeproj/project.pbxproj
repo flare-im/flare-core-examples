@@ -433,7 +433,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "cd \"${SRCROOT}/../../..\" && cargo xtask build macos-copy\n";
+			shellScript = "/bin/bash \"${SRCROOT}/../scripts/copy_macos_ffi_dylib.sh\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */

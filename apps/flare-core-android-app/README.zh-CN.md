@@ -29,8 +29,8 @@ SDK 的认证、持久化、事件订阅、生命周期切换、重试与媒体�
 
 ```bash
 export ANDROID_HOME=/path/to/android/sdk
-../flare-core-flutter-app/android/gradlew :app:testDirectDebugUnitTest :app:lintDirectDebug :app:assembleDirectDebug
-../flare-core-flutter-app/android/gradlew :app:compileDirectDebugAndroidTestKotlin
+./gradlew :app:testDirectDebugUnitTest :app:lintDirectDebug :app:assembleDirectDebug
+./gradlew :app:compileDirectDebugAndroidTestKotlin
 ```
 
 ## 演示模式
@@ -163,3 +163,7 @@ Firebase 项目。
 
 Activity 生命周期、系统返回、输入法、导航、权限（包括通知权限）、文件／相机选择与 JNI 加载由宿主负责。
 构建好对应的原生 SDK 产物后用 `scripts/sync_ffi.sh` 同步。
+
+## 文案与组件库接入
+
+组件库文案必须跟随应用语言；Swift 自定义文案使用配置闭包。迁移、资源生成及六个原生示例的接入约定见 [原生文案接入](../../docs/native-localization.md)。

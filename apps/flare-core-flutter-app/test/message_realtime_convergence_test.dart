@@ -15,6 +15,58 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  test(
+    'confirmed client aliases remain distinct and ACK replaces only its local row',
+    () {
+      final container = ProviderContainer(
+        overrides: [
+          conversationRepositoryProvider.overrideWithValue(
+            _UnusedConversationRepository(),
+          ),
+          messageRepositoryProvider.overrideWithValue(
+            _UnusedMessageRepository(),
+          ),
+        ],
+      );
+      addTearDown(container.dispose);
+      final notifier = container.read(messageProvider('c1').notifier);
+      final first = _message(
+        'c1',
+        1,
+        'first',
+        timestampMs: 1000,
+      ).copyWith(clientMsgId: 'shared');
+      final second = _message(
+        'c1',
+        2,
+        'second',
+        timestampMs: 2000,
+      ).copyWith(clientMsgId: 'shared', senderId: 'other');
+      notifier.applyCoreSnapshot([first]);
+      notifier.mergeIncomingMessages([second]);
+      expect(container.read(messageProvider('c1')).map((m) => m.serverId), [
+        'm1',
+        'm2',
+      ]);
+      final pending =
+          _message(
+            'c1',
+            0,
+            'pending',
+            timestampMs: 3000,
+            timelineKey: 'client:shared',
+          ).copyWith(
+            clientMsgId: 'shared',
+            source: MessageSource.local,
+            status: MessageStatus.sending,
+          );
+      notifier.applyCoreSnapshot([pending, second]);
+      notifier.mergeIncomingMessages([first]);
+      final rows = container.read(messageProvider('c1'));
+      expect(rows.map((m) => m.serverId), ['m1', 'm2']);
+      expect(rows.any((m) => m.status == MessageStatus.sending), isFalse);
+    },
+  );
   test('core timeline snapshot updates active timeline', () {
     final container = ProviderContainer(
       overrides: [

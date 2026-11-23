@@ -28,11 +28,10 @@ SDK 的认证、持久化、事件订阅、生命周期切换、重试和媒体�
 ## 运行
 
 ```bash
-bash scripts/sync_ffi.sh
 swift build
 swift test
 xcodegen generate
-xcodebuild -project FlareImApp.xcodeproj -scheme FlareImExampleApp -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build
+xcodebuild -project FlareImApp.xcodeproj -scheme FlareImExampleApp -destination 'generic/platform=iOS Simulator' ARCHS=arm64 ONLY_ACTIVE_ARCH=YES CODE_SIGNING_ALLOWED=NO build
 ```
 
 ## 演示模式
@@ -117,3 +116,9 @@ APNs 推送经 `FlarePlatformPush`（`flare-core-apple-sdk` 的一个 product）
 NavigationStack、sheet/fullScreenCover、文件与照片选择器、麦克风权限、分享以及 FFI 产物加载都保持原生。
 Xcode 按 SDK 与架构选择静态库：arm64 真机用 `aarch64-apple-ios`，arm64 模拟器用 `aarch64-apple-ios-sim`，
 Intel 模拟器用 `x86_64-apple-ios`。通用 iOS 构建需要同步好的全部三个切片。
+
+## 文案与组件库接入
+
+组件库文案必须跟随应用语言；Swift 自定义文案使用配置闭包。迁移、资源生成及六个原生示例的接入约定见 [原生文案接入](../../docs/native-localization.md)。
+
+arm64 Simulator 链接前需从 Core SDK 引擎准备 `FFI/ios/aarch64-apple-ios-sim/libflare_im_core_sdk_ffi.a`。Swift 包测试验证适配层；可选 FFI / 服务用例所需的环境变量会在跳过原因中列出。

@@ -59,7 +59,7 @@ final class TimelineViewSnapshotEvent {
   final bool hasMore;
 }
 
-/// 核心时间线视图的一次增量（按行键：clientMsgId，没有时 serverId，都没有时 `seq:<会话>:<seq>`）。
+/// 核心时间线视图的一次增量（使用核心提供的 timelineKey，ACK 迁移本地行身份）。
 @immutable
 final class TimelineViewDeltaEvent {
   const TimelineViewDeltaEvent({

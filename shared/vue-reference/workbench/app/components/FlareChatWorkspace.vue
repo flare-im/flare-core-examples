@@ -863,7 +863,7 @@ function openPreview(id: string): void {
 }
 
 function mediaMessageId(row: Message): string {
-  return row.clientMsgId || row.serverId;
+  return row.serverId || row.clientMsgId;
 }
 
 function findMessageByActionId(id: string): Message | undefined {
@@ -1107,6 +1107,14 @@ function closeMediaPreview(): void {
   mediaPreviewItems.value = [];
   mediaPreviewOpen.value = false;
   activeMediaAction.value = null;
+}
+
+function removeMediaPreviewItem(id: string): void {
+  if (sending.value) return;
+  const item = mediaPreviewItems.value.find(item => item.id === id);
+  if (item?.previewUrl?.startsWith("blob:")) URL.revokeObjectURL(item.previewUrl);
+  mediaPreviewItems.value = mediaPreviewItems.value.filter(item => item.id !== id);
+  if (!mediaPreviewItems.value.length) closeMediaPreview();
 }
 
 async function openMediaComposer(action: ComposerActionDefinition): Promise<void> {
@@ -1826,6 +1834,7 @@ function handleHeaderAction(action: { id: string }): void {
       :items="mediaPreviewItems"
       :loading="sending"
       @cancel="closeMediaPreview"
+      @remove="removeMediaPreviewItem"
       @submit="sendMediaPreview"
     />
     </template>

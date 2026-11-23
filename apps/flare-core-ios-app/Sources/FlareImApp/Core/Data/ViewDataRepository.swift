@@ -187,11 +187,9 @@ final class ViewDataRepository: ObservableObject {
         }
     }
 
-    /// 时间线视图的行键:clientMsgId,没有时 serverId,都没有时 seq:<会话>:<seq>(与核心 row_key 相同)。
+    /// 时间线增量使用核心提供的 timelineKey。
     private func timelineRowKey(_ message: AppMessage) -> String {
-        if !message.clientMsgId.isEmpty { return message.clientMsgId }
-        if !message.serverId.isEmpty { return message.serverId }
-        return "seq:\(message.conversationId):\(message.seq)"
+        message.core.timelineKey
     }
 
     /// 按核心视图的增量规则应用:删 remove;原位替换 upsert;prepend 放最前、append 放最后;

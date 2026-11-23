@@ -317,7 +317,7 @@ function findMessage(id: string) {
 }
 
 function messageId(message: MessageIdentity): string {
-  return message.clientMsgId || message.serverId;
+  return message.serverId || message.clientMsgId;
 }
 
 function chatSearchResultText(message: ChatSearchResultMessage): string {

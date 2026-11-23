@@ -5,7 +5,9 @@ import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   test('multi-device conformance manifest covers Web and Flutter', () {
-    final file = File('../multidevice_conformance.json');
+    final file = File(
+      '../../../flare-core-sdk/examples/multidevice_conformance.json',
+    );
     expect(file.existsSync(), isTrue);
 
     final manifest =

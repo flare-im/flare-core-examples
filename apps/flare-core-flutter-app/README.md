@@ -248,3 +248,11 @@ picking, microphone permissions, local/authenticated media resolution and
 platform sharing stay in the host. `scripts/sync_ffi.sh` installs matching
 native SDK artifacts. This Core reference app ships no audio/video calls; calls
 are the managed `flare.call` plugin, integrated by product apps.
+
+## Localization integration
+
+Kit strings follow the app language. Swift custom strings use the configuration closure. See [native localization integration](../../docs/native-localization.md) for the migration, generated resources, and platform adapters.
+
+The macOS build embeds `flare-core-sdk/native/artifacts/host/libflare_im_core_sdk_ffi.dylib` through `scripts/copy_macos_ffi_dylib.sh`. Prepare that SDK artifact first, or set `FLARE_CORE_FFI_DYLIB` to an explicit matching-architecture library. The app build validates architectures and signs its embedded copy; it does not invoke the removed workspace `cargo xtask`.
+
+After rebuilding the engine FFI, run `make sync-host` in `flare-core-sdk` (use `CORE_DIST` for an isolated test dist). The macOS embedding phase checks every exported function declared by the generated SDK C header and rejects stale binaries before copying.

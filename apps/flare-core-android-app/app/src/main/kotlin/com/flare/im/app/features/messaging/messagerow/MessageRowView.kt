@@ -202,7 +202,7 @@ internal fun com.flare.im.model.entity.MessageContent?.toPresentationContent(
         MessageContentType.FILE -> FlareFileContent(
             content.str("fileName", "filename", "name") ?: fallback,
             imagePath(content).orEmpty(),
-            (content.data["size"] as? Number)?.toInt() ?: 0,
+            (content.data["size"] as? Number)?.toLong() ?: 0L,
         )
         MessageContentType.LOCATION -> FlareLocationContent(
             content.str("title", "name", "address") ?: "Location",

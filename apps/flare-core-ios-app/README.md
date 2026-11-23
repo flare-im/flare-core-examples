@@ -32,11 +32,10 @@ contracts and intents form the visual boundary; do not import private renderers.
 ## Run
 
 ```bash
-bash scripts/sync_ffi.sh
 swift build
 swift test
 xcodegen generate
-xcodebuild -project FlareImApp.xcodeproj -scheme FlareImExampleApp -destination 'platform=iOS Simulator,name=iPhone 17 Pro' build
+xcodebuild -project FlareImApp.xcodeproj -scheme FlareImExampleApp -destination 'generic/platform=iOS Simulator' ARCHS=arm64 ONLY_ACTIVE_ARCH=YES CODE_SIGNING_ALLOWED=NO build
 ```
 
 ## Demo Mode
@@ -142,3 +141,9 @@ permissions, sharing and FFI artifact loading stay native. Xcode selects the
 static library by SDK and architecture: `aarch64-apple-ios` for arm64 devices,
 `aarch64-apple-ios-sim` for arm64 simulators and `x86_64-apple-ios` for Intel
 simulators. All three synced slices are required for generic iOS builds.
+
+## Localization integration
+
+Kit strings follow the app language. Swift custom strings use the configuration closure. See [native localization integration](../../docs/native-localization.md) for the migration, generated resources, and platform adapters.
+
+For the arm64 Simulator link, prepare `FFI/ios/aarch64-apple-ios-sim/libflare_im_core_sdk_ffi.a` from the Core SDK engine. The Swift package tests exercise adapters without that Simulator binary; optional FFI and service tests name their required environment variables in their skip messages.

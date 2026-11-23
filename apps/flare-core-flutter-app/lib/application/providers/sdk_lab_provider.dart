@@ -1547,6 +1547,22 @@ final class _SdkLabEventListener extends core.FlareImEventListener {
     record('plugin', 'catalog_changed', {'version': event.version});
   }
 
+  @override
+  void onPluginCapabilityRequest(core.PluginCapabilityRequestEvent event) {
+    record('plugin', 'capability_request', {
+      'requestId': event.requestId,
+      'method': event.method,
+    });
+  }
+
+  @override
+  void onPluginBundleEvent(core.PluginBundleEvent event) {
+    record('plugin', 'bundle_event', {
+      'sessionId': event.sessionId,
+      'close': event.close,
+    });
+  }
+
   /// Title and body are message previews: only the identity and the decision
   /// are recorded.
   @override
