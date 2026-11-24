@@ -176,7 +176,10 @@ rust_inputs_newer_than_archive() {
     "$CORE_SDK_ROOT/bindings/shared/Cargo.toml" \
     "$CORE_SDK_ROOT/storage/sqlite/Cargo.toml" \
     "$FLARE_IM_ROOT/flare-transport/Cargo.toml" \
-    "$FLARE_IM_ROOT/flare-protocol/Cargo.toml" \
+    "$FLARE_IM_ROOT/flare-protocol-grpc/crates/flare-proto/Cargo.toml" \
+    "$FLARE_IM_ROOT/flare-protocol-grpc/crates/flare-proto/build.rs" \
+    "$FLARE_IM_ROOT/flare-plugin-devkit/flare-plugin-protocol/Cargo.toml" \
+    "$FLARE_IM_ROOT/flare-notify-rules/Cargo.toml" \
     "$FLARE_IM_ROOT/flare-protocol-grpc/Cargo.toml"; do
     [[ -e "$file" && "$file" -nt "$OUT_LIB" ]] && return 0
   done
@@ -189,7 +192,11 @@ rust_inputs_newer_than_archive() {
       "$CORE_SDK_ROOT/bindings/shared/src" \
       "$CORE_SDK_ROOT/storage/sqlite/src" \
       "$FLARE_IM_ROOT/flare-transport/src" \
-      "$FLARE_IM_ROOT/flare-protocol/src" \
+      "$FLARE_IM_ROOT/flare-protocol-grpc/crates/flare-proto/src" \
+      "$FLARE_IM_ROOT/flare-protocol-grpc/crates/flare-proto/proto" \
+      "$FLARE_IM_ROOT/flare-protocol-grpc/proto" \
+      "$FLARE_IM_ROOT/flare-plugin-devkit/flare-plugin-protocol/src" \
+      "$FLARE_IM_ROOT/flare-notify-rules/src" \
       "$FLARE_IM_ROOT/flare-protocol-grpc/src" \
       -type f \( -name '*.rs' -o -name '*.proto' \) \
       -newer "$OUT_LIB" \
