@@ -239,9 +239,6 @@ class SdkModelMapper {
     return {
       'phase': status.phase.name,
       'quality': status.quality?.name,
-      'accessPointId': status.accessPointId,
-      'cellId': status.cellId,
-      'regionId': status.regionId,
       'protocol': status.protocol,
       'rttMs': status.rttMs,
       'attempt': status.attempt,

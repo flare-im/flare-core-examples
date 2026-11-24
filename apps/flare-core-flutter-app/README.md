@@ -47,53 +47,16 @@ Unit/widget fixtures are test inputs, not a supported product demo mode.
 ## Real SDK Mode
 
 Enter a test user ID on the login screen. Where the app connects is the build's
-access config (`lib/shared/config/access_config.dart`); the login screen has no
+endpoint configuration (`lib/shared/config/endpoints.dart`); the login screen has no
 server settings and the app keeps no addresses. Connect tokens are SDK-managed
 (`auth: {}`): the core issues and refreshes them through the Core API of the
-access point it uses (in development mode `developmentEndpoints.coreApiUrl`);
+configured deployment;
 the app configures no token address and holds no signing keys. Use isolated test
 accounts for destructive or send workflows.
 
-### Access config
+### Endpoint configuration
 
-A release build needs the signed access config:
-
-```bash
-flutter build apk --release \
-  --dart-define=FLARE_ACCESS_JSON='{"bootstrapId":"…","trustRoots":[…],"seed":"…","trustMode":"production"}'
-```
-
-Without `FLARE_ACCESS_JSON`, or with a development one, a release build fails at
-SDK init instead of falling back to development mode.
-
-Debug and profile builds without `FLARE_ACCESS_JSON` run in development mode
-(unsigned local endpoints; the kit connection notice wears its development
-badge). The defaults are the local stack's ports:
-
-| define | default | |
-|---|---|---|
-| `FLARE_DEV_HOST` | `127.0.0.1`; `10.0.2.2` on Android | the host below. The Android emulator reaches the host machine at `10.0.2.2`; a device needs the machine's LAN address |
-| `FLARE_DEV_WS_URL` | `ws://<host>:60051/ws` | gateway WebSocket |
-| `FLARE_DEV_QUIC_URL` | none | gateway QUIC (local QUIC needs a certificate; WebSocket only by default) |
-| `FLARE_DEV_CORE_API_URL` | `http://<host>:50050` | Core HTTP |
-| `FLARE_DEV_MEDIA_URL` | Core HTTP | media |
-
-A given entry replaces its default whole. Two local access points (failover
-drills) and any other full development config go in `FLARE_ACCESS_JSON`; the
-primary access point is `development`, `accessPoints` lists the others in the
-same cell:
-
-```bash
-flutter run -d macos \
-  --dart-define='FLARE_ACCESS_JSON={"trustMode":"development","developmentEndpoints":{"wsUrl":"ws://127.0.0.1:60051/ws","coreApiUrl":"http://127.0.0.1:50050","mediaUrl":"http://127.0.0.1:50050","accessPoints":[{"id":"dev-b","wsUrl":"ws://127.0.0.1:61051/ws","coreApiUrl":"http://127.0.0.1:51050"}]}}'
-```
-
-The connection banner is the kit's `FlareConnectionNotice`, fed with the core's
-`connection://status`; kicked or expired sessions sign out to the login page.
-Login and connect succeed when the failure is one the link recovers from by
-itself (no network, unreachable access points, overload): the core keeps the
-session and reconnects, the local view stays, and whether the app is online is
-read from `connection://status` only.
+Release builds pass `--dart-define=FLARE_CORE_ENDPOINTS_JSON` with `baseUrl` and `websocketUrl`, plus optional `quicUrl` and `mediaBaseUrl`. Debug builds default to ports 50050 and 60051 on loopback, or the Android emulator host `10.0.2.2`. `FLARE_DEV_HOST`, `FLARE_DEV_CORE_API_URL`, `FLARE_DEV_WS_URL`, `FLARE_DEV_QUIC_URL`, and `FLARE_DEV_MEDIA_URL` override the debug defaults.
 
 ## Supported Features
 
@@ -149,24 +112,6 @@ build must not carry the Play dependency, so a Play build needs flavors, as in
 
 6. Build with the channel:
    `flutter build appbundle --release --flavor play --dart-define=FLARE_APP_DISTRIBUTION=play`.
-
-macOS registers `flare-recover://` in `macos/Runner/Info.plist` and takes the link
-through `flare_core_flutter_lifecycle`. On Windows and Linux a release build
-registers itself for the current user at startup: `reg add` under
-`HKCU\Software\Classes\flare-recover`, or a desktop entry in
-`~/.local/share/applications` with `xdg-mime default`. A failed registration is only
-logged, and a recovery link can still be pasted on the network and line page. The
-system starts the app with the link as an argument of `main`, and from there it
-takes the same path as on macOS. This app has no `windows/` or `linux/` runner yet,
-so none of this runs until they are added.
-
-Limits on Windows and Linux:
-
-- With the app already running, opening a link starts a second process. It is not
-  handed to the running instance, which takes a native single-instance check that
-  this app does not have.
-- There is one handler per user. The Flutter apps share the scheme, so the one
-  started last holds it.
 
 ## System push
 

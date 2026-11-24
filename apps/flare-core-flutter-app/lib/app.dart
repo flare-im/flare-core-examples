@@ -6,7 +6,6 @@ import 'package:flare_im/interface/sdk_event_scope.dart';
 import 'package:flare_im/interface/theme/flare_im_design.dart';
 import 'package:flare_im/interface/widgets/message_alert_host.dart';
 import 'package:flare_im/interface/widgets/push_notification_host.dart';
-import 'package:flare_im/interface/widgets/recovery_link_host.dart';
 import 'package:flare_im/interface/widgets/update_host.dart';
 import 'package:flare_im_ui/flare_im_ui.dart'
     show FlarePlatformScope, FlareStringsScope;
@@ -16,10 +15,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Flare IM 应用主组件
 class FlareImApp extends ConsumerWidget {
-  const FlareImApp({super.key, this.launchArguments = const []});
-
-  /// `main`'s arguments: Windows and Linux open a recovery link with them.
-  final List<String> launchArguments;
+  const FlareImApp({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -51,10 +47,7 @@ class FlareImApp extends ConsumerWidget {
             strings: kitStringsFor(flareLocale),
             child: PushNotificationHost(
               child: MessageAlertHost(
-                child: RecoveryLinkHost(
-                  launchArguments: launchArguments,
-                  child: UpdateHost(child: child!),
-                ),
+                child: UpdateHost(child: child!),
               ),
             ),
           ),

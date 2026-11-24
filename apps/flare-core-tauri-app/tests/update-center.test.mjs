@@ -22,14 +22,8 @@ test("the app turns on no macOS private API", () => {
   assert.doesNotMatch(cargo, /macos-private-api/);
 });
 
-test("the system's deep links are recovery links, delivered to the running instance", () => {
-  assert.deepEqual(conf.plugins?.["deep-link"]?.desktop?.schemes, ["flare-recover"]);
-  assert.ok(rust.indexOf("tauri_plugin_single_instance::init") < rust.indexOf("tauri_plugin_deep_link::init"));
-  assert.match(cargo, /tauri-plugin-single-instance = \{[^}]*"deep-link"/);
-});
-
-test("the window may use what the installer and the deep links call", () => {
-  for (const permission of ["deep-link:default", "updater:default", "process:allow-restart"]) {
+test("the window may use the installer", () => {
+  for (const permission of ["updater:default", "process:allow-restart"]) {
     assert.ok(capability.permissions.includes(permission), permission);
   }
 });

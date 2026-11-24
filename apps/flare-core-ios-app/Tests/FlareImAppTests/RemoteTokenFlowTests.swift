@@ -35,7 +35,7 @@ final class RemoteTokenFlowTests: XCTestCase {
         // 这条用例就会红。
         draft.tokenOverride = token
 
-        let access = try AppAccess.resolve(lookup: { $0 == "FLARE_DEV_WS_URL" ? endpoint : nil }, allowDevelopment: true)
+        let access = try AppEndpoints.resolve(lookup: { $0 == "FLARE_DEV_WS_URL" ? endpoint : nil }, allowDevelopment: true)
         let session = AppSession(access: access)
         defer { Task { try? await session.dispose() } }
 

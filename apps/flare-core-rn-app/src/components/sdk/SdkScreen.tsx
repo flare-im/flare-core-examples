@@ -103,9 +103,6 @@ const connectionLabels: Record<RnConnectionOperation, string> = {
   status: '连接状态',
   reconnect_now: '立即重连',
   disconnect: '断开连接',
-  access_status: '接入状态',
-  access_points: '接入点',
-  access_diagnostics: '导出诊断',
 };
 
 const sessionLabels: Record<RnSessionOperation, string> = {

@@ -31,7 +31,7 @@ final class AppSession: ObservableObject {
     var onNotificationClear: (@MainActor (NotificationClearEvent) -> Void)?
 
     private let clientFactory: SdkClientFactory
-    private let access: AppAccess
+    private let access: AppEndpoints
     private var eventSubscriptions: [any EventSubscription] = []
     private var nativeEventSubscription: [String: AnySendable]?
     private var lastLoginDraft: LoginDraft?
@@ -42,7 +42,7 @@ final class AppSession: ObservableObject {
     /// That initialization while it runs: a sign-in during the update center's first read continues on its client.
     private var sessionlessBringUp: Task<Void, Error>?
 
-    nonisolated init(clientFactory: SdkClientFactory = DefaultSdkClientFactory(), access: AppAccess = .current) {
+    nonisolated init(clientFactory: SdkClientFactory = DefaultSdkClientFactory(), access: AppEndpoints = .current) {
         self.clientFactory = clientFactory
         self.access = access
     }
@@ -123,17 +123,6 @@ final class AppSession: ObservableObject {
         }
         sessionlessInit = (dataURL, draft.tenantId)
         return client
-    }
-
-    /// The events the network and line page reads again on; the returned function stops listening.
-    func subscribeLinkEvents(_ onLinkEvent: @escaping @Sendable () -> Void) -> () -> Void {
-        guard let client else { return {} }
-        let subscriptions: [any EventSubscription] = [
-            client.events.onConnectionStatusChanged { _ in onLinkEvent() },
-            client.events.onAccessChanged { _ in onLinkEvent() },
-            client.events.onAccessSwitched { _ in onLinkEvent() },
-        ]
-        return { subscriptions.forEach { $0.unsubscribe() } }
     }
 
     /// 热启动网络半段：本地出图后在后台建连并完成首次同步，失败保持本地视图可用。链路自己能恢复的失败（没网、
@@ -229,20 +218,20 @@ final class AppSession: ObservableObject {
         return request
     }
 
-    /// The init config: data directory, tenant, the build's access configuration (``AppAccess``), the private CA when
+    /// The init config: data directory, tenant, the build's access configuration (``AppEndpoints``), the private CA when
     /// one is given, and SDK-managed connect tokens (`auth: {}`: the SDK issues and renews them on the Core API of the
     /// access point it uses). The client never mints tokens itself (that would put the signing key in the app); a
     /// token pasted in Settings goes to `login` as given.
-    nonisolated static func sessionInitConfig(draft: LoginDraft, dataURL: URL, access: AppAccess) -> [String: AnySendable] {
+    nonisolated static func sessionInitConfig(draft: LoginDraft, dataURL: URL, access: AppEndpoints) -> [String: AnySendable] {
         var config = draft.trustConfig()
         config["dataUrl"] = AnySendable(dataURL.absoluteString)
         config["tenantId"] = AnySendable(draft.tenantId)
-        config["access"] = AnySendable(access.access)
+        config["endpoints"] = AnySendable(access.endpoints)
         config["auth"] = AnySendable([String: Any]())
         config["platform"] = AnySendable("apple")
         config["runtime"] = AnySendable("swiftui-example")
-        config["app"] = AnySendable(AppAccess.updateApp)
-        return config
+        config["app"] = AnySendable(AppEndpoints.updateApp)
+        return ["environment": AnySendable(access.environment), "sdkConfig": AnySendable(config)]
     }
 
     private func installEventSubscriptions(_ client: any FlareImClientProtocol) {
@@ -255,7 +244,7 @@ final class AppSession: ObservableObject {
                     self.connectionStatusEvents += 1
                     self.connectionStatus = status
                     self.appendEvent("connection", name: status.phase.rawValue,
-                                     detail: [status.reason, status.accessPointId, status.protocol].compactMap { $0 }.joined(separator: " "))
+                                     detail: [status.reason, status.protocol].compactMap { $0 }.joined(separator: " "))
                 }
             },
             client.events.onUpdateState { [weak self] status in

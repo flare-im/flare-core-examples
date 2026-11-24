@@ -2,7 +2,7 @@ import { inject, provide, type InjectionKey } from "vue";
 import { currentFlareRuntimeLocale } from "@flare-im/vue-ui/i18n";
 import { useFlareCoreClient } from "../../composables/sdk";
 import { createProductionAppClient, productionAppHost } from "../infrastructure/sdk/createProductionAppClient";
-import { buildAccessConfig } from "../runtime/access";
+import { resolveCoreEndpoints } from "../runtime/endpoints";
 
 export type FlareSdkContext = ReturnType<typeof useFlareCoreClient>;
 
@@ -19,11 +19,11 @@ export function provideFlareSdk(): FlareSdkContext {
   const sdk = useFlareCoreClient({
     createClient: createProductionAppClient,
     env: import.meta.env as Record<string, string | undefined>,
-    // Where to connect is the build's access configuration; the host only adds its own settings (a private CA). Every
+    // Where to connect is the build's endpoint settings; the host only adds its own settings (a private CA). Every
     // init gets the whole `app`: the core replaces it, and release notes follow the language of the moment.
     sdkConfig: () => {
       const own = host.sdkConfig?.();
-      return { ...own, access: buildAccessConfig(), app: { ...own?.app, locale: currentFlareRuntimeLocale() } };
+      return { ...own, endpoints: resolveCoreEndpoints(import.meta.env), app: { ...own?.app, locale: currentFlareRuntimeLocale() } };
     },
     runtimeStatus: host.runtimeStatus ?? "browser-wasm",
   });

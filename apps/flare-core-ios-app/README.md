@@ -58,19 +58,7 @@ settings in `project.yml`):
   only when given; a self-signed server also needs `FLARE_TLS_CA_CERT`),
   `FLARE_DEV_CORE_API_URL` and `FLARE_DEV_MEDIA_URL`, for example
   `xcodebuild ... FLARE_DEV_WS_URL=ws://192.168.1.20:60051`.
-- `FLARE_ACCESS_JSON` replaces all of them with a whole `access` object, for
-  example a second access point for failover drills:
-  `{"trustMode":"development","developmentEndpoints":{"wsUrl":"ws://127.0.0.1:60051","coreApiUrl":"http://127.0.0.1:50050","mediaUrl":"http://127.0.0.1:50050","accessPoints":[{"id":"dev-b","wsUrl":"ws://127.0.0.1:61051","coreApiUrl":"http://127.0.0.1:51050","mediaUrl":"http://127.0.0.1:51050"}]}}`
-  (use the second entry's real ports).
-- Release builds read only `FLARE_ACCESS_JSON` (the production `bootstrapId`,
-  `trustRoots`, `seed` and `trustMode: production`) and stop at launch without
-  it; they never fall back to development mode.
-
-Connect tokens are SDK-managed (`"auth": {}` in every build): the SDK issues and
-renews them on the Core API of the access point it uses, which in development is
-the Core HTTP entry above. A token pasted in Settings is passed to login as
-given. Do not put signing keys in UI code. Use isolated test accounts for destructive or send
-workflows.
+- Release builds require `baseUrl` and `websocketUrl` in `FLARE_CORE_ENDPOINTS_JSON`. `quicUrl` and `mediaBaseUrl` are optional.
 
 ## Push Notifications
 

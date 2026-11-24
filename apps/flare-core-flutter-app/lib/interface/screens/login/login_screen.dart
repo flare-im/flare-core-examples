@@ -15,7 +15,7 @@ import 'package:go_router/go_router.dart';
 
 // 登录页:统一登录规格 v2。视觉取自 kit 设计 token,**表单用 kit 组件搭建**
 // (FlareFormField + FlareInput,来自 flare_im_ui)。字段只有用户 ID:连哪套服务、走哪种
-// 协议是构建期的接入配置(shared/config/access_config.dart)与核心的选路,登录页没有服务器
+// 协议是构建期的接入配置(shared/config/endpoints.dart)与核心的选路,登录页没有服务器
 // 设置;也没有 access token / TLS 证书输入(SDK 托管:核心向网关签发并自动刷新;TLS CA
 // 走默认配置)。
 

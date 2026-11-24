@@ -9,11 +9,9 @@ export { default as FlareConversationsPanel } from "./components/FlareConversati
 export { default as FlareChatPlaceholder } from "./components/FlareChatPlaceholder.vue";
 export { default as FlareChatWorkspace } from "./components/FlareChatWorkspace.vue";
 export { default as FlareSdkLabPanel } from "./components/FlareSdkLabPanel.vue";
-export { default as FlareAccessDiagnosticsScreen } from "./components/FlareAccessDiagnosticsScreen.vue";
 export { default as FlareAboutScreen } from "./components/FlareAboutScreen.vue";
 export { default as FlareUpdatePromptHost } from "./components/FlareUpdatePromptHost.vue";
 export { provideFlareUpdates, useFlareUpdates, type FlareUpdates } from "./state/update";
-export { pendingRecoveryLink } from "./state/accessDiagnostics";
 export {
   getFlareSdkSingleton,
   provideFlareSdk,

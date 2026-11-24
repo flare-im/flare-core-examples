@@ -47,7 +47,7 @@ final class SdkLabViewModel: ObservableObject {
         [
             CoverageRow(family: "Lifecycle", api: "create, init, login, logout (token issued by the gateway)", status: "Real", entryPoint: "Login and Settings"),
             CoverageRow(family: "Lifecycle", api: "updateAccessToken, disconnect, uninit, hardReset, dispose", status: "Lab", entryPoint: "SDK Lab Lifecycle"),
-            CoverageRow(family: "Connection", api: "isConnected, sessionActive, connection.getStatus, connection.reconnectNow, access.getStatus, access.listAccessPoints", status: "Lab", entryPoint: "Diagnostics"),
+            CoverageRow(family: "Connection", api: "isConnected, sessionActive, connection.getStatus, connection.reconnectNow", status: "Lab", entryPoint: "Diagnostics"),
             CoverageRow(family: "Conversations", api: "list, query, archived, paginated, raw, bootstrap, open timeline", status: "Real/Lab", entryPoint: "Conversation list and Lab"),
             CoverageRow(family: "Conversations", api: "mark read/unread, pin, mute, archive, draft, clear, delete", status: "Real", entryPoint: "Conversation actions and Details"),
             CoverageRow(family: "Messages", api: "messageBuilder.buildText, sendMessage, listMessages, setTyping", status: "Real", entryPoint: "Chat composer and timeline"),
@@ -214,12 +214,6 @@ final class SdkLabViewModel: ObservableObject {
             case "connection.reconnect_now":
                 try await client.connection.reconnectNow()
                 appendLab(operation, status: "ok", detail: "next round started")
-            case "access.get_status":
-                let status = try await client.access.getStatus()
-                appendLab(operation, status: "ok", detail: String(describing: status))
-            case "access.list_access_points":
-                let points = try await client.access.listAccessPoints()
-                appendLab(operation, status: "ok", detail: points.map { "\($0.accessPointId) \($0.status)" }.joined(separator: ", "))
             default:
                 throw unavailable("Operation \(operation) is not wired")
             }

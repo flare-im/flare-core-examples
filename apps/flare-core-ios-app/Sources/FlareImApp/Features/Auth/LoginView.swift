@@ -2,7 +2,7 @@ import SwiftUI
 import FlareIMUI
 
 /// The account entry composes the same branded shell as the Social client.
-/// Access configuration and tokens remain owned by AppAccess and the SDK.
+/// Access configuration and tokens remain owned by AppEndpoints and the SDK.
 struct LoginView: View {
     @EnvironmentObject private var auth: AuthViewModel
 

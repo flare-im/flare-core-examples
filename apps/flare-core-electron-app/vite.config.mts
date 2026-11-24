@@ -15,4 +15,7 @@ export default createFlareCoreWebAppViteConfig({
   defineConfig,
   loadEnv,
   vuePlugin: vue,
+  extraAliases: [
+    { find: /^@flare-im\/core-web-update$/, replacement: path.resolve(__dirname, "../../../flare-commercial-client-runtime/packages/update/flare-core-web-update/src/index.ts") },
+  ],
 });

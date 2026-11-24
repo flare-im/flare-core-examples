@@ -41,19 +41,16 @@ void main() {
   });
 
   test('the init overlay is the access config plus run settings', () {
-    const access = {
-      'trustMode': 'development',
-      'developmentEndpoints': {'wsUrl': 'ws://127.0.0.1:60051/ws'},
-    };
+    const endpoints = {'baseUrl': 'http://127.0.0.1:50050', 'websocketUrl': 'ws://127.0.0.1:60051/ws'};
     expect(
       const SdkConfig(
-        access: access,
+        endpoints: endpoints,
         tlsCaCertPath: ' /tmp/flare-server.crt ',
         tenantId: ' ',
         dataUrl: 'file:///data/',
       ).toInitConfig(),
       {
-        'access': access,
+        'endpoints': endpoints,
         'tenantId': '0',
         'tlsCaCertPath': '/tmp/flare-server.crt',
         'auth': <String, Object?>{},
@@ -61,6 +58,6 @@ void main() {
       },
     );
     // Tokens are SDK-managed through the Core API: no token address at all.
-    expect(const SdkConfig(access: access).toInitConfig()['auth'], isEmpty);
+    expect(const SdkConfig(endpoints: endpoints).toInitConfig()['auth'], isEmpty);
   });
 }

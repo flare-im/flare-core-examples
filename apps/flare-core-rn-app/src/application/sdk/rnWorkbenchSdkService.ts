@@ -9,7 +9,7 @@ import type {
   SendMessageResponse,
 } from '@flare-im/sdk/model';
 import { MessageBuildOp, MessageContentType } from '@flare-im/sdk/model';
-import { buildAccessConfig } from '../../config/access';
+import { buildCoreEndpoints } from '../../config/endpoints';
 import {
   RN_CAPABILITY_OPERATIONS,
   RN_CONNECTION_OPERATIONS,
@@ -45,6 +45,8 @@ type LoginSnapshot = {
 type HomeSyncSnapshot = {
   conversations: ConversationItem[];
 };
+
+declare const __DEV__: boolean;
 
 export type RnWorkbenchSdkService = {
   getDiagnostics(): Promise<DiagnosticsSnapshot>;
@@ -159,7 +161,10 @@ export function createRnWorkbenchSdkService(client: FlareImClient): RnWorkbenchS
       // 应用托管：登录表单带了现成 token 就原样用；SDK 托管：留空，SDK 签发并自动刷新。
       // 客户端不再本地签发（那等于把签名密钥打进 App）。
       const explicitToken = form.token.trim();
-      await client.init(coreSdkConfig(form, identity.tenantId, explicitToken));
+      await client.init({
+        environment: __DEV__ ? "development" : "production",
+        sdkConfig: coreSdkConfig(form, identity.tenantId, explicitToken),
+      });
       await client.events.subscribeEvents({ sources: [...sdkEventSources] });
       await client.login(explicitToken ? { userId: identity.userId, token: explicitToken } : { userId: identity.userId });
       const [diagnostics, catalog, connectionStatus] = await Promise.all([
@@ -334,9 +339,6 @@ export function createRnWorkbenchSdkService(client: FlareImClient): RnWorkbenchS
         await client.connection.disconnect();
         return compactJson({ disconnected: true, status: await client.connection.getStatus() });
       }
-      if (op === 'access_status') return compactJson(await client.access.getStatus());
-      if (op === 'access_points') return compactJson(await client.access.listAccessPoints());
-      if (op === 'access_diagnostics') return compactJson(await client.access.exportDiagnostics());
       return compactJson(await client.connection.getStatus());
     },
 
@@ -378,13 +380,13 @@ export function createRnWorkbenchSdkService(client: FlareImClient): RnWorkbenchS
 }
 
 /**
- * The init request: where to connect is the bundle's access configuration (src/config/access.ts), never a field of
+ * The init request: where to connect is the bundle's endpoints (src/config/endpoints.ts), never a field of
  * the sign-in form; the tenant and data root are the account's. Without a connect token of the host's the SDK
  * issues and renews one itself (SDK-managed).
  */
 export function coreSdkConfig(form: Pick<LoginFormState, 'dataUrl'>, tenantId: string, token: string): SdkConfig {
   return {
-    access: buildAccessConfig(),
+    endpoints: buildCoreEndpoints(),
     dataUrl: form.dataUrl,
     tenantId,
     resourceProfile: 'mobile',

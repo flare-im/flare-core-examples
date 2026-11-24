@@ -2,7 +2,7 @@ import Foundation
 
 /// 热启动会话档案：登录成功后保存，下次启动免登录直接
 /// prepare(本地库) → 本地出图 → 后台 connect。
-/// 接入 token 由 SDK 向网关签发并自动刷新，无需持久化；连到哪里由构建期的接入配置（``AppAccess``）决定，也不在档案里。
+/// 接入 token 由 SDK 向网关签发并自动刷新，无需持久化；连到哪里由构建期的接入配置（``AppEndpoints``）决定，也不在档案里。
 enum SavedSessionStore {
     private static let userIdKey = "flare.savedSession.userId"
     private static let tlsCaCertPathKey = "flare.savedSession.tlsCaCertPath"

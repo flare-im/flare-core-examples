@@ -35,12 +35,14 @@ test('React Native app exposes FlareImCoreSdk native module on Android and iOS',
 
   const settings = read('android/settings.gradle');
   assert.match(settings, /include ':flare-core-android-sdk'/);
+  assert.match(settings, /include ':flare-core-android-lifecycle'/);
 
   const androidBuild = read('android/app/build.gradle');
   assert.match(androidBuild, /implementation\(project\(":flare-core-android-sdk"\)\)/);
 
   const androidSdkBuild = read('../../../flare-core-sdk/packages/flare-core-android-sdk/build.gradle.kts');
-  assert.match(androidSdkBuild, /native\/artifacts\/android/);
+  assert.match(androidSdkBuild, /FLARE_SDK_PRODUCT_DIST/);
+  assert.match(androidSdkBuild, /resolve\("android"\)/);
   assert.doesNotMatch(androidSdkBuild, /abiFilters \+= "arm64-v8a"/);
 
   const iosModule = read(iosModulePath);
@@ -64,7 +66,7 @@ test('TypeScript native host passes the generated descriptor to React Native mod
   }
 });
 
-test('React Native connects where the bundle\'s access configuration says, with no server settings on sign-in', () => {
+test('React Native initializes with bundled endpoints and keeps sign-in focused on credentials', () => {
   const service = read('src/application/sdk/rnWorkbenchSdkService.ts');
   const loginScreen = read('src/components/auth/LoginScreen.tsx');
   const types = read('src/types.ts');
@@ -72,7 +74,7 @@ test('React Native connects where the bundle\'s access configuration says, with 
   const indexJs = read('index.js');
 
   assert.match(service, /userId:\s*'11'/);
-  assert.match(service, /access:\s*buildAccessConfig\(\)/);
+  assert.match(service, /endpoints:\s*buildCoreEndpoints\(\)/);
   assert.match(service, /client\.connection\.getStatus\(\)/);
   // The forbidden names are spelled from parts, so this test does not trip the repository grep gate it mirrors.
   const addressField = new RegExp(`\\b(${['ws', 'quic', 'http', 'gateway'].map((prefix) => `${prefix}Url`).join('|')})\\b`);
@@ -85,6 +87,6 @@ test('React Native connects where the bundle\'s access configuration says, with 
   assert.doesNotMatch(loginScreen, /粘贴 dev token|Token\s*</);
   assert.match(packageJson, /sync:dev-token-secret/);
   assert.match(packageJson, /scripts\/sync-dev-token-secret\.js/);
-  assert.match(packageJson, /"sync:access-config":\s*"node scripts\/sync-access-config\.js"/);
-  assert.match(indexJs, /__FLARE_ACCESS_JSON__ = require\('\.\/\.generated\/flare-access\.json'\)\.json/);
+  assert.match(packageJson, /"sync:endpoints-config":\s*"node scripts\/sync-endpoints-config\.js"/);
+  assert.match(indexJs, /__FLARE_CORE_ENDPOINTS_JSON__ = require\('\.\/\.generated\/flare-endpoints\.json'\)\.json/);
 });

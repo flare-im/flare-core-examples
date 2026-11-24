@@ -1,15 +1,11 @@
-import 'dart:async' show unawaited;
-
-import 'package:flare_core_flutter_update_ui/flare_core_flutter_update_ui.dart'
+import 'package:flare_core_flutter_update/flare_core_flutter_update.dart'
     show FlareUpdateAboutScreen, FlareUpdatePromptHost;
-import 'package:flare_im/application/providers/access_diagnostics_provider.dart';
 import 'package:flare_im/application/providers/auth_state_provider.dart';
 import 'package:flare_im/interface/screens/chat/chat_screen.dart';
 import 'package:flare_im/interface/screens/conversation_list/conversation_list_screen.dart';
 import 'package:flare_im/interface/screens/login/login_screen.dart';
 import 'package:flare_im/interface/screens/message_search/message_search_screen.dart';
 import 'package:flare_im/interface/screens/sdk_lab/sdk_lab_screen.dart';
-import 'package:flare_im/interface/screens/settings/access_diagnostics_screen.dart';
 import 'package:flare_im/interface/screens/settings/settings_screen.dart';
 import 'package:flare_im/interface/shell/workbench_shell.dart';
 import 'package:flare_im/shared/layout/workbench_layout.dart';
@@ -39,19 +35,10 @@ bool _isWide(BuildContext context) {
 /// 应用路由配置
 final appRouterProvider = Provider<GoRouter>((ref) {
   return GoRouter(
-    // Recovery link `flare-recover://v1?…`: the engine hands it over as a route
-    // (cold and warm start). Imported in either sign-in state, and the network
-    // and line page says what became of it.
-    redirect: (context, state) {
-      final recovery = recoveryLinkOf(state.uri);
-      if (recovery == null) return null;
-      unawaited(ref.read(accessDiagnosticsProvider).importRecovery(recovery));
-      return '/network';
-    },
     routes: [
       // The update prompt is a route on the root navigator. This shell keeps
       // that navigator to one page and puts every page under one host: the
-      // prompt reaches them all, `/network` included, and stays the same route
+      // prompt reaches them all and stays the same route
       // while they change.
       ShellRoute(
         builder: (context, state, child) => FlareUpdatePromptHost(child: child),
@@ -59,10 +46,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/login',
             builder: (context, state) => const LoginScreen(),
-          ),
-          GoRoute(
-            path: '/network',
-            builder: (context, state) => const AccessDiagnosticsScreen(),
           ),
           GoRoute(
             path: '/about',

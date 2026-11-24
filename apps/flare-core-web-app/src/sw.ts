@@ -1,6 +1,6 @@
-/** The site's Service Worker, the same script for every build: see `@flare-im/sdk/update/service-worker`. */
+/** The site's Service Worker, the same script for every build: see `@flare-im/core-web-update/service-worker`. */
 import { handleFlareNotificationClick } from "@flare-im/sdk/notifications";
-import { installFlareServiceWorker } from "@flare-im/sdk/update/service-worker";
+import { installFlareServiceWorker } from "@flare-im/core-web-update/service-worker";
 
 // "index.html" resolves against this script: beside it, whatever the deploy base is.
 installFlareServiceWorker({

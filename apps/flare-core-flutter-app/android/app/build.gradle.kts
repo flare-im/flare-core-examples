@@ -1,3 +1,5 @@
+import java.util.Base64
+
 plugins {
     id("com.android.application")
     id("kotlin-android")
@@ -19,7 +21,7 @@ val getuiAppId: String =
         .orEmpty()
         .split(",")
         .filter { it.isNotBlank() }
-        .mapNotNull { runCatching { String(java.util.Base64.getDecoder().decode(it), Charsets.UTF_8) }.getOrNull() }
+        .mapNotNull { runCatching { String(Base64.getDecoder().decode(it), Charsets.UTF_8) }.getOrNull() }
         .firstOrNull { it.startsWith("FLARE_GETUI_APP_ID=") }
         ?.substringAfter("=")
         ?.trim()
@@ -49,6 +51,10 @@ android {
         versionCode = flutter.versionCode
         versionName = flutter.versionName
         manifestPlaceholders["GETUI_APPID"] = getuiAppId
+        providers.gradleProperty("FLARE_JPUSH_APP_KEY").orNull?.trim()?.takeIf(String::isNotEmpty)?.let {
+            manifestPlaceholders["JPUSH_APPKEY"] = it
+            manifestPlaceholders["JPUSH_CHANNEL"] = "direct"
+        }
     }
 
     buildTypes {

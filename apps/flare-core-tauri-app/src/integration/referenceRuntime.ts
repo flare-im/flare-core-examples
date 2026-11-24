@@ -1,8 +1,7 @@
 import { FlareCoreSdk } from "@flare-im/sdk/tauri";
-import { followRecoveryLinks, webAppInfoFromBuild } from "@flare-im/sdk/lifecycle";
-import { createTauriUpdateInstaller, isStoreDistribution } from "@flare-im/sdk/update";
+import { webAppInfoFromBuild } from "@flare-im/sdk/lifecycle";
+import { createTauriUpdateInstaller, isStoreDistribution } from "@flare-im/core-web-update";
 import { convertFileSrc } from "@tauri-apps/api/core";
-import { getCurrent, onOpenUrl } from "@tauri-apps/plugin-deep-link";
 import { openUrl, revealItemInDir } from "@tauri-apps/plugin-opener";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { check } from "@tauri-apps/plugin-updater";
@@ -19,7 +18,7 @@ declare const __FLARE_DEV_CA_CERT_PATH__: string;
 /**
  * The private CA the native runtime trusts for TLS endpoints (a local gateway's self-signed QUIC, say):
  * `VITE_FLARE_TLS_CA_CERT_PATH`, else on the dev server the repository's development certificate. Where to
- * connect is not here: that is the build's VITE_FLARE_ACCESS_JSON (see the shared runtime/access.ts).
+ * connect is not here: that is the build's VITE_FLARE_CORE_API_URL and VITE_FLARE_WEBSOCKET_URL (see the shared runtime/endpoints.ts).
  */
 function tlsCaCertPath(): string | undefined {
   const configured = String(import.meta.env.VITE_FLARE_TLS_CA_CERT_PATH ?? "").trim();
@@ -55,7 +54,6 @@ export const referenceRuntime: ReferenceRuntime = {
     onError: (error) => console.warn("[update]", error),
   }),
   openUrl: (url) => openUrl(url),
-  followRecoveryLinks: (onLink) => followRecoveryLinks({ getCurrent, onOpenUrl }, onLink),
   // Desktop host: fine pointer, hover, context menus and shortcuts; the dialog
   // plugin backs the pickers, nothing backs share.
   platform: {

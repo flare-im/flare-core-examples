@@ -2,7 +2,7 @@ import 'dart:async' show unawaited;
 
 import 'package:flare_core_flutter_push/flare_core_flutter_push.dart'
     show FlarePushBackgroundDelivery, FlarePushPermissionStatus;
-import 'package:flare_core_flutter_update_ui/flare_core_flutter_update_ui.dart'
+import 'package:flare_core_flutter_update/flare_core_flutter_update.dart'
     show FlareUpdateScope;
 import 'package:flare_im/application/providers/app_theme_mode_provider.dart';
 import 'package:flare_im/application/providers/locale_provider.dart';
@@ -106,11 +106,6 @@ class SettingsScreen extends ConsumerWidget {
       FlareSettingsSection(
         items: [
           FlareSettingsItem(
-            key: 'network',
-            label: FlareStrings.of(context).accessDiagnosticsTitle,
-            icon: 'link',
-          ),
-          FlareSettingsItem(
             key: 'about',
             label: FlareStrings.of(context).versionPanelTitle,
             icon: 'info',
@@ -155,8 +150,6 @@ class SettingsScreen extends ConsumerWidget {
           ref.read(appThemeModeProvider.notifier).setMode(ThemeMode.light);
         case 'theme_dark':
           ref.read(appThemeModeProvider.notifier).setMode(ThemeMode.dark);
-        case 'network':
-          context.push('/network');
         case 'about':
           context.push('/about');
         case 'download_location':

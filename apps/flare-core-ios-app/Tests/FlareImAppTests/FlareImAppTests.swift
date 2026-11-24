@@ -71,7 +71,7 @@ final class FlareImAppTests: XCTestCase {
         var draft = LoginDraft()
         draft.tlsCaCertPath = " /tmp/flare-server.crt "
         let config = AppSession.sessionInitConfig(draft: draft, dataURL: URL(fileURLWithPath: "/tmp/x"),
-                                                  access: try! AppAccess.resolve(lookup: { _ in nil }, allowDevelopment: true))
+                                                  access: try! AppEndpoints.resolve(lookup: { _ in nil }, allowDevelopment: true))
         XCTAssertEqual(config["tlsCaCertPath"]?.value as? String, "/tmp/flare-server.crt")
         let access = config["access"]?.value as? [String: Any]
         XCTAssertEqual(access?["trustMode"] as? String, "development")
@@ -927,9 +927,9 @@ final class FlareImAppTests: XCTestCase {
 
 /// The development access the live tests run on: `FLARE_IOS_LIVE_WS_URL` / `FLARE_IOS_LIVE_HTTP_URL` when given, else
 /// the local stack.
-private func liveAccess(_ environment: [String: String]) throws -> AppAccess {
+private func liveAccess(_ environment: [String: String]) throws -> AppEndpoints {
     let names = ["FLARE_DEV_WS_URL": "FLARE_IOS_LIVE_WS_URL", "FLARE_DEV_CORE_API_URL": "FLARE_IOS_LIVE_HTTP_URL"]
-    return try AppAccess.resolve(lookup: { name in names[name].flatMap { environment[$0] } }, allowDevelopment: true)
+    return try AppEndpoints.resolve(lookup: { name in names[name].flatMap { environment[$0] } }, allowDevelopment: true)
 }
 
 private func appendRichRun(

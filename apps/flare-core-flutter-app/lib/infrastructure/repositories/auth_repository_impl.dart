@@ -1,9 +1,9 @@
-import 'package:flare_core_flutter_update_ui/flare_core_flutter_update_ui.dart'
+import 'package:flare_core_flutter_update/flare_core_flutter_update.dart'
     show flutterAppConfig;
 import 'package:flare_im/domain/entities/user.dart';
 import 'package:flare_im/domain/repositories/i_auth_repository.dart';
 import 'package:flare_im/infrastructure/sdk/flare_core_sdk_wrapper.dart';
-import 'package:flare_im/shared/config/access_config.dart';
+import 'package:flare_im/shared/config/endpoints.dart';
 
 class AuthRepositoryImpl implements IAuthRepository {
   final SdkWrapper _sdk;
@@ -25,7 +25,7 @@ class AuthRepositoryImpl implements IAuthRepository {
   }) async {
     await _sdk.init(
       SdkConfig(
-        access: resolveAccessConfig(),
+        endpoints: resolveCoreEndpoints(),
         app: flutterAppConfig(locale: _locale?.call()),
         tlsCaCertPath: tlsCaCertPath,
         tlsCaCert: tlsCaCert,

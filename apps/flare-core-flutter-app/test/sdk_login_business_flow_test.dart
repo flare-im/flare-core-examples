@@ -5,7 +5,7 @@ import 'package:flare_im/infrastructure/paths/sdk_data_url.dart';
 import 'package:flare_im/infrastructure/sdk/flare_core_sdk_wrapper.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'support/dev_access.dart';
+import 'support/dev_endpoints.dart';
 
 void main() {
   test(
@@ -32,7 +32,7 @@ void main() {
       await sdk
           .init(
             SdkConfig(
-              access: devAccess('ws://127.0.0.1:60051/ws'),
+              endpoints: devEndpoints('ws://127.0.0.1:60051/ws'),
               tenantId: '0',
               dataUrl: toFileDataUrl(root.path),
             ),

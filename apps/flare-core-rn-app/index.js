@@ -11,11 +11,11 @@ try {
   globalThis.__FLARE_RN_DEV_TOKEN_SECRET__ = '';
 }
 
-// Where to connect: the access configuration the bundle was built with (scripts/sync-access-config.js).
+// Where to connect: the access configuration the bundle was built with (scripts/sync-endpoints-config.js).
 try {
-  globalThis.__FLARE_ACCESS_JSON__ = require('./.generated/flare-access.json').json || '';
+  globalThis.__FLARE_CORE_ENDPOINTS_JSON__ = require('./.generated/flare-endpoints.json').json || '';
 } catch {
-  globalThis.__FLARE_ACCESS_JSON__ = '';
+  globalThis.__FLARE_CORE_ENDPOINTS_JSON__ = '';
 }
 
 const flareNativeModule = NativeModules.FlareImCoreSdk;

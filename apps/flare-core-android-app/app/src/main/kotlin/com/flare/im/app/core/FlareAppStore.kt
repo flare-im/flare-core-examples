@@ -13,7 +13,6 @@ import com.flare.im.api.FlareImClient
 import com.flare.im.app.features.auth.AuthViewModel
 import com.flare.im.app.features.messaging.MessagingViewModel
 import com.flare.im.app.features.search.SearchViewModel
-import com.flare.im.app.features.settings.AccessDiagnosticsHost
 import com.flare.im.app.features.sdklab.SdkLabViewModel
 import com.flare.im.app.features.settings.SettingsViewModel
 import com.flare.im.push.CorePushHost
@@ -53,13 +52,6 @@ class FlareAppStore(
 
     /** 应用内横幅、提示音与屏幕上的会话：登录或恢复会话后报给新客户端，登出、释放前收走。 */
     val alerts = MessageAlerts(session, scope)
-
-    /** The network and line page. `access.*` needs no session, so it reads before sign-in as well. */
-    val accessDiagnostics = AccessDiagnosticsHost(
-        access = { session.accessClient(environment.loginDraft.value, dataDir).access },
-        subscribeLinkEvents = session::subscribeLinkEvents,
-        scope = scope,
-    )
 
     private val updateEngine = ClientUpdateEngine { session.accessClient(environment.loginDraft.value, dataDir) }
 
@@ -107,7 +99,6 @@ class FlareAppStore(
      */
     fun openFromNotification(conversationId: String) {
         if (!session.isLoggedIn.value) return
-        accessDiagnostics.presented = false
         environment.setSection(AppSection.Conversations)
         messagingViewModel.openConversation(conversationId)
     }

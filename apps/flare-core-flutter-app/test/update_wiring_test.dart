@@ -1,8 +1,7 @@
 import 'dart:async';
 
 import 'package:flare_core_flutter_sdk/flare_core_flutter_sdk.dart' as core;
-import 'package:flare_core_flutter_update_ui/flare_core_flutter_update_ui.dart'
-    show FlareUpdateScope;
+import 'package:flare_core_flutter_update/flare_core_flutter_update.dart';
 import 'package:flare_im/application/providers/locale_provider.dart';
 import 'package:flare_im/infrastructure/sdk/flare_core_sdk_wrapper.dart';
 import 'package:flare_im/interface/router/app_router.dart';
@@ -18,7 +17,7 @@ import 'package:go_router/go_router.dart';
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  test('one prompt host stands over every page, the network page included', () {
+  test('one prompt host stands over every route', () {
     final container = ProviderContainer();
     addTearDown(container.dispose);
 
@@ -27,7 +26,7 @@ void main() {
 
     expect(
       pages.whereType<GoRoute>().map((route) => route.path),
-      containsAll(['/login', '/network', '/about']),
+      containsAll(['/login', '/about']),
     );
     expect(pages.whereType<ShellRoute>(), hasLength(1));
     expect(routes.whereType<GoRoute>().map((route) => route.path), ['/']);
@@ -53,7 +52,7 @@ void main() {
           return _FakeClient(_Events());
         },
       );
-      const config = SdkConfig(access: {'trustMode': 'development'});
+      const config = SdkConfig(endpoints: {'baseUrl': 'http://127.0.0.1:50050', 'websocketUrl': 'ws://127.0.0.1:60051'});
 
       final first = sdk.init(config);
       final second = sdk.init(config);
@@ -73,7 +72,7 @@ void main() {
           return _FakeClient(_Events());
         },
       );
-      const config = SdkConfig(access: {'trustMode': 'development'});
+      const config = SdkConfig(endpoints: {'baseUrl': 'http://127.0.0.1:50050', 'websocketUrl': 'ws://127.0.0.1:60051'});
 
       await expectLater(sdk.init(config), throwsStateError);
       await sdk.init(config);
@@ -89,7 +88,7 @@ void main() {
 
       await sdk.init(
         const SdkConfig(
-          access: {'trustMode': 'development'},
+          endpoints: {'baseUrl': 'http://127.0.0.1:50050', 'websocketUrl': 'ws://127.0.0.1:60051'},
           app: {'distribution': 'direct', 'locale': 'en-US'},
         ),
       );
@@ -101,13 +100,13 @@ void main() {
     });
 
     test('nothing to say leaves `app` to the platform', () {
-      const config = SdkConfig(access: {'trustMode': 'development'}, app: {});
+      const config = SdkConfig(endpoints: {'baseUrl': 'http://127.0.0.1:50050', 'websocketUrl': 'ws://127.0.0.1:60051'}, app: {});
       expect(config.toInitConfig().containsKey('app'), isFalse);
     });
   });
 
   testWidgets('read only turns the composer off and says why', (tester) async {
-    final updates = core.FlareUpdateController(
+    final updates = FlareUpdateController(
       engine: const _ReadOnlyEngine(),
       installer: const _NoInstaller(),
     )..install();
@@ -159,7 +158,7 @@ final class _FakeClient implements core.FlareImClient {
   dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }
 
-final class _ReadOnlyEngine implements core.FlareUpdateEngine {
+final class _ReadOnlyEngine implements FlareUpdateEngine {
   const _ReadOnlyEngine();
 
   @override
@@ -178,23 +177,23 @@ final class _ReadOnlyEngine implements core.FlareUpdateEngine {
       const Stream<Map<String, Object?>>.empty();
 }
 
-final class _NoInstaller implements core.FlareUpdateInstaller {
+final class _NoInstaller implements FlareUpdateInstaller {
   const _NoInstaller();
 
   @override
-  Future<core.FlareUpdateInstallResult> execute(
-    core.FlareUpdateInstallPlan plan,
+  Future<FlareUpdateInstallResult> execute(
+    FlareUpdateInstallPlan plan,
   ) async =>
-      const core.FlareUpdateInstallResult(core.FlareUpdateOutcome.completed);
+      const FlareUpdateInstallResult(FlareUpdateOutcome.completed);
 
   @override
-  Future<bool> canPrompt(core.FlareUpdateRelease release) async => true;
+  Future<bool> canPrompt(FlareUpdateRelease release) async => true;
 
   @override
-  Stream<core.FlareUpdateHandoff> handoffs() =>
-      const Stream<core.FlareUpdateHandoff>.empty();
+  Stream<FlareUpdateHandoff> handoffs() =>
+      const Stream<FlareUpdateHandoff>.empty();
 
   @override
-  Future<core.FlareUpdateInstallResult> completeHandoff() async =>
-      const core.FlareUpdateInstallResult(core.FlareUpdateOutcome.completed);
+  Future<FlareUpdateInstallResult> completeHandoff() async =>
+      const FlareUpdateInstallResult(FlareUpdateOutcome.completed);
 }

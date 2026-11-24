@@ -7,7 +7,7 @@ import 'package:flare_im/infrastructure/sdk/flare_core_sdk_wrapper.dart';
 import 'package:flare_im/shared/config/app_defaults_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'support/dev_access.dart';
+import 'support/dev_endpoints.dart';
 
 /// 实时投递的接收端：登录、打开会话、等带 tag 的推送。
 /// 发送端是另一个进程（test/x_send_test.dart），因为一个进程里同时跑两个
@@ -51,7 +51,7 @@ void main() {
 
     const d = AppDefaults.fallback;
     await sdk.init(SdkConfig(
-      access: devAccess(ws!), tenantId: d.tenantId,
+      endpoints: devEndpoints(ws!), tenantId: d.tenantId,
       dataUrl: toFileDataUrl(root.path),
     )).timeout(const Duration(seconds: 25));
     await sdk.login(user!, token!).timeout(const Duration(seconds: 30));

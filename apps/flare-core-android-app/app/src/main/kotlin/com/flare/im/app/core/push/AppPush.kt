@@ -8,8 +8,10 @@ import com.flare.im.app.MainActivity
 import com.flare.im.app.R
 import com.flare.im.push.FlareBackgroundPresenter
 import com.flare.im.push.FlarePush
+import com.flare.im.push.FirebasePushProvider
 import com.flare.im.push.FlarePushHost
 import com.flare.im.push.FlarePushOptions
+import com.flare.im.push.PlatformPushProviders
 import com.flare.im.push.getui.FlareGetuiPush
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
@@ -50,6 +52,7 @@ object AppPush {
             application,
             hostProvider = { currentHost() },
             options = FlarePushOptions(
+                providers = listOf(FirebasePushProvider),
                 smallIcon = R.drawable.ic_notification,
                 launchActivity = MainActivity::class.java,
                 // 模块给出的错误不含令牌与载荷，可以进日志。
@@ -61,7 +64,8 @@ object AppPush {
 
     /** 这个构建有推送通道：打包了 FCM 的客户端配置，或给了个推的应用标识。没有时设置里才提供常驻连接。 */
     fun hasPushProvider(context: Context): Boolean =
-        FlarePush.isFcmAvailable(context) || BuildConfig.FLARE_GETUI_APP_ID.isNotBlank()
+        FirebasePushProvider.isAvailable(context) || BuildConfig.FLARE_GETUI_APP_ID.isNotBlank() ||
+            PlatformPushProviders.jpushAdapter() != null
 
     /**
      * 常驻连接开着（[resident]）：不登记推送绑定，模块对每个通道撤一次服务端的绑定（`clearPushToken`），之后每个
@@ -85,6 +89,7 @@ object AppPush {
         state.value = HostState.Ready(owner, host)
         FlarePush.refresh()
         startGetui()
+        PlatformPushProviders.jpushAdapter()?.let(FlarePush::activateProvider)
     }
 
     /** [owner] 的登录或恢复没有成功，或持有会话的一方不在了：没有宿主。别的一方登记的宿主不动。 */

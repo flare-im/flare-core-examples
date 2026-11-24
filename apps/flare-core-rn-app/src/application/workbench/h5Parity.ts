@@ -90,9 +90,6 @@ export const RN_CONNECTION_OPERATIONS = [
   'status',
   'reconnect_now',
   'disconnect',
-  'access_status',
-  'access_points',
-  'access_diagnostics',
 ] as const;
 export type RnConnectionOperation = (typeof RN_CONNECTION_OPERATIONS)[number];
 

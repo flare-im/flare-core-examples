@@ -119,14 +119,6 @@ function back(): void {
           </div>
         </div>
         <div class="lab-field">
-          <span>Access</span>
-          <div class="lab-grid">
-            <FlareButton variant="secondary" :loading="sdk.labBusy.value" @click="sdk.runConnectionOperation('access_status')">Access status</FlareButton>
-            <FlareButton variant="secondary" :loading="sdk.labBusy.value" @click="sdk.runConnectionOperation('access_points')">Access points</FlareButton>
-            <FlareButton variant="secondary" :loading="sdk.labBusy.value" @click="sdk.runConnectionOperation('access_diagnostics')">Export diagnostics</FlareButton>
-          </div>
-        </div>
-        <div class="lab-field">
           <span>Session lifecycle</span>
           <div class="lab-grid">
             <FlareButton variant="secondary" :loading="sdk.labBusy.value" @click="sdk.runSessionOperation('current_user')">Current user</FlareButton>

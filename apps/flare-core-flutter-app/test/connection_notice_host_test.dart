@@ -11,7 +11,7 @@ void main() {
       kitConnectionStatus(
         const core.ConnectionStatus(
           phase: core.ConnectionPhase.actionRequired,
-          accessPointId: 'development',
+          endpointRevision: 1,
           protocol: 'ws',
           attempt: 2,
           nextRetryAt: 1762250000000,
@@ -54,15 +54,18 @@ void main() {
       dropped.unsubscribe();
       expect(events.listeners, isEmpty);
 
-      await sdk.init(const SdkConfig(access: {'trustMode': 'development'}));
+      await sdk.init(const SdkConfig(endpoints: {'baseUrl': 'http://127.0.0.1:50050', 'websocketUrl': 'ws://127.0.0.1:60051'}));
 
-      expect(created?['access'], {'trustMode': 'development'});
+      expect(created?['endpoints'], {
+        'baseUrl': 'http://127.0.0.1:50050',
+        'websocketUrl': 'ws://127.0.0.1:60051',
+      });
       expect(created?['auth'], isEmpty);
       expect(events.listeners, hasLength(1));
       early.unsubscribe();
       expect(events.listeners, isEmpty);
       // The same config again is no new init.
-      await sdk.init(const SdkConfig(access: {'trustMode': 'development'}));
+      await sdk.init(const SdkConfig(endpoints: {'baseUrl': 'http://127.0.0.1:50050', 'websocketUrl': 'ws://127.0.0.1:60051'}));
       expect(events.batchSubscriptions, 1);
     },
   );

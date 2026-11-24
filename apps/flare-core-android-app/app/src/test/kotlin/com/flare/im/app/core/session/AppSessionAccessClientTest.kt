@@ -53,7 +53,7 @@ class AppSessionAccessClientTest {
             created.incrementAndGet()
             FlareCoreSdk.createClientWithBridge(bridge)
         },
-        access = { AppAccess(mapOf("trustMode" to "development")) },
+        access = { AppEndpoints(mapOf("baseUrl" to "https://example.test", "websocketUrl" to "wss://example.test/ws")) },
     )
 
     @Test

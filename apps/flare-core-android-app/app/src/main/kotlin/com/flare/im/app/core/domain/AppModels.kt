@@ -66,7 +66,7 @@ sealed interface RuntimeStatus {
         }
 }
 
-/** The sign-in form. Where to connect is not part of it: the build's access configuration (`AppAccess`) is. */
+/** The sign-in form. Where to connect is not part of it: the build's access configuration (`AppEndpoints`) is. */
 data class LoginDraft(
     val userId: String = com.flare.im.app.BuildConfig.DEFAULT_USER_ID,
     val tlsCaCertPath: String = "",

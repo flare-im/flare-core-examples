@@ -2,6 +2,14 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+        if (!providers.gradleProperty("FLARE_JPUSH_APP_KEY").orNull.isNullOrBlank()) {
+            exclusiveContent {
+                forRepository {
+                    maven { url = uri("https://maven.jiguang.cn/nexus/content/repositories/releases/") }
+                }
+                filter { includeGroup("cn.jiguang.sdk") }
+            }
+        }
         // 个推的制品只在它自己的仓库里；只让 com.getui 下的坐标走这里，别的依赖不去问它。
         exclusiveContent {
             forRepository {

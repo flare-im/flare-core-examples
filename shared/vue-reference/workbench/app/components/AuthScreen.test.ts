@@ -32,9 +32,9 @@ afterEach(() => {
 });
 
 describe("shared authentication screen", () => {
-  it("uses the shared decorative brand motif without rendering simulated messages", () => {
+  it("uses the shared decorative brand mark without rendering simulated messages", () => {
     const { screen } = setup();
-    expect(screen.get(".flare-auth-shell__art").attributes("aria-hidden")).toBe("true");
+    expect(screen.get(".flare-auth-shell__mark").attributes("aria-hidden")).toBe("true");
     expect(screen.findAll(".message-bubble")).toHaveLength(0);
     expect(screen.findAll("form")).toHaveLength(1);
     expect(screen.emitted("login")).toBeUndefined();

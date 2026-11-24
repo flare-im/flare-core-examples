@@ -27,7 +27,7 @@ class ConnectionStatusMappingTest {
     fun theFieldsTheNoticeReadsPassThrough() {
         val reconnecting = ConnectionStatus(
             phase = ConnectionPhase.RECONNECTING,
-            accessPointId = "development",
+            endpointRevision = 1,
             protocol = "ws",
             attempt = 2,
             nextRetryAt = 1_762_250_000_000,

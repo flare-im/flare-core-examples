@@ -49,15 +49,7 @@ xcodebuild -project FlareImApp.xcodeproj -scheme FlareImExampleApp -destination 
   `http://127.0.0.1:50050`。用 `FLARE_DEV_WS_URL`、`FLARE_DEV_QUIC_URL`（给了才走 QUIC；
   自签证书的服务端还要配 `FLARE_TLS_CA_CERT`）、`FLARE_DEV_CORE_API_URL` 与 `FLARE_DEV_MEDIA_URL`
   单项覆盖，例如 `xcodebuild ... FLARE_DEV_WS_URL=ws://192.168.1.20:60051`。
-- `FLARE_ACCESS_JSON` 用一整段 `access` 对象替换上面所有项，例如为切线演练加第二个接入点：
-  `{"trustMode":"development","developmentEndpoints":{"wsUrl":"ws://127.0.0.1:60051","coreApiUrl":"http://127.0.0.1:50050","mediaUrl":"http://127.0.0.1:50050","accessPoints":[{"id":"dev-b","wsUrl":"ws://127.0.0.1:61051","coreApiUrl":"http://127.0.0.1:51050","mediaUrl":"http://127.0.0.1:51050"}]}}`
-  （第二项按实际端口填写）。
-- 发布构建只读 `FLARE_ACCESS_JSON`（正式的 `bootstrapId`、`trustRoots`、`seed` 与
-  `trustMode: production`），没有就在启动时停下，绝不退回开发模式。
-
-连接令牌由 SDK 托管（每种构建都是 `"auth": {}`）：SDK 在它所用接入点的 Core API 上签发并续期，
-开发模式下就是上面的 Core HTTP 入口。在设置里粘贴的令牌原样交给登录。不要把签名密钥放进界面代码。
-会删除数据或发送消息的流程请用隔离的测试账号。
+- 发布构建通过 `FLARE_CORE_ENDPOINTS_JSON` 提供必填的 `baseUrl` 与 `websocketUrl`，可选 `quicUrl`、`mediaBaseUrl`。
 
 ## 推送通知
 

@@ -1,3 +1,4 @@
+import FlareCoreIOSKeepAlive
 import FlareCoreAppleSDK
 
 /// DI 缝:SDK 客户端的创建被抽到协议背后,而非 god-object 内部 `FlareCoreSdk.createClient` 硬造。
@@ -16,6 +17,8 @@ struct DefaultSdkClientFactory: SdkClientFactory {
     func makeClient(libraryPath: String?) throws -> any FlareImClientProtocol {
         let trimmed = libraryPath?.trimmingCharacters(in: .whitespacesAndNewlines)
         let resolved = (trimmed?.isEmpty == false) ? trimmed : nil
-        return try FlareCoreSdk.createClient(libraryPath: resolved)
+        return DefaultFlareImClient(bridge: try FfiNativeBridge(libraryPath: resolved)) { connection, lifecycle in
+            PlatformLifecycle(connection: connection, lifecycle: lifecycle, backgroundExecution: SystemBackgroundExecution())
+        }
     }
 }

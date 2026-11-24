@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:flare_core_flutter_update_ui/flare_core_flutter_update_ui.dart'
+import 'package:flare_core_flutter_update/flare_core_flutter_update.dart'
     show FlareUpdateResourceScope, FlareUpdateScope;
 import 'package:flare_im/application/providers/locale_provider.dart';
 import 'package:flare_im/application/providers/service_providers.dart';

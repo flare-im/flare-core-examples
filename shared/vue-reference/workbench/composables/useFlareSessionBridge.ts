@@ -112,11 +112,6 @@ function dispatchMappedEvent(listener: SessionEventListener, payload: unknown): 
     if (kind === "status") listener.onConnectionStatusChanged?.(eventPayload(payload) as unknown as ConnectionStatus);
     return;
   }
-  if (type === "access") {
-    if (kind === "switched") listener.onAccessSwitched?.(eventPayload(payload) as never);
-    else if (kind === "changed") listener.onAccessChanged?.(eventPayload(payload) as never);
-    return;
-  }
   if (type === "presence" && kind === "changed") {
     listener.onPresenceChanged?.(payload);
     return;
@@ -137,13 +132,7 @@ export function bindFlareSessionEvents(options: SessionBridgeOptions): () => voi
     // `actionRequired`: the session stays (readable locally) and the kit's notice offers the way out.
     onConnectionStatusChanged: (status) => {
       options.connectionStatus.value = status;
-      pushEvent(options.events, "connection_status", [status.phase, status.reason, status.accessPointId, status.protocol].filter(Boolean).join(" "));
-    },
-    onAccessSwitched: (event) => {
-      pushEvent(options.events, "access_switched", `${event.from.ap} → ${event.to.ap} (${event.reason})`);
-    },
-    onAccessChanged: (event) => {
-      pushEvent(options.events, "access_changed", `serial ${event.serial} ${event.source}${event.stale ? " stale" : ""}`);
+      pushEvent(options.events, "connection_status", [status.phase, status.reason, status.endpointRevision, status.protocol].filter(Boolean).join(" "));
     },
     onLoggedOut: () => {
       options.loggedIn.value = false;

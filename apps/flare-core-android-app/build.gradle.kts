@@ -5,3 +5,5 @@ plugins {
     // Applied by the app module only when the Firebase client configuration is present (see app/build.gradle.kts).
     id("com.google.gms.google-services") version "4.4.2" apply false
 }
+
+extra["flareNativeUpdateUi"] = true

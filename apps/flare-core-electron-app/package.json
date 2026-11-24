@@ -27,6 +27,7 @@
     "test:e2e:opfs": "playwright test -c playwright.opfs.config.ts"
   },
   "dependencies": {
+    "@flare-im/core-web-update": "file:../../../flare-commercial-client-runtime/packages/update/flare-core-web-update",
     "@flare-im/sdk": "file:../../../flare-core-sdk/packages/flare-core-typescript-sdk",
     "@flare-im/vue-ui": "file:../../../flare-im-design/packages/vue-im-ui",
     "markdown-it": "^14.2.0",

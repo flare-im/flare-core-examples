@@ -51,7 +51,7 @@ final class AppSessionAccessClientTests: XCTestCase {
 
     override func setUp() async throws {
         factory = CountingFactory()
-        session = AppSession(clientFactory: factory, access: AppAccess(access: ["trustMode": "development"]))
+        session = AppSession(clientFactory: factory, access: AppEndpoints(endpoints: ["baseUrl": "http://127.0.0.1:50050", "websocketUrl": "ws://127.0.0.1:60051"], environment: "development"))
     }
 
     func testReadsShareOneClient() async throws {

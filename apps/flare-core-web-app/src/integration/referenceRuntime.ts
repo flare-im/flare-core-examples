@@ -5,7 +5,7 @@ import {
   type FlareWasmRuntime,
 } from "@flare-im/sdk/web";
 import { webAppInfoFromBuild } from "@flare-im/sdk/lifecycle";
-import { createWebUpdateInstaller, registerFlareServiceWorker } from "@flare-im/sdk/update";
+import { createWebUpdateInstaller, registerFlareServiceWorker } from "@flare-im/core-web-update";
 import type { ReferenceRuntime } from "../../../../shared/vue-reference/runtime";
 import { createWebPlatformAdapter } from "@flare-im/vue-ui/composables";
 
@@ -40,7 +40,7 @@ export const referenceRuntime: ReferenceRuntime = {
   runtimeStatus: "browser-wasm",
   // Browser host: pointer / hover detected by the kit, pickers through the DOM file input.
   platform: { kind: "web", adapter: createWebPlatformAdapter() },
-  // Where to connect is the build's VITE_FLARE_ACCESS_JSON (see the shared runtime/access.ts); the bridge adds the
+  // Where to connect is the build's VITE_FLARE_CORE_API_URL and VITE_FLARE_WEBSOCKET_URL (see the shared runtime/endpoints.ts); the bridge adds the
   // build-time app version and build, and the SDK installs the browser's network and visibility lifecycle at init.
   createClient: () => new WebFlareImClient(wrapWebHostBridge(new WebProductionBridge({ loadRuntime }))),
   createUpdateInstaller: (client, isInputEmpty) => createWebUpdateInstaller({

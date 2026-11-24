@@ -21,6 +21,7 @@
     // { version, path } 双写是同一个思路：让解析顺序表达优先级，
     // 而不是维护两套清单或切换脚本。
     "paths": {
+      "@flare-im/core-web-update": ["../../../flare-commercial-client-runtime/packages/update/flare-core-web-update/src/index.ts"],
       "@vicons/ionicons5": ["../../../flare-im-design/node_modules/@vicons/ionicons5"],
       "@flare-im/sdk": ["../../../flare-core-sdk/packages/flare-core-typescript-sdk/src/index.ts"],
       "@flare-im/sdk/web": ["../../../flare-core-sdk/packages/flare-core-typescript-sdk/src/adapters/web/index.ts"],

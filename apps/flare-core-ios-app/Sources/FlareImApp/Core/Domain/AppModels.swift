@@ -172,7 +172,7 @@ enum LabTab: String, CaseIterable, Identifiable {
     var title: String { rawValue.capitalized }
 }
 
-/// The sign-in form. Where to connect is not part of it: the build's access configuration (``AppAccess``) is.
+/// The sign-in form. Where to connect is not part of it: the build's access configuration (``AppEndpoints``) is.
 struct LoginDraft: Equatable {
     var userId = LoginDefaults.userId
     var tlsCaCertPath = ""

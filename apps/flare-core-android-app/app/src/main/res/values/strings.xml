@@ -86,7 +86,6 @@
     <string name="settings_session">Session</string>
     <string name="settings_refresh_diagnostics">Refresh diagnostics</string>
     <string name="settings_dispose">Dispose</string>
-    <string name="settings_access_pin_failed">This line is no longer available. The list has been refreshed.</string>
     <string name="settings_media_cache">Media cache</string>
     <string name="settings_cache_usage">Usage: %1$s</string>
     <string name="settings_cache_refresh">Refresh</string>

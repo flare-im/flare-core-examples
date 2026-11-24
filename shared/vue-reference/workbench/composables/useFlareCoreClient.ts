@@ -623,7 +623,7 @@ export function useFlareCoreClient(options: UseFlareCoreClientOptions) {
   const client = appClient;
   const form = reactive({ ...makeFormDefaults(env) });
   // A build without an access configuration cannot connect anywhere: the sign-in page says why and offers no sign-in.
-  const accessConfigError = ref(sdkConfigProblem());
+  const endpointConfigError = ref(sdkConfigProblem());
   const sdkLab = reactive({ ...sdkLabDefaults });
   const conversationFilters = reactive<ConversationFilterState>({
     filter: "all",
@@ -1288,13 +1288,14 @@ export function useFlareCoreClient(options: UseFlareCoreClientOptions) {
    * through the core API of the access point it is on and renews it before expiry. The client never signs tokens
    * itself (that would put the signing key in the browser).
    */
-  function coreSdkConfig(request: { dataUrl: string; tenantId: string; token: string }): SdkConfig {
-    return {
+  function coreSdkConfig(request: { dataUrl: string; tenantId: string; token: string }) {
+    const sdkConfig: SdkConfig = {
       ...options.sdkConfig(),
       dataUrl: request.dataUrl,
       tenantId: request.tenantId,
       ...(request.token ? {} : { auth: {} }),
     };
+    return { environment: import.meta.env.DEV ? "development" : "production", sdkConfig };
   }
 
   /** Why this build cannot connect anywhere, or "" when it can. */
@@ -1311,7 +1312,7 @@ export function useFlareCoreClient(options: UseFlareCoreClientOptions) {
 
   async function initForSignInPage(): Promise<boolean> {
     if (initialized.value) return true;
-    if (accessConfigError.value || hasSavedSession()) return false;
+    if (endpointConfigError.value || hasSavedSession()) return false;
     try {
       await client.init(coreSdkConfig({ dataUrl: form.dataUrl, tenantId: form.tenantId, token: "" }));
       return true;
@@ -3685,15 +3686,6 @@ export function useFlareCoreClient(options: UseFlareCoreClientOptions) {
         await refreshConnectionStatusSafely("lab.disconnect");
         return { disconnected: true, status: connectionStatus.value };
       }
-      if (kind === "access_status") {
-        return { ...await client.access.getStatus() };
-      }
-      if (kind === "access_points") {
-        return await client.access.listAccessPoints();
-      }
-      if (kind === "access_diagnostics") {
-        return { diagnostics: await client.access.exportDiagnostics() };
-      }
       await refreshConnectionStatus();
       return { status: connectionStatus.value };
     });
@@ -3877,7 +3869,7 @@ export function useFlareCoreClient(options: UseFlareCoreClientOptions) {
     initialized: readonly(initialized),
     loggedIn: readonly(loggedIn),
     busy: readonly(busy),
-    accessConfigError: readonly(accessConfigError),
+    endpointConfigError: readonly(endpointConfigError),
     connectionStatus: readonly(connectionStatus),
     connectionPhase,
     currentUserId: readonly(currentUserId),

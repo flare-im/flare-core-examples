@@ -6,7 +6,7 @@ import 'package:flare_im/infrastructure/sdk/flare_core_sdk_wrapper.dart';
 import 'package:flare_im/shared/config/app_defaults_model.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'support/dev_access.dart';
+import 'support/dev_endpoints.dart';
 
 /// 用**服务端签好的 token** 连真实网关，跑通登录 → 会话列表 → 打开时间线。
 ///
@@ -41,7 +41,7 @@ void main() {
     await sdk
         .init(
           SdkConfig(
-            access: devAccess(ws),
+            endpoints: devEndpoints(ws),
             tenantId: defaults.tenantId,
             dataUrl: toFileDataUrl(root.path),
           ),

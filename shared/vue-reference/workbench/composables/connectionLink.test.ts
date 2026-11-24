@@ -36,15 +36,6 @@ describe("the reference app's connection signal", () => {
     expect(loggedIn.value).toBe(true);
   });
 
-  it("logs access switches and manifest changes without touching the status", () => {
-    const { emit, connectionStatus, events } = bridge();
-    emit({ type: "access", event: "switched", from: { ap: "development", protocol: "ws" }, to: { ap: "dev-b", protocol: "ws" }, reason: "failure" });
-    emit({ type: "access", event: "changed", serial: 3, source: "development", stale: false, developmentMode: true, changes: { accessPointsAdded: [], accessPointsRemoved: [], policyChanged: false } });
-    expect(connectionStatus.value).toBeNull();
-    expect(events.value.map((item) => item.label)).toEqual(["access_changed", "access_switched"]);
-    expect(events.value[1].detail).toBe("development → dev-b (failure)");
-  });
-
   it("ignores the removed connection events", () => {
     const { emit, connectionStatus, loggedIn } = bridge();
     for (const name of ["connected", "disconnected", "reconnecting", "kicked_off", "token_expired"]) {

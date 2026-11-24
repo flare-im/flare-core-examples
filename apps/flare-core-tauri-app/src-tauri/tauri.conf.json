@@ -30,13 +30,6 @@
       }
     }
   },
-  "plugins": {
-    "deep-link": {
-      "desktop": {
-        "schemes": ["flare-recover"]
-      }
-    }
-  },
   "bundle": {
     "active": true,
     "targets": "all"

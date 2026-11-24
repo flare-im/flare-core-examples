@@ -762,9 +762,6 @@ async function buildFromAction(op: string): Promise<void> {
         :action-text="t('common.retry')"
         @action="alertSettings.load"
       />
-      <FlareButton variant="secondary" block @click="settingsOpen = false; router.push({ name: 'network' })">
-        {{ t("accessDiagnostics.title") }}
-      </FlareButton>
       <FlareSettingsList :sections="aboutSections" @select="settingsOpen = false; router.push({ name: 'about' })" />
       <FlareFormField :label="t('workbench.downloadLocation')">
         <div class="workbench-storage-row">

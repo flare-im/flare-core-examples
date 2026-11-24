@@ -75,7 +75,7 @@ web / uni / tauri 三列数值相同，因为它们共享同一套 Vue UI。三�
 
 需要连接后端才能真正执行的操作（上传、删除等）须先登录。
 
-`connection.notifyNetworkChange` 与 `lifecycle.setAppState` 在各示例中都记为 `·`，这是有意的：网络与前后台上报由平台包在 `init` 时自动安装的 PlatformLifecycle 完成，示例不再手写接线。连到哪里由初始化配置的 `access`（签名清单或开发模式 `developmentEndpoints`）决定，示例登录页没有服务器地址设置。
+平台包在 `init` 时安装 PlatformLifecycle，上报网络及前后台状态。各示例从构建配置取得 `CoreEndpoints` 并传给初始化接口。
 
 ## 补齐优先级
 
@@ -95,7 +95,6 @@ web / uni / tauri 三列数值相同，因为它们共享同一套 Vue UI。三�
 | connection.getStatus | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | connection.notifyNetworkChange | · | · | · | · | · | · |
 | connection.reconnectNow | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| access.listAccessPoints | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | conversations.bootstrapHomeTimeline | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | conversations.clearLocalChatHistory | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | conversations.deleteConversation | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |

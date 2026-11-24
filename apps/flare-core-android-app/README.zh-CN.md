@@ -44,32 +44,9 @@ export ANDROID_HOME=/path/to/android/sdk
 接入点的 Core API 上自己签发并刷新连接 token（`auth: {}`）；不要把签名密钥放进 UI 代码。
 破坏性操作或发送流程用隔离的测试账号。
 
-## 接入配置
+## 服务地址
 
-应用把 `sdkConfig.access`（`AppAccess.kt`）和 `auth: {}`（SDK 托管的连接 token，在 Core API 上
-签发：开发模式是 `developmentEndpoints.coreApiUrl`，正式环境是接入点的 Core API）交给核心 SDK。
-每项先读 Gradle 属性，再读同名环境变量；空串算没给。
-
-| 设置 | 含义 |
-|---|---|
-| `FLARE_ACCESS_JSON` | 整段 `access`：正式配置（`bootstrapId`、`trustRoots`、`seed`、`trustMode: production`），或完整的开发配置。release 构建必须给。 |
-| `FLARE_DEV_WS_URL` | 开发模式 IM 入口，默认 `ws://10.0.2.2:60051`（模拟器访问宿主机 `access-gateway.toml` 的端口）。 |
-| `FLARE_DEV_QUIC_URL` | 开发模式 QUIC 入口，给了才提供 QUIC（例如 `quic://10.0.2.2:60052`）。 |
-| `FLARE_DEV_CORE_API_URL` | 开发模式 Core HTTP 入口，默认 `http://10.0.2.2:50050`（`api-gateway.toml`）。 |
-| `FLARE_DEV_MEDIA_URL` | 开发模式媒体入口，缺省同 Core HTTP 入口。 |
-
-调试构建没给 `FLARE_ACCESS_JSON` 时按 `FLARE_DEV_*` 组装开发模式，连接横幅随之带开发模式角标。
-本地栈上的两个接入点（故障切换演练）直接给整段：
-
-```bash
-FLARE_ACCESS_JSON='{"trustMode":"development","developmentEndpoints":{"wsUrl":"ws://10.0.2.2:60051","coreApiUrl":"http://10.0.2.2:50050","accessPoints":[{"id":"dev-b","wsUrl":"ws://10.0.2.2:61051","coreApiUrl":"http://10.0.2.2:51050"}]}}' \
-  ./gradlew :app:assembleDirectDebug
-```
-
-release 构建没有 `FLARE_ACCESS_JSON`、或给的是开发配置，会在 `preDirectReleaseBuild`（play 渠道是
-`prePlayReleaseBuild`）停下，运行时应用也拒绝开发配置。
-选哪条线路、协议竞速、重连、网络变化与前后台都归 SDK：`FlareCoreSdk.createClient(context)` 在 `init`
-之后装上平台生命周期，连接横幅是由 `connection://status` 驱动的 kit `ConnectionNotice`。
+发布构建用 `FLARE_CORE_ENDPOINTS_JSON` 提供 `baseUrl`、`websocketUrl`，可选 `quicUrl` 和 `mediaBaseUrl`。调试构建默认使用 Android 模拟器宿主 `10.0.2.2`，通过 `FLARE_DEV_CORE_API_URL`、`FLARE_DEV_WS_URL`、`FLARE_DEV_QUIC_URL`、`FLARE_DEV_MEDIA_URL` 覆盖。Gradle 属性优先于同名环境变量。
 
 ## 分发渠道
 

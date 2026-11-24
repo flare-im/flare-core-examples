@@ -1,8 +1,7 @@
 import 'dart:async';
 
-import 'package:flare_core_flutter_sdk/flare_core_flutter_sdk.dart' as core;
-import 'package:flare_core_flutter_update_ui/flare_core_flutter_update_ui.dart'
-    show flutterUpdateController;
+import 'package:flare_core_flutter_update/flare_core_flutter_update.dart'
+    show FlareClientUpdateEngine, FlareUpdateController, flutterUpdateController;
 import 'package:flare_im/application/providers/auth_state_provider.dart';
 import 'package:flare_im/application/providers/locale_provider.dart';
 import 'package:flare_im/application/providers/sdk_provider.dart';
@@ -13,11 +12,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// The update center, one for the app. [UpdateHost] starts it once the SDK is
 /// initialized; a signed-in session also starts it, in case that first init
 /// failed.
-final updateControllerProvider = Provider<core.FlareUpdateController>((ref) {
+final updateControllerProvider = Provider<FlareUpdateController>((ref) {
   final sdk = ref.watch(sdkWrapperProvider);
   final ready = ref.watch(sdkReadyProvider);
   final controller = flutterUpdateController(
-    core.FlareClientUpdateEngine(
+    FlareClientUpdateEngine(
       update: () async {
         await ready();
         return sdk.update;

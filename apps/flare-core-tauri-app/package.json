@@ -9,16 +9,16 @@
     "dev:renderer": "vite --host 0.0.0.0 --port 1432",
     "build": "vue-tsc --noEmit -p tsconfig.json && vite build && node ../../../flare-core-sdk/packages/flare-core-typescript-sdk/scripts/check-vite-bundle-budget.mjs dist 1400",
     "tauri": "RUSTC_WRAPPER= tauri",
-    "tauri:build": "RUSTC_WRAPPER= node ../../../flare-core-sdk/packages/flare-core-typescript-sdk/scripts/tauri-build-with-updater.mjs",
+    "tauri:build": "RUSTC_WRAPPER= node ../../../flare-commercial-client-runtime/packages/update/flare-core-web-update/scripts/tauri-build-with-updater.mjs",
     "test": "node --test tests/*.test.mjs",
     "typecheck": "vue-tsc --noEmit -p tsconfig.json"
   },
   "dependencies": {
+    "@flare-im/core-web-update": "file:../../../flare-commercial-client-runtime/packages/update/flare-core-web-update",
     "@flare-im/sdk": "file:../../../flare-core-sdk/packages/flare-core-typescript-sdk",
     "@flare-im/tokens": "file:../../../flare-im-design/tokens",
     "@flare-im/vue-ui": "file:../../../flare-im-design/packages/vue-im-ui",
     "@tauri-apps/api": "2.12.4",
-    "@tauri-apps/plugin-deep-link": "2.6.3",
     "@tauri-apps/plugin-dialog": "2.7.1",
     "@tauri-apps/plugin-notification": "2.3.3",
     "@tauri-apps/plugin-opener": "2.5.4",

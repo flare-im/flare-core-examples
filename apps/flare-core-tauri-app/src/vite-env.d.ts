@@ -1,12 +1,11 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
-  /**
-   * The core SDK's access configuration `access` as JSON: a signed seed, or development endpoints
-   * (`{"trustMode":"development","developmentEndpoints":{...}}`). `tauri dev` falls back to the local stack
-   * without it; a production build without it offers no sign-in.
-   */
-  readonly VITE_FLARE_ACCESS_JSON?: string;
+  /** Required Core HTTP base for a production build. */
+  readonly VITE_FLARE_CORE_API_URL?: string;
+  readonly VITE_FLARE_WEBSOCKET_URL?: string;
+  readonly VITE_FLARE_QUIC_URL?: string;
+  readonly VITE_FLARE_MEDIA_BASE_URL?: string;
   /** The tenant (platform app id); "0" when unset. */
   readonly VITE_FLARE_TENANT_ID?: string;
   /** The private CA for TLS endpoints given in the access configuration (a local gateway's self-signed QUIC). */

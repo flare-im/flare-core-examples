@@ -65,7 +65,7 @@ class LoginCopy {
 }
 
 /// 应用的非地址默认值。连哪套服务（接入配置与令牌端点）是构建期配置，见
-/// `access_config.dart`。
+/// `endpoints.dart`。
 class AppDefaults {
   const AppDefaults({
     required this.defaultTlsCaCertPath,

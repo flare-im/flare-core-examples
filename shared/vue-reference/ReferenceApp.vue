@@ -5,15 +5,13 @@
  * same providers (language, theme, layout) as the routes. `notificationPermission` is the host's system notification
  * permission; with it the settings sheet shows the "New message notifications" row.
  */
-import { computed, onMounted, watch } from "vue";
-import { useRoute, useRouter } from "vue-router";
+import { watch } from "vue";
+import { useRouter } from "vue-router";
 import { FlareConnectionNotice, FlareUiProvider } from "@flare-im/vue-ui/components";
 import {
   FlareUpdatePromptHost,
   appPlatformOptions,
   createAppMediaResolver,
-  pendingRecoveryLink,
-  productionAppHost,
   provideFlareSdk,
   provideFlareUpdates,
   provideNotificationPermission,
@@ -32,9 +30,6 @@ const updates = provideFlareUpdates(sdk.client);
 const mediaResolver = createAppMediaResolver(sdk);
 const platform = appPlatformOptions();
 const router = useRouter();
-const route = useRoute();
-/** The diagnostics page says all the notice would, and the notice would hang over its header. */
-const noticeHidden = computed(() => route.name === "network");
 // The notice draws "update" only while someone listens: a host without an update center gets no button.
 const updateListener = updates.available ? { update: updates.update } : {};
 
@@ -50,29 +45,18 @@ watch(sdk.loggedIn, (loggedIn) => {
   else updates.restart();
 }, { immediate: true });
 
-// The system delivered a recovery link. The page importing it needs the initialized SDK, so a link arriving before
-// sign-in waits for it.
-watch([pendingRecoveryLink, sdk.loggedIn], ([link, loggedIn]) => {
-  if (link && loggedIn) void router.push({ name: "network" });
-}, { immediate: true });
-onMounted(() => {
-  void productionAppHost().followRecoveryLinks?.((link) => {
-    pendingRecoveryLink.value = link;
-  }).catch((error: unknown) => console.warn("[access] following recovery links failed", error));
-});
 </script>
 
 <template>
   <FlareUiProvider layout-mode="auto" :media-resolver="mediaResolver" :platform="platform">
     <!-- The one connection notice, above every route and always mounted: when it shows and for how long is the
          kit's call from the status timeline, and unmounting would lose its timing. -->
-    <div v-show="!noticeHidden" class="reference-app__notices">
+    <div class="reference-app__notices">
       <FlareConnectionNotice
         :status="sdk.connectionStatus.value"
         floating
         @retry="sdk.reconnectNow"
         @sign-in="sdk.signInAgain"
-        @diagnose="router.push({ name: 'network' })"
         v-on="updateListener"
       />
     </div>

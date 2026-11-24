@@ -1,6 +1,6 @@
 import { expect, test, type Browser, type Page, type TestInfo } from "@playwright/test";
 
-// The service is the one the dev server was started for: VITE_FLARE_ACCESS_JSON, or the local stack without it.
+// The service is the one the dev server was started for: VITE_FLARE_CORE_API_URL and VITE_FLARE_WEBSOCKET_URL, or the local stack without it.
 test.skip(process.env.FLARE_REAL_SERVICE !== "1", "Requires the explicitly selected development service");
 
 async function login(browser: Browser, id: string) {

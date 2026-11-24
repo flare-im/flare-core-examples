@@ -8,8 +8,8 @@ final class SdkManagedTokenTests: XCTestCase {
     func testInitConfigAsksForSdkManagedTokensAndLoginOmitsTokenByDefault() throws {
         var draft = LoginDraft()
         draft.userId = "hugo"
-        for access in [try AppAccess.resolve(lookup: { _ in nil }, allowDevelopment: true),
-                       AppAccess(access: ["trustMode": "production"])] {
+        for access in [try AppEndpoints.resolve(lookup: { _ in nil }, allowDevelopment: true),
+                       AppEndpoints(endpoints: ["baseUrl": "https://example.test", "websocketUrl": "wss://example.test/ws"])] {
             let config = AppSession.sessionInitConfig(draft: draft, dataURL: URL(fileURLWithPath: "/tmp/x"), access: access)
             let auth = try XCTUnwrap(config["auth"]?.value as? [String: Any], "every build asks for SDK-managed tokens")
             XCTAssertTrue(auth.isEmpty, "no endpoint of its own: the SDK issues on the access point's Core API")

@@ -108,12 +108,6 @@ fun SettingsScreen(store: FlareAppStore) {
                 FilterChip(theme == t, { vm.setTheme(t) }, { Text(t.name) }, colors = FilterChipDefaults.filterChipColors(selectedContainerColor = colors.brandSoft, selectedLabelColor = colors.brand))
             }
         }
-        FlareGroupedCard(Modifier.padding(vertical = tk.sm)) {
-            SettingsRow(
-                SettingsItem("network", flareStrings().accessDiagnosticsTitle, "link", FlareSettingKind.Navigation),
-                onSelect = { store.accessDiagnostics.presented = true },
-            )
-        }
         FlareUpdateVersionPanel(store.updateCenter, BuildConfig.VERSION_NAME)
         Spacer(Modifier.height(tk.md))
         // 通知是否开着、系统是否限制后台运行（kit 分组，自带标题）：只读状态并打开系统自己的页面。

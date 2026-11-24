@@ -73,6 +73,7 @@ export default createFlareCoreWebAppViteConfig({
   loadEnv,
   vuePlugin: vue,
   extraAliases: [
+    { find: /^@flare-im\/core-web-update$/, replacement: path.resolve(__dirname, "../../../flare-commercial-client-runtime/packages/update/flare-core-web-update/src/index.ts") },
     ...(process.env.FLARE_USE_PUBLISHED_KIT !== "true" && existsSync(path.resolve(__dirname, "../../../flare-im-design/tokens/dist/tokens.js")) ? [
       { find: "@flare-im/tokens/tokens.css", replacement: path.resolve(__dirname, "../../../flare-im-design/tokens/dist/tokens.css") },
       { find: "@flare-im/tokens/theme", replacement: path.resolve(__dirname, "../../../flare-im-design/tokens/theme.js") },

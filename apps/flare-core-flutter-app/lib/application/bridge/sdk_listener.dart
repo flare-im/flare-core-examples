@@ -84,26 +84,10 @@ final class _AppSdkEventListener extends core.FlareImEventListener {
   void onConnectionStatusChanged(core.ConnectionStatus event) {
     debugPrint(
       'flare sdk event connection.status phase=${event.phase.name} '
-      'ap=${event.accessPointId ?? ''} protocol=${event.protocol ?? ''} '
+      'revision=${event.endpointRevision ?? ''} protocol=${event.protocol ?? ''} '
       'reason=${event.reason ?? ''}',
     );
     imEventBus.fire(ConnectionStatusChangedEvent(event));
-  }
-
-  @override
-  void onAccessSwitched(core.AccessSwitchedEvent event) {
-    debugPrint(
-      'flare sdk event access.switched ${event.from.ap}/${event.from.protocol} '
-      '-> ${event.to.ap}/${event.to.protocol} reason=${event.reason}',
-    );
-  }
-
-  @override
-  void onAccessChanged(core.AccessChangedEvent event) {
-    debugPrint(
-      'flare sdk event access.changed serial=${event.serial} '
-      'source=${event.source} stale=${event.stale}',
-    );
   }
 
   /// The update center takes `update://state` through its own engine.

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { UpdateStatus } from "@flare-im/sdk/model";
-import type { FlareUpdateInstaller } from "@flare-im/sdk/update";
+import type { FlareUpdateInstaller } from "@flare-im/core-web-update";
 import { applyFlareResourceOverlay } from "@flare-im/vue-ui/i18n";
 import { createUpdateState } from "./update";
 

@@ -22,7 +22,7 @@ CHAT_SRC     ?= $(abspath ../../../../flare-transport)
 ADB       := $(ANDROID_HOME)/platform-tools/adb
 EMULATOR  := $(ANDROID_HOME)/emulator/emulator
 # DEV_WS= 覆盖开发模式的 IM 入口(注入 BuildConfig.FLARE_DEV_WS_URL,组装 access.developmentEndpoints)。
-# 其余接入设置(FLARE_ACCESS_JSON、FLARE_DEV_CORE_API_URL 等)用同名环境变量或 -P 传,见 README。
+# 其余接入设置(FLARE_CORE_ENDPOINTS_JSON、FLARE_DEV_CORE_API_URL 等)用同名环境变量或 -P 传,见 README。
 # 接入 token 由 SDK 托管(auth: {}),在开发模式的 Core API(FLARE_DEV_CORE_API_URL)上签发,没有单独的签发地址设置。
 DEV_WS    ?=
 WS_PROP   := $(if $(DEV_WS),-PFLARE_DEV_WS_URL=$(DEV_WS),)

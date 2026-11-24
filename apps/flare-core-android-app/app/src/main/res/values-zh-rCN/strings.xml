@@ -76,7 +76,6 @@
     <string name="settings_session">会话</string>
     <string name="settings_refresh_diagnostics">刷新诊断</string>
     <string name="settings_dispose">释放</string>
-    <string name="settings_access_pin_failed">这条线路已不可用，列表已刷新</string>
     <string name="settings_media_cache">媒体缓存</string>
     <string name="settings_cache_usage">占用：%1$s</string>
     <string name="settings_cache_refresh">刷新</string>

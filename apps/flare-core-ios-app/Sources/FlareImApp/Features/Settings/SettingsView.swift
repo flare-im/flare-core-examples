@@ -49,11 +49,6 @@ struct SettingsView: View {
                 )
                 .task { await settings.refreshAlertSettings() }
 
-                ButtonView(label: strings.accessDiagnosticsTitle, variant: .secondary, icon: "link") {
-                    store.accessDiagnostics.presented = true
-                }
-                .padding(.horizontal, FlareDesign.Spacing.lg)
-
                 FlareUpdateVersionPanel(controller: store.updateCenter)
                     .padding(.horizontal, FlareDesign.Spacing.lg)
 

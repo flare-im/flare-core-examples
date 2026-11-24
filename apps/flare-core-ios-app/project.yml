@@ -25,8 +25,8 @@ packages:
   FlareImApp:
     path: .
   # The notification service extension links FlareNotificationService alone (no engine, no FFI).
-  FlareCoreAppleSDK:
-    path: ../../../flare-core-sdk/packages/flare-core-apple-sdk
+  FlareCoreIOSPush:
+    path: ../../../flare-commercial-client-runtime/packages/push/flare-core-ios-push
 
 targets:
   FlareImExampleApp:
@@ -55,14 +55,9 @@ targets:
       properties:
         UIFileSharingEnabled: true
         LSSupportsOpeningDocumentsInPlace: true
-        # Recovery link `flare-recover://v1?…`: imported in either sign-in state (RootWorkbenchView).
-        CFBundleURLTypes:
-          - CFBundleTypeRole: Viewer
-            CFBundleURLName: com.flare.im.recovery
-            CFBundleURLSchemes: [flare-recover]
         # Access configuration (AppAccess): the whole `access` object, or the development endpoints of a debug build.
         # Empty keys take the local stack's ports in AppAccess.LocalDevelopment.
-        FLARE_ACCESS_JSON: $(FLARE_ACCESS_JSON)
+        FLARE_CORE_ENDPOINTS_JSON: $(FLARE_CORE_ENDPOINTS_JSON)
         FLARE_DEV_WS_URL: $(FLARE_DEV_WS_URL)
         FLARE_DEV_QUIC_URL: $(FLARE_DEV_QUIC_URL)
         FLARE_DEV_CORE_API_URL: $(FLARE_DEV_CORE_API_URL)
@@ -84,9 +79,9 @@ targets:
         ONLY_ACTIVE_ARCH: "YES"
         SWIFT_VERSION: "6.0"
         # Debug builds run on development endpoints: set any of these to override the local default, for example
-        # `xcodebuild ... FLARE_DEV_WS_URL=ws://192.168.1.20:60051`. A release build reads only FLARE_ACCESS_JSON (its
+        # `xcodebuild ... FLARE_DEV_WS_URL=ws://192.168.1.20:60051`. A release build reads only FLARE_CORE_ENDPOINTS_JSON (its
         # production access configuration) and stops at launch without one.
-        FLARE_ACCESS_JSON: ""
+        FLARE_CORE_ENDPOINTS_JSON: ""
         FLARE_DEV_WS_URL: ""
         FLARE_DEV_QUIC_URL: ""
         FLARE_DEV_CORE_API_URL: ""
@@ -94,13 +89,14 @@ targets:
         FLARE_UPDATE_CHANNEL: stable
         FLARE_UPDATE_DISTRIBUTION: ""
         # Select the Rust target for the SDK and current architecture being linked.
+        FLARE_CORE_FFI_ROOT: $(PROJECT_DIR)/FFI
         "FLARE_FFI_TARGET[sdk=iphoneos*][arch=arm64]": aarch64-apple-ios
         "FLARE_FFI_TARGET[sdk=iphonesimulator*][arch=arm64]": aarch64-apple-ios-sim
         "FLARE_FFI_TARGET[sdk=iphonesimulator*][arch=x86_64]": x86_64-apple-ios
         # dlopen(nil)+dlsym needs force_load + export_dynamic.
         OTHER_LDFLAGS:
           - -force_load
-          - $(PROJECT_DIR)/FFI/ios/$(FLARE_FFI_TARGET)/libflare_im_core_sdk_ffi.a
+          - $(FLARE_CORE_FFI_ROOT)/ios/$(FLARE_FFI_TARGET)/libflare_im_core_sdk_ffi.a
           - -Xlinker
           - -export_dynamic
 
@@ -113,7 +109,7 @@ targets:
     sources:
       - path: NotificationService
     dependencies:
-      - package: FlareCoreAppleSDK
+      - package: FlareCoreIOSPush
         product: FlareNotificationService
     entitlements:
       path: Resources/NotificationService.entitlements

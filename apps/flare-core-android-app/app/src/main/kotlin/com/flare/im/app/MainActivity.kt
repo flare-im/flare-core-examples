@@ -6,11 +6,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import com.flare.im.app.core.platform.AndroidPlatformAdapter
-import com.flare.im.app.features.settings.parseRecoveryLink
 import com.flare.im.app.features.shell.FlareApp
 import com.flare.im.push.FlarePush
 import com.flare.im.update.FlareResumedActivity
@@ -22,15 +20,9 @@ import kotlinx.coroutines.awaitCancellation
  * [FlareApp]。
  */
 class MainActivity : ComponentActivity() {
-    // Recovery link `flare-recover://…` (manifest VIEW filter): a cold start reads it here, a warm one arrives through
-    // onNewIntent (singleTop). Taken once: an Activity recreated with the same intent must not import it again.
-    private val recoveryLink = mutableStateOf<String?>(null)
-
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
-        // 点开的通知：载荷交给推送模块，核对过的去向从 FlarePush.routes 出来。它不是恢复链接，不动那一项。
-        if (FlarePush.handleLaunchIntent(intent)) return
-        recoveryLink.value = parseRecoveryLink(intent.dataString)
+        FlarePush.handleLaunchIntent(intent)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -38,7 +30,6 @@ class MainActivity : ComponentActivity() {
         // The Play update dialog needs the activity on screen, which the view model outlives.
         FlareResumedActivity.track(application)
         if (savedInstanceState == null) {
-            recoveryLink.value = parseRecoveryLink(intent?.dataString)
             // 冷启动的那次点击：会话恢复之前模块先留着它，会话就绪（FlarePush.refresh）后再解析成去向。
             FlarePush.handleLaunchIntent(intent)
         }
@@ -73,7 +64,7 @@ class MainActivity : ComponentActivity() {
                 }
             }
             FlarePlatformProvider(platform) {
-                FlareApp(root.store, recoveryLink.value, onRecoveryLinkTaken = { recoveryLink.value = null })
+                FlareApp(root.store)
             }
         }
     }

@@ -39,7 +39,6 @@ fun SdkLabScreen(store: FlareAppStore) {
                 "isConnected" to { lab.runIsConnected() }, "sessionActive" to { lab.runSessionActive() },
                 "connect" to { lab.runConnect() }, "currentUserId" to { lab.runCurrentUserId() },
                 "updateToken" to { lab.runUpdateAccessToken() }, "reconnectNow" to { lab.runReconnectNow() },
-                "access" to { lab.runAccessStatus() }, "accessPoints" to { lab.runListAccessPoints() },
                 "disconnect" to { lab.runDisconnect() }, "uninit" to { lab.runUninit() }, "hardReset" to { lab.runHardReset() },
             ))
             LabGroup("Conversations", listOf(

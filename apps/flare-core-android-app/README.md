@@ -49,36 +49,9 @@ and refreshes connect tokens itself (`auth: {}`) on the Core API of the access
 point it is on; do not put signing keys in UI code.
 Use isolated test accounts for destructive or send workflows.
 
-## Access Configuration
+## Endpoint configuration
 
-The app hands the core SDK `sdkConfig.access` (`AppAccess.kt`) and `auth: {}`
-(SDK-managed connect tokens, issued on the Core API: in development
-`developmentEndpoints.coreApiUrl`, in production the access point's Core API). Each setting is read from a Gradle property first, then the
-environment variable of the same name; blank counts as unset.
-
-| Setting | Meaning |
-|---|---|
-| `FLARE_ACCESS_JSON` | The whole `access` object: the production one (`bootstrapId`, `trustRoots`, `seed`, `trustMode: production`), or a complete development one. Required for release builds. |
-| `FLARE_DEV_WS_URL` | Development IM entry. Default `ws://10.0.2.2:60051` (the emulator reaches the host's `access-gateway.toml` port). |
-| `FLARE_DEV_QUIC_URL` | Development QUIC entry; QUIC is offered only when given (for example `quic://10.0.2.2:60052`). |
-| `FLARE_DEV_CORE_API_URL` | Development Core HTTP entry. Default `http://10.0.2.2:50050` (`api-gateway.toml`). |
-| `FLARE_DEV_MEDIA_URL` | Development media entry. Defaults to the Core HTTP entry. |
-
-Debug builds without `FLARE_ACCESS_JSON` build development endpoints from the
-`FLARE_DEV_*` settings; the connection notice then wears the development badge.
-Two access points on the local stack (failover drills) take the full object:
-
-```bash
-FLARE_ACCESS_JSON='{"trustMode":"development","developmentEndpoints":{"wsUrl":"ws://10.0.2.2:60051","coreApiUrl":"http://10.0.2.2:50050","accessPoints":[{"id":"dev-b","wsUrl":"ws://10.0.2.2:61051","coreApiUrl":"http://10.0.2.2:51050"}]}}' \
-  ./gradlew :app:assembleDirectDebug
-```
-
-A release build without `FLARE_ACCESS_JSON`, or with a development one, stops
-at `preDirectReleaseBuild` (`prePlayReleaseBuild` on the play flavor), and the app refuses development access at runtime.
-Line choice, protocol racing, reconnecting, network changes and foreground
-state are the SDK's: `FlareCoreSdk.createClient(context)` installs the platform
-lifecycle after `init`, and the connection banner is the kit `ConnectionNotice`
-fed by `connection://status`.
+Release builds take `baseUrl` and `websocketUrl` from `FLARE_CORE_ENDPOINTS_JSON`, with optional `quicUrl` and `mediaBaseUrl`. Debug builds default to the Android emulator host `10.0.2.2`. Override them with `FLARE_DEV_CORE_API_URL`, `FLARE_DEV_WS_URL`, `FLARE_DEV_QUIC_URL`, and `FLARE_DEV_MEDIA_URL`. Gradle properties take precedence over environment variables.
 
 ## Distribution flavors
 

@@ -13,7 +13,7 @@ import {
   type FlareUpdateInstaller,
   type UpdatePromptForm,
   type UpdatePromptView,
-} from "@flare-im/sdk/update";
+} from "@flare-im/core-web-update";
 import { applyFlareResourceOverlay } from "@flare-im/vue-ui/i18n";
 import { productionAppHost } from "../infrastructure/sdk/createProductionAppClient";
 

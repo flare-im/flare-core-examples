@@ -6,7 +6,7 @@ import com.flare.im.app.core.domain.LoginDraft
 /**
  * 热启动会话档案：登录成功后保存，下次启动免登录直接
  * prepare(本地库) → 本地出图 → 后台 connect。
- * 只存登录表单里的身份与信任设置；连哪里由构建期的接入配置决定（[AppAccess]），不进档案。
+ * 只存登录表单里的身份与信任设置；连哪里由构建期的接入配置决定（[AppEndpoints]），不进档案。
  * SDK 托管 token 由核心签发与刷新，token 本身不持久化。
  */
 class SavedSessionStore(context: Context) {

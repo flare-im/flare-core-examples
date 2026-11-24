@@ -398,13 +398,6 @@ const sdkLabOperationTemplates = <SdkLabOperationTemplate>[
     defaultPayload: <String, Object?>{},
   ),
   SdkLabOperationTemplate(
-    id: 'access.list_access_points',
-    family: 'Connection',
-    title: 'Access Points',
-    description: 'Access points with status, latency, breaker and protocol.',
-    defaultPayload: <String, Object?>{},
-  ),
-  SdkLabOperationTemplate(
     id: 'diagnostics.runtime_health',
     family: 'Diagnostics',
     title: 'Runtime Health',
@@ -971,23 +964,6 @@ class SdkLabNotifier extends StateNotifier<SdkLabSnapshot> {
         case 'connection.reconnect_now':
           await sdk.reconnectNow();
           return {'requested': true};
-        case 'access.list_access_points':
-          return {
-            'accessPoints': [
-              for (final point in await sdk.accessPoints())
-                {
-                  'accessPointId': point.accessPointId,
-                  'regionId': point.regionId,
-                  'host': point.host,
-                  'status': point.status,
-                  'rttMs': point.rttMs,
-                  'breaker': point.breaker,
-                  'protocolWinner': point.protocolWinner,
-                  'pinned': point.pinned,
-                  'current': point.current,
-                },
-            ],
-          };
         case 'diagnostics.runtime_health':
           return sdk.runtimeHealth();
         case 'sdk.heartbeat_effective_interval':
@@ -1366,23 +1342,6 @@ final class _SdkLabEventListener extends core.FlareImEventListener {
     'status',
     SdkModelMapper.connectionStatusJsonFromCore(event),
   );
-
-  @override
-  void onAccessSwitched(core.AccessSwitchedEvent event) =>
-      record('access', 'switched', {
-        'from': {'ap': event.from.ap, 'protocol': event.from.protocol},
-        'to': {'ap': event.to.ap, 'protocol': event.to.protocol},
-        'reason': event.reason,
-      });
-
-  @override
-  void onAccessChanged(core.AccessChangedEvent event) =>
-      record('access', 'changed', {
-        'serial': event.serial,
-        'source': event.source,
-        'stale': event.stale,
-        'developmentMode': event.developmentMode,
-      });
 
   @override
   void onUpdateState(core.UpdateStatus event) => record('update', 'state', {

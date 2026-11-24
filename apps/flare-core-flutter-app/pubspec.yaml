@@ -18,14 +18,14 @@ dependencies:
   # Flutter 平台生命周期（原生网络回调、前后台、安装包版本）：FlareCoreFlutter.createClient
   # 在 init 时装上，app 不做网络或前后台接线。
   flare_core_flutter_lifecycle:
-    path: ../../../flare-core-sdk/packages/flare-core-flutter-lifecycle
+    path: ../../../flare-commercial-client-runtime/packages/keepalive/flare-core-flutter-keepalive
   # 更新中心：控制器绑 Kit 的提示、版本区和宿主安装器（Android 直装、商店跳转）。
-  flare_core_flutter_update_ui:
-    path: ../../../flare-core-sdk/packages/flare-core-flutter-update-ui
+  flare_core_flutter_update:
+    path: ../../../flare-commercial-client-runtime/packages/update/flare-core-flutter-update
   # 系统推送：原生平台推送模块的桥。Android 宿主要 include flare-core-android-push（见 settings.gradle.kts），
   # iOS 在 AppDelegate 里先 prepare。
   flare_core_flutter_push:
-    path: ../../../flare-core-sdk/packages/flare-core-flutter-push
+    path: ../../../flare-commercial-client-runtime/packages/push/flare-core-flutter-push
   flare_im_ui:
     path: ../../../flare-im-design/packages/flutter-im-ui
 

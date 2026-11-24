@@ -18,6 +18,7 @@
     "typecheck": "vue-tsc --noEmit"
   },
   "dependencies": {
+    "@flare-im/core-web-update": "file:../../../flare-commercial-client-runtime/packages/update/flare-core-web-update",
     "@flare-im/sdk": "file:../../../flare-core-sdk/packages/flare-core-typescript-sdk",
     "@flare-im/tokens": "file:../../../flare-im-design/tokens",
     "@flare-im/vue-ui": "file:../../../flare-im-design/packages/vue-im-ui",

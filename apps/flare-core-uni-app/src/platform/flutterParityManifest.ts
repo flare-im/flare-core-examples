@@ -38,8 +38,6 @@ export const flutterAlignedWorkbenchCapabilities = [
   "connection.getStatus",
   "connection.reconnectNow",
   "connection.disconnect",
-  "access.getStatus",
-  "access.listAccessPoints",
   "session.currentUser",
   "session.runtimeHealth",
   "session.updateAccessToken",

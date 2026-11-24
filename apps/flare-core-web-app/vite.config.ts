@@ -3,6 +3,7 @@ import { existsSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
 import vue from "@vitejs/plugin-vue";
+import { flareWebUpdateBuild, resolveWebBuildId } from "@flare-im/core-web-update/vite";
 import { createFlareCoreWebAppViteConfig } from "@flare-im/sdk/devtools/vite";
 import { build, defineConfig, loadEnv, type UserConfig } from "vite";
 import type { OutputOptions } from "rollup";
@@ -12,6 +13,9 @@ const typeScriptSdkRoot = path.resolve(__dirname, "../../../flare-core-sdk/packa
 
 export default createFlareCoreWebAppViteConfig({
   appDir: __dirname,
+  ...(process.env.FLARE_SDK_PRODUCT_DIST
+    ? { wasmBindingRoot: path.join(process.env.FLARE_SDK_PRODUCT_DIST, "wasm/pkg") }
+    : {}),
   serverPort: 1430,
   defineConfig: (factory) => defineConfig((context) => {
     const config = factory(context) as UserConfig;
@@ -39,8 +43,17 @@ export default createFlareCoreWebAppViteConfig({
   }),
   loadEnv,
   vuePlugin: vue,
-  webUpdate: { viteBuild: build },
+  extraPlugins: ({ env, wasmAssetDirectory, wasmAssetQueries }) => [
+    flareWebUpdateBuild({
+      buildId: resolveWebBuildId(env),
+      viteBuild: build,
+      pinned: [wasmAssetDirectory],
+      assetQueries: wasmAssetQueries,
+    }),
+  ],
   extraAliases: [
+    { find: /^@flare-im\/core-web-update$/, replacement: path.resolve(__dirname, "../../../flare-commercial-client-runtime/packages/update/flare-core-web-update/src/index.ts") },
+    { find: /^@flare-im\/core-web-update\/service-worker$/, replacement: path.resolve(__dirname, "../../../flare-commercial-client-runtime/packages/update/flare-core-web-update/src/service-worker.ts") },
     ...(process.env.FLARE_USE_PUBLISHED_KIT !== "true" && existsSync(path.resolve(__dirname, "../../../flare-im-design/tokens/dist/tokens.js")) ? [
       { find: "@flare-im/tokens/tokens.css", replacement: path.resolve(__dirname, "../../../flare-im-design/tokens/dist/tokens.css") },
       { find: "@flare-im/tokens/theme", replacement: path.resolve(__dirname, "../../../flare-im-design/tokens/theme.js") },

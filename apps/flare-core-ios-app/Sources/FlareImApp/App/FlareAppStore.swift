@@ -1,3 +1,4 @@
+import FlareCoreUpdateBridge
 import Combine
 import Foundation
 import FlareCoreAppleSDK
@@ -25,13 +26,6 @@ final class FlareAppStore: ObservableObject, AppLifecycle {
     let notifications: PushNotifications
     /// 应用内横幅、提示音与屏幕上的会话：登录或恢复会话后报给新客户端，登出、释放前收走。
     let alerts: MessageAlerts
-    /// The network and line page. `access.*` needs no session, so it reads before sign-in as well.
-    private(set) lazy var accessDiagnostics = AccessDiagnostics(
-        access: { [unowned self] in
-            try await self.session.accessClient(draft: self.environment.loginDraft, dataURL: self.dataURL()).access
-        },
-        subscribeLinkEvents: { [unowned self] onLinkEvent in self.session.subscribeLinkEvents(onLinkEvent) }
-    )
     private lazy var updateEngine = ClientUpdateEngine { @MainActor [unowned self] in
         try await self.session.accessClient(draft: self.environment.loginDraft, dataURL: self.dataURL())
     }

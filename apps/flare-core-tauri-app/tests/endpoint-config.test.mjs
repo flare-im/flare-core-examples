@@ -6,7 +6,7 @@ import { test } from "node:test";
 const appRoot = join(import.meta.dirname, "..");
 const monorepoRoot = join(appRoot, "../../..");
 const sharedRoot = join(monorepoRoot, "flare-core-examples/shared/vue-reference");
-const accessModule = join(sharedRoot, "workbench/app/runtime/access.ts");
+const accessModule = join(sharedRoot, "workbench/app/runtime/endpoints.ts");
 
 const read = (path) => readFileSync(path, "utf8");
 
@@ -20,32 +20,21 @@ function sources(dir, out = []) {
 }
 const files = [...sources(join(appRoot, "src")), ...sources(sharedRoot)];
 // The forbidden names are spelled from parts, so this test does not trip the repository grep gate it mirrors.
-const named = (...names) => new RegExp(`\\b(${names.join("|")})\\b`);
 
-test("where the app connects comes from the build's access configuration alone", () => {
-  const runtime = read(join(appRoot, "src/integration/referenceRuntime.ts"));
-  assert.doesNotMatch(runtime, /configureAppTransportSelector/);
-  assert.match(runtime, /sdkConfig:\s*\(\)\s*=>/);
-  assert.match(runtime, /tlsCaCertPath/);
-
-  const access = read(accessModule);
-  assert.match(access, /VITE_FLARE_ACCESS_JSON/);
-  assert.match(access, /localDefaults:\s*import\.meta\.env\.DEV \? LOCAL_DEVELOPMENT_ACCESS : undefined/);
-  // access-gateway.toml port 60051, api-gateway.toml port 50050.
-  assert.match(access, /wsUrl:\s*"ws:\/\/127\.0\.0\.1:60051"/);
-  assert.match(access, /coreApiUrl:\s*"http:\/\/127\.0\.0\.1:50050"/);
-
-  const addressField = named(...["ws", "quic", "http", "gateway", "capability", "online"].map((prefix) => `${prefix}Url`));
-  const withAddresses = files.filter((file) => file !== accessModule && addressField.test(read(file)));
-  assert.deepEqual(withAddresses.map((file) => relative(monorepoRoot, file)), []);
+test("where the app connects comes from the host endpoint settings", () => {
+  const endpoints = read(accessModule);
+  assert.match(endpoints, /VITE_FLARE_CORE_API_URL/);
+  assert.match(endpoints, /VITE_FLARE_WEBSOCKET_URL/);
+  assert.match(endpoints, /env\.DEV === true/);
+  const provider = read(join(sharedRoot, "workbench/app/sdk/flareSdkContext.ts"));
+  assert.match(provider, /endpoints: resolveCoreEndpoints\(import\.meta\.env\)/);
 });
-
 test("the sign-in page has no server settings", () => {
   const auth = read(join(sharedRoot, "workbench/app/components/AuthScreen.vue"));
   const login = read(join(sharedRoot, "workbench/app/components/FlareLoginScreen.vue"));
   assert.doesNotMatch(auth, /auth-server|transportMode|tlsCaCert/);
   assert.doesNotMatch(login, /transportMode|tlsCaCert|transportFallbackNotice/);
-  assert.match(login, /accessConfigError/);
+  assert.match(login, /endpointConfigError/);
 });
 
 test("network and foreground reports are the SDK's platform lifecycle, not the app's", () => {

@@ -84,8 +84,6 @@ class SdkLabViewModel(
     fun runDisconnect() = probe("connection.disconnect") { it.connection.disconnect() }
     fun runConnectionStatus() = probe("connection.getStatus") { it.connection.getStatus() }
     fun runReconnectNow() = probe("connection.reconnectNow") { it.connection.reconnectNow() }
-    fun runAccessStatus() = probe("access.getStatus") { it.access.getStatus() }
-    fun runListAccessPoints() = probe("access.listAccessPoints") { it.access.listAccessPoints() }
 
     // ---- Conversation probes ----
     fun runListConversations() = probe("conversations.listConversations") { it.conversations.listConversations() }

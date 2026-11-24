@@ -356,14 +356,14 @@ packages:
   flare_core_flutter_lifecycle:
     dependency: "direct main"
     description:
-      path: "../../../flare-core-sdk/packages/flare-core-flutter-lifecycle"
+      path: "../../../flare-commercial-client-runtime/packages/keepalive/flare-core-flutter-keepalive"
       relative: true
     source: path
     version: "0.1.0"
   flare_core_flutter_push:
     dependency: "direct main"
     description:
-      path: "../../../flare-core-sdk/packages/flare-core-flutter-push"
+      path: "../../../flare-commercial-client-runtime/packages/push/flare-core-flutter-push"
       relative: true
     source: path
     version: "0.1.0"
@@ -375,16 +375,9 @@ packages:
     source: path
     version: "0.1.0"
   flare_core_flutter_update:
-    dependency: transitive
-    description:
-      path: "../../../flare-core-sdk/packages/flare-core-flutter-update"
-      relative: true
-    source: path
-    version: "0.1.0"
-  flare_core_flutter_update_ui:
     dependency: "direct main"
     description:
-      path: "../../../flare-core-sdk/packages/flare-core-flutter-update-ui"
+      path: "../../../flare-commercial-client-runtime/packages/update/flare-core-flutter-update"
       relative: true
     source: path
     version: "0.1.0"

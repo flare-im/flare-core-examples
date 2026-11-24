@@ -47,6 +47,10 @@
   resolved "https://registry.npmjs.org/@esbuild/darwin-arm64/-/darwin-arm64-0.25.12.tgz"
   integrity sha512-N3zl+lxHCifgIlcMUP5016ESkeQjLj/959RxxNYIthIg+CQHInujFuXeWbWMgnTo4cp5XVHqFPmpyu9J65C1Yg==
 
+"@flare-im/core-web-update@file:../../../flare-commercial-client-runtime/packages/update/flare-core-web-update":
+  version "0.1.0"
+  resolved "file:../../../flare-commercial-client-runtime/packages/update/flare-core-web-update"
+
 "@flare-im/sdk@file:../../../flare-core-sdk/packages/flare-core-typescript-sdk":
   version "1.0.6"
   resolved "file:../../../flare-core-sdk/packages/flare-core-typescript-sdk"
@@ -64,7 +68,6 @@
     "@flare-im/tokens" "2.0.0-rc.1"
     "@lucide/vue" "1.44.0"
     "@types/markdown-it" "^14.1.2"
-    "@vicons/ionicons5" "^0.12.0"
     markdown-it "^14.2.0"
 
 "@jridgewell/sourcemap-codec@^1.5.5":

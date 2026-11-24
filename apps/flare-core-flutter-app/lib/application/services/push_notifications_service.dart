@@ -58,6 +58,7 @@ class PushNotificationsService {
     if (_push.isSupported) {
       await _push.attach(host);
       if (_getuiAppId.isNotEmpty) await _push.installGetui();
+      await _push.installJpush();
     }
     if (_presenter.isSupported) {
       await _presenter.attach(host);

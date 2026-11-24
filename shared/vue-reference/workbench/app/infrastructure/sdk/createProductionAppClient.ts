@@ -1,5 +1,5 @@
 import type { FlareImClient, SdkConfig } from "@flare-im/sdk/api";
-import type { FlareUpdateInstaller } from "@flare-im/sdk/update";
+import type { FlareUpdateInstaller } from "@flare-im/core-web-update";
 import type { SdkRuntimeStatus } from "../../../composables/useFlareCoreClient";
 
 export type ProductionAppClientFactory = () => FlareImClient;
@@ -30,8 +30,6 @@ export interface ProductionAppHost {
   createUpdateInstaller?: (client: FlareImClient, isInputEmpty: () => boolean) => FlareUpdateInstaller;
   /** Opens the failure prompt's website or store address. */
   openUrl?: (url: string) => void | Promise<void>;
-  /** Hands over every recovery link the system delivers; a browser has none. */
-  followRecoveryLinks?: (onLink: (link: string) => void) => Promise<void>;
 }
 
 let host: ProductionAppHost = {};

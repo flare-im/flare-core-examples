@@ -43,7 +43,6 @@ export function configureReferenceApp(runtime: ReferenceRuntime): void {
     runtimeStatus: runtime.runtimeStatus,
     createUpdateInstaller: runtime.createUpdateInstaller,
     openUrl: runtime.openUrl,
-    followRecoveryLinks: runtime.followRecoveryLinks,
   });
   configureAppPlatform(runtime.platform);
   configureMediaProxy(sdkMediaProxyFields());

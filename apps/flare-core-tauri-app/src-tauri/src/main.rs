@@ -7,8 +7,7 @@ fn main() {
 
     #[cfg(desktop)]
     {
-        // A second instance does not start: the deep link has reached this one, the window only comes
-        // forward. This has to be the first plugin registered.
+        // A second launch brings the existing window forward. Register this plugin first.
         builder = builder.plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
             if let Some(window) = app.get_webview_window("main") {
                 let _ = window.unminimize();
@@ -24,21 +23,11 @@ fn main() {
     }
 
     builder
-        .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_process::init())
         .manage(flare_im_core_sdk_tauri::SdkState::default())
-        .setup(|_app| {
-            // No installer registers the scheme in these two cases.
-            #[cfg(any(target_os = "linux", all(debug_assertions, windows)))]
-            {
-                use tauri_plugin_deep_link::DeepLinkExt;
-                _app.deep_link().register_all()?;
-            }
-            Ok(())
-        })
         .invoke_handler(flare_im_core_sdk_tauri::im_invoke_handler())
         .run(context)
         .expect("failed to run flare core tauri app");

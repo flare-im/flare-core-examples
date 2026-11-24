@@ -1,7 +1,7 @@
 import 'dart:async' show unawaited;
 
 import 'package:flare_core_flutter_sdk/flare_core_flutter_sdk.dart' as core;
-import 'package:flare_core_flutter_update_ui/flare_core_flutter_update_ui.dart'
+import 'package:flare_core_flutter_update/flare_core_flutter_update.dart'
     show FlareUpdateScope;
 import 'package:flare_im/application/providers/auth_state_provider.dart';
 import 'package:flare_im/application/providers/im_outbound_provider.dart';
@@ -38,8 +38,7 @@ FlareConnectionStatus? kitConnectionStatus(core.ConnectionStatus? status) {
 /// which action it offers. This widget only performs the actions: retry now
 /// asks the core to reconnect; sign in again (kicked or expired) signs out
 /// locally, even when the server already refused the session, and returns to
-/// the login page; update now goes to the update center; diagnose opens the
-/// network and line page.
+/// the login page. Update now opens the update center.
 class ConnectionNoticeHost extends ConsumerWidget {
   const ConnectionNoticeHost({super.key, this.padding = EdgeInsets.zero});
 
@@ -57,7 +56,6 @@ class ConnectionNoticeHost extends ConsumerWidget {
         onRetry: () => _reconnectNow(ref),
         onSignIn: () => _signInAgain(context, ref),
         onUpdate: updates == null ? null : () => unawaited(updates.update()),
-        onDiagnose: () => context.push('/network'),
       ),
     );
   }

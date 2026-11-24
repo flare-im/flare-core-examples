@@ -63,30 +63,13 @@ is built: the login screen has no server settings. With only a user ID the SDK
 issues and renews the connect token through the core API; do not put signing keys
 in UI code. Use isolated test accounts for destructive or send workflows.
 
-## Access Configuration
+## Endpoint configuration
 
-The core SDK's `access` object comes from `VITE_FLARE_ACCESS_JSON` at build time
-(shared `workbench/app/runtime/access.ts`, the same rule as the Web app):
+Set `VITE_FLARE_CORE_API_URL` and `VITE_FLARE_WEBSOCKET_URL` for a production build. `VITE_FLARE_MEDIA_BASE_URL` is optional and defaults to the Core API. Development runs use the local stack at `http://127.0.0.1:50050` and `ws://127.0.0.1:60051`. The sign-in screen uses the addresses supplied by the build.
 
-- unset, `npm run tauri -- dev` connects to the local stack in development mode:
-  IM `ws://127.0.0.1:60051`, core API and media `http://127.0.0.1:50050`;
-- unset, a production build offers no sign-in and never falls back to
-  development endpoints;
-- set, the object goes to the SDK as it is. QUIC goes in `developmentEndpoints.quicUrl`,
-  a second access point of the same cell in `developmentEndpoints.accessPoints`:
+`VITE_FLARE_TENANT_ID` sets the tenant (default `0`). `VITE_FLARE_APP_BUILD` and `VITE_FLARE_APP_CHANNEL` set the application build number and channel.
 
-```bash
-VITE_FLARE_ACCESS_JSON='{"trustMode":"development","developmentEndpoints":{
-  "wsUrl":"ws://127.0.0.1:60051","quicUrl":"quic://127.0.0.1:60052","coreApiUrl":"http://127.0.0.1:50050",
-  "accessPoints":[{"id":"dev-b","wsUrl":"ws://127.0.0.1:61051","coreApiUrl":"http://127.0.0.1:51050"}]}}' \
-  npm run tauri -- dev
-```
-
-The private CA for TLS endpoints (a local gateway's self-signed QUIC) is
-`VITE_FLARE_TLS_CA_CERT_PATH`; the dev server falls back to
-`flare-core-server/certs/server.crt`. The Tauri binding reports the app version
-and `distribution = "tauri"`; network and window-visibility changes are reported
-by the SDK, and the one connection notice follows `connection://status`.
+Tauri also accepts `VITE_FLARE_QUIC_URL` and a private CA path in `VITE_FLARE_TLS_CA_CERT_PATH`.
 
 ## Updates and Recovery Links
 
@@ -109,10 +92,6 @@ may open `itms-apps://`, `macappstore://` and `ms-windows-store://`. The core
 only derives the default address for `appstore`, other stores need `storeUrl` in
 the release manifest. `macOSPrivateApi` stays off: nothing here needs a transparent
 window, and the App Store does not accept the private APIs it stands for.
-
-The app registers `flare-recover://`. A link the system delivers opens the
-network page after sign-in and is imported there. macOS only delivers it to an
-installed bundle.
 
 ## Supported Features
 

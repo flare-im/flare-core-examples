@@ -28,7 +28,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import com.flare.im.app.core.FlareAppStore
@@ -44,7 +43,6 @@ import com.flare.im.app.features.messaging.conversationlist.ConversationListScre
 import com.flare.im.app.features.notifications.playMessageSound
 import com.flare.im.app.features.sdklab.SdkLabScreen
 import com.flare.im.app.features.search.SearchScreen
-import com.flare.im.app.features.settings.AccessDiagnosticsScreen
 import com.flare.im.app.features.settings.SettingsScreen
 import com.flare.im.ui.ConnectionNotice
 import com.flare.im.ui.EmptyState as KitEmptyState
@@ -72,7 +70,7 @@ import kotlinx.coroutines.launch
 
 /** App 根：主题 + 登录路由 + 自适应 workbench 导航。 */
 @Composable
-fun FlareApp(store: FlareAppStore, recoveryLink: String?, onRecoveryLinkTaken: () -> Unit) {
+fun FlareApp(store: FlareAppStore) {
     val theme by store.environment.theme.collectAsState()
     val loggedIn by store.session.isLoggedIn.collectAsState()
     val dark = when (theme) {
@@ -106,13 +104,6 @@ fun FlareApp(store: FlareAppStore, recoveryLink: String?, onRecoveryLinkTaken: (
     // 引擎要横幅响一声时放系统的通知提示音。
     val context = LocalContext.current
     LaunchedEffect(store.alerts, context) { store.alerts.sounds.collect { playMessageSound(context) } }
-    // A recovery link waits for the saved session's resume, which is what brings the client up.
-    LaunchedEffect(resumeAttempted, recoveryLink) {
-        if (resumeAttempted && recoveryLink != null) {
-            onRecoveryLinkTaken()
-            store.accessDiagnostics.openRecoveryLink(recoveryLink)
-        }
-    }
     FlareAppTheme(dark = dark) {
         AppResources(store, locale, resourceMode) {
             val colors = FlareTheme.colors
@@ -138,13 +129,6 @@ fun FlareApp(store: FlareAppStore, recoveryLink: String?, onRecoveryLinkTaken: (
                                 CircularProgressIndicator(color = colors.brand)
                             }
                         }
-                        // The network and line page sits over sign-in and the workbench: a recovery link can open it in either.
-                        if (store.accessDiagnostics.presented) {
-                            // The empty pointer modifier keeps taps from reaching the page underneath.
-                            Box(Modifier.fillMaxSize().pointerInput(Unit) {}) {
-                                AccessDiagnosticsScreen(store.accessDiagnostics, onBack = { store.accessDiagnostics.presented = false })
-                            }
-                        }
                         // The update prompt over everything, in either sign-in state.
                         FlareUpdatePromptHost(store.updateCenter)
                     }
@@ -163,7 +147,7 @@ private fun AppResources(store: FlareAppStore, locale: String, mode: FlareThemeM
 /**
  * The connection notice over the signed-in workbench: the kit's ConnectionNotice reads the core SDK's
  * `connection://status` as it arrives and decides what shows when. 立即重试 asks the SDK for its next round now;
- * 重新登录 (kicked or expired) signs out to the login page; 诊断 opens the network and line page.
+ * 重新登录 (kicked or expired) signs out to the login page.
  */
 @Composable
 private fun WorkbenchConnectionNotice(store: FlareAppStore, modifier: Modifier = Modifier) {
@@ -179,7 +163,6 @@ private fun WorkbenchConnectionNotice(store: FlareAppStore, modifier: Modifier =
             onRetry = { scope.launch { runCatching { store.session.reconnectNow() } } },
             onSignIn = { scope.launch { store.logout() } },
             onUpdate = { store.updateCenter.launch { update() } },
-            onDiagnose = { store.accessDiagnostics.presented = true },
         )
     }
 }

@@ -21,18 +21,23 @@ let package = Package(
         .executable(name: "FlareImAppRunner", targets: ["FlareImAppRunner"]),
     ],
     dependencies: [
+        .package(path: "../../../flare-commercial-client-runtime/packages/keepalive/flare-core-ios-keepalive"),
         .package(path: "../../../flare-core-sdk/packages/flare-core-apple-sdk"),
-        .package(path: "../../../flare-core-sdk/packages/flare-core-apple-update-ui"),
+        .package(path: "../../../flare-commercial-client-runtime/packages/update/flare-core-apple-update"),
+        .package(path: "../../../flare-commercial-client-runtime/packages/push/flare-core-ios-push"),
         kitDependency,
     ],
     targets: [
         .target(
             name: "FlareImApp",
             dependencies: [
+                .product(name: "FlareCoreIOSKeepAlive", package: "flare-core-ios-keepalive"),
                 .product(name: "FlareCoreAppleSDK", package: "flare-core-apple-sdk"),
-                .product(name: "FlarePlatformUpdate", package: "flare-core-apple-sdk"),
-                .product(name: "FlarePlatformPush", package: "flare-core-apple-sdk"),
-                .product(name: "FlareUpdateUI", package: "flare-core-apple-update-ui"),
+                .product(name: "FlarePlatformUpdate", package: "flare-core-apple-update"),
+                .product(name: "FlarePlatformPush", package: "flare-core-ios-push"),
+                .product(name: "FlareUpdateUI", package: "flare-core-apple-update"),
+                .product(name: "FlareCorePushBridge", package: "flare-core-ios-push"),
+                .product(name: "FlareCoreUpdateBridge", package: "flare-core-apple-update"),
                 .product(name: "FlareIMUI", package: kitPackageName),
             ],
             path: "Sources/FlareImApp"

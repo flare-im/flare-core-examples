@@ -49,15 +49,15 @@ async function login(): Promise<void> {
   <div class="auth-route">
     <!-- Where this build connects is set when it is built; without it there is nothing to sign in to. -->
     <FlareStatusBanner
-      v-if="sdk.accessConfigError.value"
+      v-if="sdk.endpointConfigError.value"
       tone="danger"
-      :text="`${t('login.accessConfigMissing')}: ${sdk.accessConfigError.value}`"
+      :text="`${t('login.endpointConfigMissing')}: ${sdk.endpointConfigError.value}`"
     />
     <FlareStatusBanner v-else-if="runtimeUnavailable" tone="danger" :text="`${t('login.runtimeUnavailable')}: ${t('login.runtimeUnavailableHint')}`" />
     <AuthScreen
       v-model:user-id="sdk.form.userId"
       :loading="sdk.busy.value"
-      :disabled="Boolean(sdk.accessConfigError.value)"
+      :disabled="Boolean(sdk.endpointConfigError.value)"
       @login="login"
     />
     <section v-if="sdk.initialized.value || sdk.events.value.length" class="auth-session-strip">

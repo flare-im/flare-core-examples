@@ -3,16 +3,15 @@ import 'dart:convert';
 
 import 'package:flare_core_flutter_lifecycle/flare_core_flutter_lifecycle.dart'
     show FlareCoreFlutter, FlutterPlatformLifecycleSource;
+import 'package:flare_core_flutter_push/flare_core_flutter_push.dart';
 import 'package:flare_core_flutter_sdk/flare_core_flutter_sdk.dart' as core;
 import 'package:flare_im/infrastructure/mappers/sdk_model_mapper.dart';
 import 'package:flutter/foundation.dart';
 
-/// What the core is initialized with. Where it connects is the build's access
-/// config (`shared/config/access_config.dart`), never an address the app
-/// keeps.
+/// Initialization options, including the build's Core endpoints.
 final class SdkConfig {
   const SdkConfig({
-    required this.access,
+    required this.endpoints,
     this.app,
     this.tlsCaCertPath,
     this.tlsCaCert,
@@ -20,8 +19,8 @@ final class SdkConfig {
     this.tenantId = '0',
   });
 
-  /// The core access config (`sdkConfig.access`), passed through unchanged.
-  final Map<String, Object?> access;
+  /// The address group passed as `sdkConfig.endpoints`.
+  final Map<String, Object?> endpoints;
 
   /// The `app` keys the build decides (channel, the language it shows); the
   /// platform fills the rest.
@@ -35,8 +34,7 @@ final class SdkConfig {
   final String tenantId;
 
   /// The core init overlay. Connect tokens are SDK-managed (`auth: {}`): the
-  /// core issues and refreshes them through the Core API of the access point
-  /// it uses; an explicit token at login still wins.
+  /// core issues and refreshes them through its configured API address.
   Map<String, Object?> toInitConfig() {
     final tlsCaCertPath = this.tlsCaCertPath?.trim() ?? '';
     final tlsCaCert = this.tlsCaCert?.trim() ?? '';
@@ -44,7 +42,7 @@ final class SdkConfig {
     final tenantId = this.tenantId.trim();
     final app = this.app;
     return {
-      'access': access,
+      'endpoints': endpoints,
       if (app != null && app.isNotEmpty) 'app': app,
       'tenantId': tenantId.isEmpty ? '0' : tenantId,
       if (tlsCaCertPath.isNotEmpty) 'tlsCaCertPath': tlsCaCertPath,
@@ -93,9 +91,7 @@ final class SdkWrapper {
   String _currentUserId = '';
   String _tenantId = '0';
 
-  /// init 时交给核心的完整 overlay。prepare 的 storeConfigJson 会让核心**重新 init**，
-  /// 所以必须原样重发同一份，否则 auth / tlsCaCert 这类字段会被冲掉
-  /// （实测：QUIC 登录报 connect token required）。
+  /// The last initialization overlay, used to deduplicate host initialization.
   Map<String, Object?>? _lastInitConfig;
   String? _dataUrl;
   Map<String, Object?>? _nativeEventSubscription;
@@ -113,9 +109,6 @@ final class SdkWrapper {
   }
 
   Future<void> _init(SdkConfig config) async {
-    // `app` is filled here, not only in the client: prepare sends this overlay
-    // again, the core replaces `app` as a whole, and without version and build
-    // the update center stops working after sign-in.
     final initConfig = core.platformInitConfig(
       config.toInitConfig(),
       await _appInfo?.call(),
@@ -129,7 +122,7 @@ final class SdkWrapper {
     _tenantId = '${initConfig['tenantId']}';
     _dataUrl = initConfig['dataUrl'] as String?;
     debugPrint(
-      'flare sdk init trustMode=${config.access['trustMode'] ?? 'production'} '
+      'flare sdk init '
       'tenant=$_tenantId dataUrl=${_dataUrl ?? ''}',
     );
     final existing = _clientOrNull;
@@ -146,7 +139,10 @@ final class SdkWrapper {
       await existing.hardReset();
       _initialized = false;
       _currentUserId = '';
-      await existing.init(Map<String, Object?>.from(initConfig));
+      await existing.init({
+        'environment': kReleaseMode ? 'production' : 'development',
+        'sdkConfig': initConfig,
+      });
     }
     _lastInitConfig = initConfig;
     await _ensureNativeEventSubscription();
@@ -159,10 +155,7 @@ final class SdkWrapper {
     debugPrint(
       'flare sdk prepare user=$userId tenant=$_tenantId dataUrl=${_dataUrl ?? ''}',
     );
-    await _client.prepare({
-      'userId': userId,
-      'storeConfigJson': _storeConfigJson(),
-    });
+    await _client.prepare({'userId': userId});
   }
 
   /// 网络半段：建立连接。热启动在后台调用。
@@ -248,15 +241,11 @@ final class SdkWrapper {
   /// The connection notice's "retry now": the core starts a round at once.
   Future<void> reconnectNow() => _client.connection.reconnectNow();
 
-  /// The network and line page's API (status, lines, pin, refresh, recovery
-  /// links, diagnostics export).
-  core.AccessApi get access => _client.access;
-
   /// The update center's routes; the update controller is what calls them.
   core.UpdateApi get update => _client.update;
 
   /// 系统推送的宿主：令牌、权限、远程推送、点击与角标都交给这个客户端。
-  core.FlarePushHost pushHost() => core.CorePushHost(_client);
+  FlarePushHost pushHost() => CorePushHost(_client);
 
   /// 屏幕上的会话（null：没有），它的新消息在前台不再提醒。不等登录、不等网络；客户端还没建出来时不报，
   /// 登录后再报一次。
@@ -276,12 +265,6 @@ final class SdkWrapper {
   Future<core.UserNotificationSettings> updateNotificationSettings(
     core.UpdateUserNotificationSettingsRequest request,
   ) => _client.notification.updateSettings(request);
-
-  /// Access lines for diagnostics.
-  Future<core.AccessStatus> accessStatus() => _client.access.getStatus();
-
-  Future<List<core.AccessPointInfo>> accessPoints() =>
-      _client.access.listAccessPoints();
 
   String sdkVersionSync() => 'flare_core_flutter_sdk';
 
@@ -308,7 +291,7 @@ final class SdkWrapper {
       'connected': connected,
       'sessionActive': sessionActive,
       'connectionPhase': status.phase.name,
-      'accessPointId': status.accessPointId,
+      'endpointRevision': status.endpointRevision,
       'protocol': status.protocol,
       'developmentMode': status.developmentMode,
       'currentUserId': _currentUserId,
@@ -1380,16 +1363,7 @@ final class SdkWrapper {
     }
   }
 
-  String _storeConfigJson() {
-    final config = _lastInitConfig ??
-        <String, Object?>{
-          'tenantId': _tenantId,
-          if (_dataUrl != null && _dataUrl!.isNotEmpty) 'dataUrl': _dataUrl,
-        };
-    return jsonEncode(config);
-  }
-
-  /// 测试用：prepare 重发的配置必须与 init 的一致。
+  /// The initialization overlay includes the platform's app metadata.
   @visibleForTesting
   Map<String, Object?>? get lastInitConfigForTest => _lastInitConfig;
 }

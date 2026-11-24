@@ -16,7 +16,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.util.concurrent.atomic.AtomicLong
-import org.json.JSONObject
 
 /**
  * 跨切面会话核心：唯一持有 `FlareImClient` 的地方（其余层经它拿门面）。
@@ -28,7 +27,7 @@ import org.json.JSONObject
  */
 class AppSession(
     private val newClient: () -> FlareImClient,
-    private val access: () -> AppAccess = { AppAccess.current },
+    private val access: () -> AppEndpoints = { AppEndpoints.current },
 ) {
     private val _currentUserId = MutableStateFlow<String?>(null)
     val currentUserId: StateFlow<String?> = _currentUserId.asStateFlow()
@@ -78,7 +77,6 @@ class AppSession(
     ): FlareImClient {
         // `dataUrl` is a URL; filesDir is absolute, so this yields file:///data/...
         val sdkConfig = buildSdkConfig(draft, dataDir)
-        val storeConfigJson = JSONObject(sdkConfig).toString()
         val sdk = initializedClient(draft, dataDir, sdkConfig, progress)
 
         val userId = draft.userId.trim()
@@ -91,7 +89,6 @@ class AppSession(
             buildMap {
                 put("userId", userId)
                 if (pastedToken.isNotEmpty()) put("token", pastedToken)
-                put("storeConfigJson", storeConfigJson)
             },
         )
 
@@ -134,7 +131,7 @@ class AppSession(
         subscribeNativeEvents(sdk)
 
         progress("Initializing SDK")
-        sdk.init(sdkConfig)
+        sdk.init(mapOf("environment" to access().environment, "sdkConfig" to sdkConfig))
         sessionless = Sessionless(sdk, dataDir, tenantId)
         sdk
     }
@@ -155,20 +152,9 @@ class AppSession(
         val sdk = newClient()
         subscribeEvents(sdk)
         subscribeNativeEvents(sdk)
-        sdk.init(buildSdkConfig(draft, dataDir))
+        sdk.init(mapOf("environment" to access().environment, "sdkConfig" to buildSdkConfig(draft, dataDir)))
         sessionless = Sessionless(sdk, dataDir, normalizedTenantId(draft))
         sdk
-    }
-
-    /** The events the network and line page reads again on; the returned function stops listening. */
-    fun subscribeLinkEvents(onLinkEvent: () -> Unit): () -> Unit {
-        val sdk = client ?: sessionless?.sdk ?: return {}
-        val links = listOf(
-            sdk.events.onConnectionStatusChanged { onLinkEvent() },
-            sdk.events.onAccessChanged { onLinkEvent() },
-            sdk.events.onAccessSwitched { onLinkEvent() },
-        )
-        return { links.forEach { runCatching { it.unsubscribe() } } }
     }
 
     internal fun buildSdkConfig(draft: LoginDraft, dataDir: String): Map<String, Any> {
@@ -177,7 +163,7 @@ class AppSession(
             put("dataUrl", "file://$dataDir")
             put("tenantId", normalizedTenantId(draft))
             put("deviceId", ANDROID_EXAMPLE_DEVICE_ID)
-            put("access", access.access)
+            put("endpoints", access.endpoints)
             // SDK 托管 token：核心在当前接入点的 Core API 上签发、到期前刷新（`auth` 给空对象即可，路径用默认值）。
             // 填了 accessToken 时核心会直接用它，不走签发。
             put("auth", emptyMap<String, Any>())
@@ -204,12 +190,7 @@ class AppSession(
         progress("Opening local store")
         val userId = draft.userId.trim()
         val tenantId = normalizedTenantId(draft)
-        sdk.prepare(
-            mapOf(
-                "userId" to userId,
-                "storeConfigJson" to JSONObject(sdkConfig).toString(),
-            ),
-        )
+        sdk.prepare(mapOf("userId" to userId))
 
         runCatching {
             sdk.media.setMediaCacheRoot(mapOf("absolutePath" to "$dataDir/media-cache"))

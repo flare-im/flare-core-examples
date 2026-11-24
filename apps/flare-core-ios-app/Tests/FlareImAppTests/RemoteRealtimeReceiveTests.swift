@@ -36,7 +36,7 @@ final class RemoteRealtimeReceiveTests: XCTestCase {
         draft.userId = userId
         draft.tokenOverride = token
 
-        let access = try AppAccess.resolve(lookup: { $0 == "FLARE_DEV_WS_URL" ? endpoint : nil }, allowDevelopment: true)
+        let access = try AppEndpoints.resolve(lookup: { $0 == "FLARE_DEV_WS_URL" ? endpoint : nil }, allowDevelopment: true)
         let session = AppSession(access: access)
         defer { Task { try? await session.dispose() } }
         let client = try await session.start(draft: draft, dataURL: root) { _ in }

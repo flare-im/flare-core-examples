@@ -100,8 +100,6 @@ private struct LifecycleLab: View {
                 LabButton(title: "Heartbeat NAT 120s", operation: "session.heartbeat_nat_timeout")
                 LabButton(title: "Prepare session", operation: "session.prepare")
                 LabButton(title: "Reconnect now", operation: "connection.reconnect_now")
-                LabButton(title: "Access status", operation: "access.get_status")
-                LabButton(title: "Access points", operation: "access.list_access_points")
                 Button("Logout") { Task { await sdkLab.logout() } }
                 Button("Dispose") { Task { await sdkLab.dispose() } }
             }
