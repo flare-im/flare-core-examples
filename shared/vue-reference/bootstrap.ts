@@ -41,7 +41,7 @@ export function configureReferenceApp(runtime: ReferenceRuntime): void {
   configureProductionAppHost({
     sdkConfig: runtime.sdkConfig,
     runtimeStatus: runtime.runtimeStatus,
-    createUpdateInstaller: runtime.createUpdateInstaller,
+    createUpdateController: runtime.createUpdateController,
     openUrl: runtime.openUrl,
   });
   configureAppPlatform(runtime.platform);

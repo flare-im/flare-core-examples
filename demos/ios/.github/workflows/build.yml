@@ -1,0 +1,20 @@
+name: Standalone build
+on:
+  push:
+    branches: [dev, main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: brew install xcodegen
+      - run: python3 scripts/bootstrap.py
+      - run: xcodegen generate
+      - run: xcodebuild -project FlareCoreDemo.xcodeproj -scheme FlareCoreDemo -sdk iphonesimulator -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build

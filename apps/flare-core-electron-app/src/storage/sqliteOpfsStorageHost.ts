@@ -37,7 +37,8 @@ function messageKey(userId: string, message: Record<string, unknown>): string {
 }
 
 function pendingSendKey(userId: string, entry: Record<string, unknown>): string {
-  const clientMsgId = String(entry.clientMsgId ?? cryptoSafeId());
+  const clientMsgId = String(entry.client_msg_id ?? entry.clientMsgId ?? "").trim();
+  if (!clientMsgId) throw new Error("Missing outbox identity");
   return `${userPrefix(userId)}::${clientMsgId}`;
 }
 
@@ -100,6 +101,19 @@ export function createSqliteOpfsStorageHost(): WasmStorageHostCallbacks {
         json: JSON.stringify(message),
       });
       notifyStorageChanged({ userId, kind: "message", conversationId, message });
+    },
+    async commitOutgoing({userId, message, conversation, entry}) {
+      userId = userId.trim();
+      const id = String(message.clientMsgId ?? "").trim();
+      const conversationId = String(message.conversationId ?? "").trim();
+      if (!userId || !id || !conversationId || conversationId !== conversation.conversationId ||
+          (entry && (pendingSendKey(userId, entry) !== `${userId}::${id}` || (entry.conversation_id ?? entry.conversationId) !== conversationId))) {
+        throw new Error("Outgoing transaction has inconsistent identity");
+      }
+      await client.call("commitOutgoing", { userId, message, conversation, entry, key: messageKey(userId, message) });
+      notifyStorageChanged({userId, kind: "message", conversationId, message});
+      notifyStorageChanged({userId, kind: "conversation", conversationId, conversation});
+      notifyStorageChanged({userId, kind: entry ? "pending_send" : "delete", id});
     },
     async saveConversation(payload) {
       const userId = payload.userId?.trim();

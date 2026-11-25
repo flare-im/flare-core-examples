@@ -1,0 +1,27 @@
+name: FlareCoreDemo
+options:
+  deploymentTarget:
+    iOS: "15.0"
+packages:
+  FlareCoreAppleSDK:
+    path: .flare/sources/flare-core-sdk/packages/flare-core-apple-sdk
+  FlareIMDesign:
+    path: .flare/sources/flare-im-design/packages/ios-im-ui
+targets:
+  FlareCoreDemo:
+    type: application
+    platform: iOS
+    sources: [Sources]
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: im.flare.core.demo.ios
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_UILaunchScreen_Generation: YES
+        OTHER_LDFLAGS: "$(inherited) -lc++"
+    dependencies:
+      - package: FlareCoreAppleSDK
+        product: FlareCoreAppleSDK
+      - package: FlareIMDesign
+        product: FlareIMUI
+      - framework: .flare/artifacts/apple/FlareCoreFFI.xcframework
+        embed: false

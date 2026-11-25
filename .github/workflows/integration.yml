@@ -1,0 +1,31 @@
+name: Reference app integration
+on:
+  push:
+    branches: [dev, main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  application-contracts:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check out public SDK and design sources
+        run: |
+          for repository in flare-core-sdk flare-core-sdk-engine flare-im-design; do
+            git clone --depth 1 --branch dev "https://github.com/flare-im/$repository.git" "../$repository"
+          done
+      - name: Verify app transport and composition contracts
+        run: |
+          for platform in electron tauri uni; do
+            node --test "apps/flare-core-$platform-app/tests/"*.test.mjs
+          done
+      - name: Compile the Vue application sources
+        working-directory: ../flare-core-sdk
+        run: |
+          npm install --no-save @vue/compiler-sfc
+          node packages/flare-core-typescript-sdk/scripts/check-sfc.mjs

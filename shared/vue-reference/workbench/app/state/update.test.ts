@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { UpdateStatus } from "@flare-im/sdk/model";
 import type { FlareUpdateInstaller } from "@flare-im/core-web-update";
+import { commercialUpdateController } from "../../../../vue-commercial/update";
 import { applyFlareResourceOverlay } from "@flare-im/vue-ui/i18n";
 import { createUpdateState } from "./update";
 
@@ -68,7 +69,7 @@ const installer: FlareUpdateInstaller = { execute: async () => ({ outcome: "comp
 describe("the update state", () => {
   it("reads the state at start and follows update://state", async () => {
     const fake = fakeClient(status());
-    const state = createUpdateState({ client: fake.client, createInstaller: () => installer, onError: () => undefined });
+    const state = createUpdateState({ createController: commercialUpdateController(fake.client, () => installer), onError: () => undefined });
 
     await state.start();
     expect(state.promptView.value?.form).toBe("sheet");
@@ -80,7 +81,7 @@ describe("the update state", () => {
 
   it("has no update center on a host with no installer", async () => {
     const fake = fakeClient(status());
-    const state = createUpdateState({ client: fake.client });
+    const state = createUpdateState({});
 
     await state.start();
 
@@ -90,7 +91,7 @@ describe("the update state", () => {
 
   it("starts by itself after a refused sign-in, and reads the refusal", async () => {
     const fake = fakeClient(status({ state: "required", readOnly: true, prompt: "modal", release: undefined }));
-    const state = createUpdateState({ client: fake.client, createInstaller: () => installer, onError: () => undefined });
+    const state = createUpdateState({ createController: commercialUpdateController(fake.client, () => installer), onError: () => undefined });
 
     state.refresh();
 
@@ -100,7 +101,7 @@ describe("the update state", () => {
   it("can start again after the SDK was not ready", async () => {
     const fake = fakeClient(status());
     fake.update.getState.mockRejectedValueOnce(new Error("call init first"));
-    const state = createUpdateState({ client: fake.client, createInstaller: () => installer, onError: () => undefined });
+    const state = createUpdateState({ createController: commercialUpdateController(fake.client, () => installer), onError: () => undefined });
 
     await state.start();
     expect(state.status.value).toBeNull();
@@ -111,7 +112,7 @@ describe("the update state", () => {
 
   it("hands the app's language over, also one it heard before it started", async () => {
     const fake = fakeClient(status());
-    const state = createUpdateState({ client: fake.client, createInstaller: () => installer, onError: () => undefined });
+    const state = createUpdateState({ createController: commercialUpdateController(fake.client, () => installer), onError: () => undefined });
 
     state.setLocale("zh-CN");
     expect(fake.update.setLocale).not.toHaveBeenCalled();
@@ -127,11 +128,10 @@ describe("the update state", () => {
     const fake = fakeClient(status());
     let isInputEmpty: () => boolean = () => false;
     const state = createUpdateState({
-      client: fake.client,
-      createInstaller: (empty) => {
+      createController: commercialUpdateController(fake.client, (empty) => {
         isInputEmpty = empty;
         return installer;
-      },
+      }),
       onError: () => undefined,
     });
     await state.start();
@@ -145,20 +145,20 @@ describe("the update state", () => {
     const error = { code: "update.installFailed", retryable: true, fallbackUrl: "https://example.com/get" };
     const fake = fakeClient(status({ error }));
     const openUrl = vi.fn();
-    const state = createUpdateState({ client: fake.client, createInstaller: () => installer, openUrl, onError: () => undefined });
+    const state = createUpdateState({ createController: commercialUpdateController(fake.client, () => installer), openUrl, onError: () => undefined });
     await state.start();
 
     state.openFallback();
     expect(openUrl).toHaveBeenCalledWith("https://example.com/get");
 
-    const unopenable = createUpdateState({ client: fakeClient(status({ error })).client, createInstaller: () => installer, onError: () => undefined });
+    const unopenable = createUpdateState({ createController: commercialUpdateController(fakeClient(status({ error })).client, () => installer), onError: () => undefined });
     await unopenable.start();
     expect(unopenable.fallbackUrl.value).toBeUndefined();
   });
 
   it("hands this run's packs to the kit and keeps them for the host", async () => {
     const fake = fakeClient(status());
-    const state = createUpdateState({ client: fake.client, createInstaller: () => installer, onError: () => undefined });
+    const state = createUpdateState({ createController: commercialUpdateController(fake.client, () => installer), onError: () => undefined });
 
     await state.start();
     await vi.waitFor(() => expect(applyOverlay).toHaveBeenCalledWith([pack]));
@@ -169,7 +169,7 @@ describe("the update state", () => {
   it("does not hold the start up for the packs", async () => {
     const fake = fakeClient(status());
     fake.update.getResources.mockImplementationOnce(() => new Promise(() => undefined));
-    const state = createUpdateState({ client: fake.client, createInstaller: () => installer, onError: () => undefined });
+    const state = createUpdateState({ createController: commercialUpdateController(fake.client, () => installer), onError: () => undefined });
 
     await state.start();
 
@@ -179,7 +179,7 @@ describe("the update state", () => {
 
   it("reads the packs once, however often sign-out restarts it", async () => {
     const fake = fakeClient(status());
-    const state = createUpdateState({ client: fake.client, createInstaller: () => installer, onError: () => undefined });
+    const state = createUpdateState({ createController: commercialUpdateController(fake.client, () => installer), onError: () => undefined });
     await state.start();
     await vi.waitFor(() => expect(applyOverlay).toHaveBeenCalledTimes(1));
 
@@ -196,7 +196,7 @@ describe("the update state", () => {
     const failure = new Error("not initialized");
     fake.update.getResources.mockRejectedValueOnce(failure);
     const onError = vi.fn();
-    const state = createUpdateState({ client: fake.client, createInstaller: () => installer, onError });
+    const state = createUpdateState({ createController: commercialUpdateController(fake.client, () => installer), onError });
 
     await state.start();
 
@@ -209,7 +209,7 @@ describe("the update state", () => {
   it("leaves the kit alone when this run has no packs", async () => {
     const fake = fakeClient(status());
     fake.update.getResources.mockResolvedValueOnce({ packs: [] });
-    const state = createUpdateState({ client: fake.client, createInstaller: () => installer, onError: () => undefined });
+    const state = createUpdateState({ createController: commercialUpdateController(fake.client, () => installer), onError: () => undefined });
 
     await state.start();
     await vi.waitFor(() => expect(fake.update.getResources).toHaveBeenCalledTimes(1));
@@ -219,7 +219,7 @@ describe("the update state", () => {
 
   it("reads no packs on a host with no update center", async () => {
     const fake = fakeClient(status());
-    const state = createUpdateState({ client: fake.client });
+    const state = createUpdateState({});
 
     await state.start();
 

@@ -1,5 +1,7 @@
 # Flare Core Examples
 
+This repository hosts local cross-platform integration. See [demos/README.md](demos/README.md) for standalone exports and [Core demo downloads](https://github.com/flare-im/flare-core-sdk/tree/dev/examples) for the public entry points.
+
 English · [Simplified Chinese](README.zh-CN.md)
 
 Reference applications for Web, Tauri, Flutter, iOS, and Android, plus Electron, React Native, uni-app, ArkTS and Cangjie scaffolds. Complete apps live only in this repository.

@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { computed, reactive, ref } from "vue";
 import { ArrowBackOutline, CheckmarkCircleOutline, FlashOutline, RefreshOutline, TerminalOutline } from "@flare-im/vue-ui/icon-glyphs";
 import { FlareButton, FlareFilterTabs, FlareInput, FlareSelect } from "@flare-im/vue-ui/components";
 import AppIcon from "./AppIcon.vue";
 import { useRouter } from "vue-router";
 import { useFlareSdk } from "../sdk/flareSdkContext";
 import { useFlareI18n } from "../shared/i18n";
+import { resolveCoreEndpoints } from "../runtime/endpoints";
 
 const sdk = useFlareSdk();
 const router = useRouter();
@@ -17,6 +18,32 @@ const buildCatalogText = computed(() => JSON.stringify(sdk.messageBuildCatalog.v
 const latestEvent = computed(() => sdk.events.value[0]);
 const tabOptions = computed(() => [{ value: "diagnostics", label: t('sdkLab.diagnostics') }, { value: "connection-session", label: t('sdklab.tabConnSession') }, { value: "builder", label: t('sdkLab.builder') }, { value: "message-dispatch", label: t('sdklab.tabMessageOps') }, { value: "sync-presence", label: t('sdklab.tabSyncPresence') }, { value: "capability", label: t('sdklab.tabCapability') }, { value: "media", label: t('sdklab.tabMedia') }, { value: "events", label: t('sdklab.tabEvents') }]);
 const activeTab = ref("diagnostics");
+const initialEndpoints = resolveCoreEndpoints(import.meta.env);
+const endpoints = reactive({
+  baseUrl: initialEndpoints.baseUrl,
+  websocketUrl: initialEndpoints.websocketUrl,
+  quicUrl: initialEndpoints.quicUrl ?? "",
+  mediaBaseUrl: initialEndpoints.mediaBaseUrl ?? "",
+});
+const replacing = ref(false);
+const replaceResult = ref("");
+
+async function replaceEndpoints() {
+  replacing.value = true;
+  try {
+    const { revision } = await sdk.client.connection.replaceEndpoints({
+      baseUrl: endpoints.baseUrl.trim(),
+      websocketUrl: endpoints.websocketUrl.trim(),
+      quicUrl: endpoints.quicUrl.trim() || undefined,
+      mediaBaseUrl: endpoints.mediaBaseUrl.trim() || undefined,
+    });
+    replaceResult.value = `Endpoint revision ${revision}`;
+  } catch (error) {
+    replaceResult.value = error instanceof Error ? error.message : String(error);
+  } finally {
+    replacing.value = false;
+  }
+}
 
 const activeRuntimeTone = computed(() => {
   const phase = sdk.connectionPhase.value;
@@ -110,6 +137,15 @@ function back(): void {
         <pre class="drawer-json">{{ diagnosticsText }}</pre>
       </section>
       <section v-show="activeTab === 'connection-session'" class="sdk-lab-pane">
+        <div class="lab-field">
+          <span>Core endpoints</span>
+          <FlareInput v-model="endpoints.baseUrl" aria-label="Core HTTP base URL" placeholder="Core HTTP base URL" />
+          <FlareInput v-model="endpoints.websocketUrl" aria-label="WebSocket URL" placeholder="WebSocket URL" />
+          <FlareInput v-if="sdk.sdkRuntimeStatus.value === 'tauri-native'" v-model="endpoints.quicUrl" aria-label="Optional QUIC URL" placeholder="QUIC URL (optional)" />
+          <FlareInput v-model="endpoints.mediaBaseUrl" aria-label="Optional media base URL" placeholder="Media base URL (optional)" />
+          <FlareButton variant="secondary" :loading="replacing" @click="replaceEndpoints">Apply endpoints</FlareButton>
+          <span aria-live="polite">{{ replaceResult }}</span>
+        </div>
         <div class="lab-field">
           <span>Connection status</span>
           <div class="lab-grid">

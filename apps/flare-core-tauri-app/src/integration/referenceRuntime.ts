@@ -1,6 +1,7 @@
 import { FlareCoreSdk } from "@flare-im/sdk/tauri";
 import { webAppInfoFromBuild } from "@flare-im/sdk/lifecycle";
 import { createTauriUpdateInstaller, isStoreDistribution } from "@flare-im/core-web-update";
+import { commercialUpdateController } from "../../../../shared/vue-commercial/update";
 import { convertFileSrc } from "@tauri-apps/api/core";
 import { openUrl, revealItemInDir } from "@tauri-apps/plugin-opener";
 import { relaunch } from "@tauri-apps/plugin-process";
@@ -47,12 +48,12 @@ export const referenceRuntime: ReferenceRuntime = {
     const { build, channel } = webAppInfoFromBuild();
     return { ...(path ? { tlsCaCertPath: path } : {}), app: { build, channel, ...(distribution ? { distribution } : {}) } };
   },
-  createUpdateInstaller: () => createTauriUpdateInstaller({
+  createUpdateController: (client) => commercialUpdateController(client, () => createTauriUpdateInstaller({
     check: updaterConfigured ? () => check() : async () => null,
     relaunch,
     openUrl,
     onError: (error) => console.warn("[update]", error),
-  }),
+  })),
   openUrl: (url) => openUrl(url),
   // Desktop host: fine pointer, hover, context menus and shortcuts; the dialog
   // plugin backs the pickers, nothing backs share.

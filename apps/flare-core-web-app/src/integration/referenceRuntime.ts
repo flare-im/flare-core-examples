@@ -6,6 +6,7 @@ import {
 } from "@flare-im/sdk/web";
 import { webAppInfoFromBuild } from "@flare-im/sdk/lifecycle";
 import { createWebUpdateInstaller, registerFlareServiceWorker } from "@flare-im/core-web-update";
+import { commercialUpdateController } from "../../../../shared/vue-commercial/update";
 import type { ReferenceRuntime } from "../../../../shared/vue-reference/runtime";
 import { createWebPlatformAdapter } from "@flare-im/vue-ui/composables";
 
@@ -43,7 +44,7 @@ export const referenceRuntime: ReferenceRuntime = {
   // Where to connect is the build's VITE_FLARE_CORE_API_URL and VITE_FLARE_WEBSOCKET_URL (see the shared runtime/endpoints.ts); the bridge adds the
   // build-time app version and build, and the SDK installs the browser's network and visibility lifecycle at init.
   createClient: () => new WebFlareImClient(wrapWebHostBridge(new WebProductionBridge({ loadRuntime }))),
-  createUpdateInstaller: (client, isInputEmpty) => createWebUpdateInstaller({
+  createUpdateController: (client) => commercialUpdateController(client, (isInputEmpty) => createWebUpdateInstaller({
     buildId: webBuildId ?? "",
     scriptUrl: `${import.meta.env.BASE_URL}sw.js`,
     scope: import.meta.env.BASE_URL,
@@ -53,7 +54,7 @@ export const referenceRuntime: ReferenceRuntime = {
     },
     isInputEmpty,
     onError: (error) => console.warn("[update]", error),
-  }),
+  })),
   openUrl: (url) => {
     window.open(url, "_blank", "noopener");
   },

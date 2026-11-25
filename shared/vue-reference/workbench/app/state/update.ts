@@ -7,20 +7,48 @@
  */
 import { computed, inject, provide, ref, shallowRef, type InjectionKey } from "vue";
 import type { FlareImClient } from "@flare-im/sdk/api";
-import type { UpdateResourcePack, UpdateStatus } from "@flare-im/sdk/model";
-import {
-  FlareUpdateController,
-  type FlareUpdateInstaller,
-  type UpdatePromptForm,
-  type UpdatePromptView,
-} from "@flare-im/core-web-update";
+import type { UpdateProgress, UpdateResourcePack, UpdateStatus } from "@flare-im/sdk/model";
 import { applyFlareResourceOverlay } from "@flare-im/vue-ui/i18n";
 import { productionAppHost } from "../infrastructure/sdk/createProductionAppClient";
 
+type UpdatePromptForm = "sheet" | "modal" | "fullscreen";
+
+interface UpdatePromptView {
+  form: UpdatePromptForm;
+  version: string;
+  notes: string[];
+  sizeBytes?: number;
+  mandatory: boolean;
+  state: string;
+  progress?: UpdateProgress;
+  errorCode?: string;
+  retryable: boolean;
+  fallbackTarget: "website" | "store";
+  canContinueReadOnly: boolean;
+  reason?: string;
+}
+
+interface UpdateController {
+  readonly status: UpdateStatus | null;
+  readonly promptView: UpdatePromptView | null;
+  subscribe(listener: () => void): () => void;
+  start(): Promise<UpdateStatus>;
+  refresh(): Promise<UpdateStatus>;
+  check(): Promise<UpdateStatus>;
+  update(): Promise<UpdateStatus>;
+  later(): Promise<UpdateStatus>;
+  skip(): Promise<UpdateStatus>;
+  continueReadOnly(): Promise<UpdateStatus>;
+  markPrompted(form: UpdatePromptForm): Promise<UpdateStatus>;
+  setLocale(locale: string): Promise<UpdateStatus>;
+  loadResources(): Promise<UpdateResourcePack[]>;
+  dispose(): void;
+}
+
+export type CreateUpdateController = (isInputEmpty: () => boolean, onError: (error: unknown) => void) => UpdateController;
+
 export interface UpdateStateHost {
-  client: Pick<FlareImClient, "update" | "events">;
-  /** The platform's installer; without one there is no update center. */
-  createInstaller?: (isInputEmpty: () => boolean) => FlareUpdateInstaller;
+  createController?: CreateUpdateController;
   /** Opens the failure prompt's other way out. */
   openUrl?: (url: string) => void | Promise<void>;
   onError?: (error: unknown) => void;
@@ -32,7 +60,7 @@ const CHECK_FAILURES: Readonly<Record<string, string>> = {
   "update.manifestRejected": "updatePrompt.failManifestRejected",
 };
 
-export function createUpdateState({ client, createInstaller, openUrl, onError = (error) => console.warn("[update]", error) }: UpdateStateHost) {
+export function createUpdateState({ createController, openUrl, onError = (error) => console.warn("[update]", error) }: UpdateStateHost) {
   const status = shallowRef<UpdateStatus | null>(null);
   const promptView = shallowRef<UpdatePromptView | null>(null);
   const resourcePacks = shallowRef<readonly UpdateResourcePack[]>([]);
@@ -42,14 +70,14 @@ export function createUpdateState({ client, createInstaller, openUrl, onError = 
   const fallbackUrl = computed(() => (openUrl ? status.value?.error?.fallbackUrl : undefined));
   const checkFailure = computed(() => CHECK_FAILURES[status.value?.error?.code ?? ""] ?? null);
 
-  let controller: FlareUpdateController | null = null;
+  let controller: UpdateController | null = null;
   let starting: Promise<void> | null = null;
   /** The app's language, kept for a controller that is not running yet. */
   let locale: string | null = null;
   /** The core's packs hold for the whole run, so `restart()` has nothing to read again. */
   let resourcesRead = false;
 
-  function show(from: FlareUpdateController): void {
+  function show(from: UpdateController): void {
     status.value = from.status;
     promptView.value = from.promptView;
   }
@@ -60,7 +88,7 @@ export function createUpdateState({ client, createInstaller, openUrl, onError = 
   }
 
   /** The built-in look renders first and the kit swaps the overlay in when it arrives. What it took is for the log. */
-  async function applyResources(from: FlareUpdateController): Promise<void> {
+  async function applyResources(from: UpdateController): Promise<void> {
     if (resourcesRead) return;
     resourcesRead = true;
     const packs = await from.loadResources();
@@ -69,14 +97,7 @@ export function createUpdateState({ client, createInstaller, openUrl, onError = 
     console.info("[update] resource overlay", applyFlareResourceOverlay(packs));
   }
 
-  async function begin(installer: FlareUpdateInstaller): Promise<void> {
-    const next = new FlareUpdateController({
-      api: client.update,
-      subscribe: (listener) => client.events.onUpdateState(listener),
-      loginSucceeded: (listener) => client.events.onLoginSucceeded(listener),
-      installer,
-      onError,
-    });
+  async function begin(next: UpdateController): Promise<void> {
     next.subscribe(() => show(next));
     try {
       await next.start();
@@ -92,21 +113,21 @@ export function createUpdateState({ client, createInstaller, openUrl, onError = 
 
   /** Repeat calls share the first; one that failed can be made again. */
   function start(): Promise<void> {
-    if (!createInstaller) return Promise.resolve();
-    starting ??= begin(createInstaller(() => !composerHasText.value)).catch((error: unknown) => {
+    if (!createController) return Promise.resolve();
+    starting ??= Promise.resolve().then(() => begin(createController(() => !composerHasText.value, onError))).catch((error: unknown) => {
       starting = null;
       onError(error);
     });
     return starting;
   }
 
-  function run(action: (running: FlareUpdateController) => Promise<unknown>): void {
+  function run(action: (running: UpdateController) => Promise<unknown>): void {
     if (controller) action(controller).catch(onError);
   }
 
   return {
     /** False on a host with no installer. */
-    available: Boolean(createInstaller),
+    available: Boolean(createController),
     status,
     /** The open prompt under the kit's prop names; null while none is open. */
     promptView,
@@ -160,10 +181,9 @@ const flareUpdatesKey: InjectionKey<FlareUpdates> = Symbol("flare-updates");
 
 /** The app's update center, for `useFlareUpdates` below it. Starts with `start()`, once the SDK is initialized. */
 export function provideFlareUpdates(client: FlareImClient): FlareUpdates {
-  const { createUpdateInstaller, openUrl } = productionAppHost();
+  const { createUpdateController, openUrl } = productionAppHost();
   const updates = createUpdateState({
-    client,
-    createInstaller: createUpdateInstaller && ((isInputEmpty) => createUpdateInstaller(client, isInputEmpty)),
+    createController: createUpdateController?.(client),
     openUrl,
   });
   provide(flareUpdatesKey, updates);

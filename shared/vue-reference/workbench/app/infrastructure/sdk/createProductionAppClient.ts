@@ -1,5 +1,5 @@
 import type { FlareImClient, SdkConfig } from "@flare-im/sdk/api";
-import type { FlareUpdateInstaller } from "@flare-im/core-web-update";
+import type { CreateUpdateController } from "../../state/update";
 import type { SdkRuntimeStatus } from "../../../composables/useFlareCoreClient";
 
 export type ProductionAppClientFactory = () => FlareImClient;
@@ -27,7 +27,7 @@ export interface ProductionAppHost {
    * The platform's update installer. `isInputEmpty` says whether the composer holds nothing. Without an installer the
    * app has no update center: no prompt, and the connection notice offers no update action.
    */
-  createUpdateInstaller?: (client: FlareImClient, isInputEmpty: () => boolean) => FlareUpdateInstaller;
+  createUpdateController?: (client: FlareImClient) => CreateUpdateController;
   /** Opens the failure prompt's website or store address. */
   openUrl?: (url: string) => void | Promise<void>;
 }

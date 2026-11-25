@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": ["vite/client", "node"],
+    "allowJs": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "paths": {
+      "@reference/*": ["./reference/*"],
+      "@/*": ["./src/*"],
+      "@flare-im/vue-ui/composables/sdk": ["./.flare/sources/flare-im-design/packages/vue-im-ui/src/composables/sdk.ts"]
+    }
+  },
+  "include": ["src/**/*.ts", "src/**/*.vue", "reference/**/*.ts", "reference/**/*.vue"]
+}

@@ -1,0 +1,13 @@
+{
+  "repositories": {
+    "flare-core-sdk": "a0484a63d63fcc588d31640d659de848aa028757",
+    "flare-core-sdk-engine": "371150641d68c3b27e9f9d4ce6e5db4e576bf99d",
+    "flare-im-design": "1b5d278bcb045d3a34e46910d217cea2cc0decc8",
+    "flare-protocol": "621f6c66fea101baa903932f2b1e6425bc232c7e",
+    "flare-protocol-grpc": "0828cb0deede1bf76fd301c2f137a25d54274441",
+    "flare-plugin-devkit": "b3f713ecbb1ec3f36f0194475a08fa3866e0f1cb",
+    "flare-notify-rules": "f731f91bd652da911c571ee8a04108b3c1cc15de",
+    "flare-transport": "0a7ab44a7e63f2c8bf18da9d35a990a7b00335a6"
+  },
+  "artifacts": {}
+}

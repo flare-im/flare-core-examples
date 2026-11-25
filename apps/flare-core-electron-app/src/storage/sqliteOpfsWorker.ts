@@ -61,7 +61,37 @@ function ensureReady(): Promise<void> {
            CREATE INDEX IF NOT EXISTS ${table}_user ON ${table}(user_id);`,
         );
       }
-    })();
+      // Older hosts keyed snake_case outbox entries by a random ID. Re-key once
+      // so a later ACK removes every durable copy of the logical send.
+      await run("BEGIN IMMEDIATE");
+      try {
+        const [version] = await selectJson("PRAGMA user_version", []);
+        if (Number(version) === 0) {
+          await run(`CREATE INDEX IF NOT EXISTS messages_send_identity ON messages (
+            user_id, json_extract(json, '$.clientMsgId'), json_extract(json, '$.conversationId'), json_extract(json, '$.senderId'))`);
+          const id = "trim(coalesce(json_extract(json, '$.client_msg_id'), json_extract(json, '$.clientMsgId'), ''))";
+          const oldKey = `json_valid(json) AND ${id} != '' AND key != (user_id || '::' || ${id})`;
+          await run(`INSERT OR IGNORE INTO pending_sends(key, user_id, json)
+            SELECT user_id || '::' || ${id}, user_id, json FROM pending_sends WHERE ${oldKey}
+            ORDER BY coalesce(json_extract(json, '$.enqueued_at_ms'), 0) DESC, rowid DESC`);
+          await run(`DELETE FROM pending_sends WHERE ${oldKey}`);
+          await run("PRAGMA user_version = 1");
+        }
+        await run("COMMIT");
+      } catch (error) {
+        await run("ROLLBACK");
+        throw error;
+      }
+    })().catch(async (error) => {
+      try {
+        if (sqlite3 && db) await sqlite3.close(db);
+      } finally {
+        db = 0;
+        sqlite3 = null;
+        ready = null;
+      }
+      throw error;
+    });
   }
   return ready;
 }
@@ -136,6 +166,34 @@ async function handle(op: string, p: Record<string, unknown>): Promise<unknown> 
     case "saveMessage":
       await upsert("messages", String(p.key), userId, String(p.json));
       return undefined;
+    case "commitOutgoing": {
+      const message = p.message as Record<string, unknown>;
+      const clientId = String(message.clientMsgId);
+      const conversationId = String(message.conversationId);
+      const identity = [userId, conversationId, String(message.senderId ?? ""), clientId];
+      const sameSend = `user_id = ? AND json_extract(json, '$.conversationId') = ?
+        AND json_extract(json, '$.senderId') = ? AND json_extract(json, '$.clientMsgId') = ?`;
+      await run("BEGIN IMMEDIATE");
+      try {
+        const previous = await selectJson(`SELECT json FROM messages WHERE ${sameSend}`, identity);
+        if (previous.some(raw => {
+          const row = JSON.parse(raw);
+          return !row.localState?.isLocal && Number(row.conversationSeq) > 0 &&
+            (p.entry || Number(row.conversationSeq) > Number(message.conversationSeq));
+        })) throw new Error("Outgoing transaction would replace a confirmed send");
+        await run(`DELETE FROM messages WHERE ${sameSend}`, identity);
+        await upsert("messages", String(p.key), userId, JSON.stringify(message));
+        await upsert("conversations", `${userId}::${conversationId}`, userId, JSON.stringify(p.conversation));
+        const pendingKey = `${userId}::${clientId}`;
+        if (p.entry) await upsert("pending_sends", pendingKey, userId, JSON.stringify(p.entry));
+        else await deleteByKey("pending_sends", pendingKey);
+        await run("COMMIT");
+      } catch (error) {
+        await run("ROLLBACK");
+        throw error;
+      }
+      return undefined;
+    }
     case "saveConversation":
       await upsert("conversations", String(p.key), userId, String(p.json));
       return undefined;
@@ -159,8 +217,7 @@ async function handle(op: string, p: Record<string, unknown>): Promise<unknown> 
   }
 }
 
-self.onmessage = async (event: MessageEvent<Req>): Promise<void> => {
-  const { id, op, payload } = event.data;
+async function respond({id, op, payload}: Req): Promise<void> {
   try {
     const result = await handle(op, payload);
     (self as unknown as Worker).postMessage({ id, ok: true, result });
@@ -171,4 +228,10 @@ self.onmessage = async (event: MessageEvent<Req>): Promise<void> => {
       error: error instanceof Error ? error.message : String(error),
     });
   }
+}
+
+// All requests share a connection. Keep other calls outside an in-progress transaction.
+let queued = Promise.resolve();
+self.onmessage = (event: MessageEvent<Req>) => {
+  queued = queued.then(() => respond(event.data));
 };

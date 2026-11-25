@@ -1,0 +1,64 @@
+{
+  "android": {
+    "native": [
+      "android"
+    ],
+    "sources": [
+      "flare-core-sdk",
+      "flare-im-design"
+    ]
+  },
+  "electron": {
+    "native": [
+      "wasm"
+    ],
+    "sources": [
+      "flare-core-sdk",
+      "flare-im-design"
+    ],
+    "desktop": true
+  },
+  "flutter": {
+    "native": [
+      "android",
+      "apple"
+    ],
+    "sources": [
+      "flare-core-sdk",
+      "flare-im-design"
+    ]
+  },
+  "ios": {
+    "native": [
+      "apple"
+    ],
+    "sources": [
+      "flare-core-sdk",
+      "flare-im-design"
+    ]
+  },
+  "tauri": {
+    "native": [],
+    "sources": [
+      "flare-core-sdk",
+      "flare-core-sdk-engine",
+      "flare-im-design",
+      "flare-protocol",
+      "flare-protocol-grpc",
+      "flare-plugin-devkit",
+      "flare-notify-rules",
+      "flare-transport"
+    ],
+    "desktop": true
+  },
+  "web": {
+    "native": [
+      "wasm"
+    ],
+    "sources": [
+      "flare-core-sdk",
+      "flare-im-design"
+    ],
+    "desktop": true
+  }
+}
